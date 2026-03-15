@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel — Interview Preparation Guide</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #1e293b;
+            padding: 12px 0;
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand {
+            font-size: 1.3rem; font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: #94a3b8; text-decoration: none; font-size: 0.78rem;
+            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
+        }
+        .nav-links a:hover { background: #1e293b; color: #e2e8f0; }
+
+        /* ── Main container ── */
+        .container { max-width: 1100px; margin: 0 auto; padding: 90px 24px 60px; }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center; padding: 60px 20px 40px;
+            border-bottom: 1px solid #1e293b; margin-bottom: 50px;
+        }
+        .hero h1 {
+            font-size: 2.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .hero p { color: #94a3b8; font-size: 1.15rem; max-width: 700px; margin: 0 auto; }
+        .hero-stats {
+            display: flex; justify-content: center; gap: 40px; margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .val {
+            font-size: 2rem; font-weight: 700; color: #60a5fa;
+        }
+        .hero-stat .lbl { font-size: 0.82rem; color: #64748b; }
+
+        /* ── Section ── */
+        .section { margin-bottom: 55px; }
+        .section-id { position: relative; top: -80px; }
+        .section-title {
+            font-size: 1.7rem; font-weight: 700; color: #f1f5f9;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .num {
+            font-size: 0.85rem; font-weight: 600;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white; padding: 3px 12px; border-radius: 20px;
+        }
+        .section-sub { color: #64748b; font-size: 0.95rem; margin-bottom: 24px; }
+
+        /* ── Q&A Card ── */
+        .qa {
+            background: #1e293b; border-radius: 14px;
+            border: 1px solid #334155;
+            margin-bottom: 18px; overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .qa:hover { border-color: #3b82f6; }
+
+        .qa-q {
+            padding: 18px 22px; cursor: pointer;
+            display: flex; align-items: flex-start; gap: 12px;
+            user-select: none;
+        }
+        .qa-q:hover { background: rgba(59,130,246,0.06); }
+        .qa-icon {
+            flex-shrink: 0; width: 28px; height: 28px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; color: white; font-weight: 700;
+        }
+        .qa-question {
+            font-weight: 600; font-size: 1.02rem; color: #e2e8f0;
+            flex: 1;
+        }
+        .qa-chevron {
+            color: #475569; font-size: 1.2rem; transition: transform 0.3s;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .qa.open .qa-chevron { transform: rotate(180deg); }
+
+        .qa-a {
+            display: none; padding: 0 22px 22px 62px;
+            color: #cbd5e1; font-size: 0.93rem;
+        }
+        .qa.open .qa-a { display: block; }
+
+        .qa-a p { margin-bottom: 12px; }
+        .qa-a strong { color: #e2e8f0; }
+
+        .qa-a ul, .qa-a ol { padding-left: 20px; margin-bottom: 12px; }
+        .qa-a li { margin-bottom: 6px; }
+
+        .qa-a .highlight {
+            background: #0f172a; border: 1px solid #334155;
+            border-radius: 8px; padding: 14px 18px; margin: 12px 0;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.84rem; overflow-x: auto; white-space: pre-wrap;
+            color: #a5b4fc; line-height: 1.6;
+        }
+
+        .qa-a .vs-table {
+            width: 100%; border-collapse: collapse; margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        .vs-table th {
+            background: #0f172a; padding: 10px 14px; text-align: left;
+            color: #94a3b8; font-weight: 600; border-bottom: 2px solid #334155;
+        }
+        .vs-table td {
+            padding: 10px 14px; border-bottom: 1px solid #1e293b; color: #cbd5e1;
+        }
+        .vs-table tr:hover td { background: rgba(59,130,246,0.04); }
+
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 600; margin-right: 4px;
+        }
+        .badge-green { background: #064e3b; color: #6ee7b7; }
+        .badge-blue { background: #1e3a5f; color: #7dd3fc; }
+        .badge-amber { background: #451a03; color: #fcd34d; }
+        .badge-red { background: #450a0a; color: #fca5a5; }
+        .badge-purple { background: #2e1065; color: #c4b5fd; }
+
+        .callout {
+            background: rgba(59,130,246,0.08); border-left: 4px solid #3b82f6;
+            border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 14px 0;
+            font-size: 0.9rem;
+        }
+        .callout.warn { border-left-color: #f59e0b; background: rgba(245,158,11,0.08); }
+        .callout.success { border-left-color: #10b981; background: rgba(16,185,129,0.08); }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center; padding: 40px 20px; color: #475569;
+            border-top: 1px solid #1e293b; margin-top: 40px; font-size: 0.85rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .hero h1 { font-size: 1.8rem; }
+            .hero-stats { gap: 20px; }
+            .qa-a { padding-left: 22px; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════════ NAVIGATION ════════════════════════ -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-brand">🧠 BizIntel Interview Prep</div>
+        <div class="nav-links">
+            <a href="#arch">Architecture</a>
+            <a href="#data">Data Pipeline</a>
+            <a href="#fields">Field Decisions</a>
+            <a href="#embed">Embeddings</a>
+            <a href="#vector">Vector Store</a>
+            <a href="#rag">RAG Chain</a>
+            <a href="#llm">LLM & Prompts</a>
+            <a href="#ui">Streamlit UI</a>
+            <a href="#tradeoffs">Trade-offs</a>
+            <a href="#advanced">Advanced</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+<!-- ════════════════════════ HERO ════════════════════════ -->
+<div class="hero">
+    <h1>BizIntel — Interview Prep Guide</h1>
+    <p>Every architectural decision, every "why this and not that", every trade-off — answered in depth for your interview.</p>
+    <div class="hero-stats">
+        <div class="hero-stat"><div class="val">50+</div><div class="lbl">Q&A Covered</div></div>
+        <div class="hero-stat"><div class="val">134K</div><div class="lbl">Startups Indexed</div></div>
+        <div class="hero-stat"><div class="val">10</div><div class="lbl">Sections</div></div>
+        <div class="hero-stat"><div class="val">6</div><div class="lbl">Analysis Types</div></div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 1. HIGH-LEVEL ARCHITECTURE ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="arch"></div>
+    <div class="section-title"><span class="num">01</span> High-Level Architecture</div>
+    <div class="section-sub">The big picture — why RAG, what pattern, how the layers connect</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is BizIntel and what problem does it solve?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>BizIntel is an <strong>AI-powered Startup Intelligence Engine</strong> that answers natural-language questions about 134,000+ startups from Y Combinator and Crunchbase. It supports 6 analysis types: similarity search, SWOT, competitor analysis, side-by-side comparison, ecosystem mapping, and auto-detect.</p>
+            <p><strong>Problem it solves:</strong> Traditional startup databases (Crunchbase, PitchBook) are <em>search-by-filter</em> tools. You can filter by industry, country, funding — but you can't ask <em>"Find me startups solving the same problem as Stripe but focused on emerging markets"</em>. BizIntel bridges this gap using RAG (Retrieval-Augmented Generation) — combining semantic search with LLM reasoning.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why RAG and not just fine-tuning an LLM on your startup data?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Criteria</th><th>Fine-tuning</th><th>RAG ✅</th></tr>
+                <tr><td>Data freshness</td><td>Stale after training cutoff — must retrain</td><td>Update CSV + re-embed; no model retraining</td></tr>
+                <tr><td>Hallucination control</td><td>LLM can generate fake companies</td><td>LLM is <strong>grounded</strong> — only sees retrieved docs</td></tr>
+                <tr><td>Cost</td><td>GPU hours for fine-tuning ($$$)</td><td>Embedding once + cheap inference</td></tr>
+                <tr><td>Transparency</td><td>Black box — can't show sources</td><td>Every answer shows the exact source documents</td></tr>
+                <tr><td>Data size</td><td>134K records too large for context window</td><td>Retrieve top-K (5) relevant docs — fits easily</td></tr>
+            </table>
+            <div class="callout success">
+                <strong>Key interview point:</strong> RAG gives us <em>grounded, verifiable, up-to-date</em> answers. Every claim in the response can be traced back to a real startup in our database. Fine-tuning would bake knowledge into model weights — making it impossible to verify or update cheaply.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Walk me through the end-to-end architecture.</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">OFFLINE PIPELINE (one-time batch job):
+CSV files → Data Cleaning → Document Builder → Embedder → Vector Store
+                               ↓                  ↓            ↓
+                         pandas + validation   Pydantic   SentenceTransformer → ChromaDB/FAISS
+
+ONLINE PIPELINE (per user query):
+User Query → Query Expansion (LLM) → Embedder → Vector Store → Top-K docs
+                                                                     ↓
+                                                             Prompt Template + Docs
+                                                                     ↓
+                                                               OpenAI LLM → Answer
+                                                                     ↓
+                                                             Streamlit UI (chat)</div>
+            <p><strong>6 layers, each with a single responsibility:</strong></p>
+            <ol>
+                <li><strong>Config</strong> (<code>settings.py</code>) — Single source of truth for all parameters</li>
+                <li><strong>Preprocessing</strong> — Load, clean, validate, unify CSVs</li>
+                <li><strong>Embeddings</strong> — Document building + SentenceTransformer encoding</li>
+                <li><strong>Vector Store</strong> — Strategy Pattern (ChromaDB / FAISS)</li>
+                <li><strong>RAG</strong> — Retriever + Prompt Templates + Chain orchestrator</li>
+                <li><strong>App</strong> — Streamlit UI with state management</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why a src/bizintel/ layout with pyproject.toml instead of flat scripts?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>We use the <strong>src-layout</strong> pattern recommended by the Python Packaging Authority (PyPA):</p>
+            <div class="highlight">BizIntel/
+├── src/bizintel/          ← importable package
+│   ├── config/
+│   ├── preprocessing/
+│   ├── embeddings/
+│   ├── vectorstore/
+│   ├── rag/
+│   └── app/
+├── scripts/               ← CLI entry points
+├── pyproject.toml         ← hatch build backend
+└── .python-version        ← Python 3.13</div>
+            <p><strong>Why not flat scripts?</strong></p>
+            <ul>
+                <li><strong>Import isolation:</strong> src-layout prevents accidental import of local files vs installed package. Without it, <code>import bizintel</code> could resolve to the source dir OR the installed package — ambiguous.</li>
+                <li><strong>Installable package:</strong> <code>pip install -e .</code> (or <code>uv pip install -e .</code>) makes <code>bizintel</code> importable from anywhere — scripts, notebooks, tests — without <code>sys.path</code> hacks.</li>
+                <li><strong>Enterprise-grade:</strong> Shows interviewers you understand packaging, not just "it runs on my machine".</li>
+            </ul>
+            <div class="callout">
+                <strong>pyproject.toml</strong> uses <code>hatchling</code> as the build backend with <code>[tool.hatch.build.targets.wheel] packages = ["src/bizintel"]</code>. Hatch is the modern replacement for setuptools — faster, simpler, PEP 621 compliant.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why centralize config in settings.py instead of .env or YAML?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Approach</th><th>Pros</th><th>Cons</th><th>Our Use</th></tr>
+                <tr><td><strong>Python module</strong> ✅</td><td>Type-safe, IDE autocomplete, can use Path objects, computed values</td><td>Not editable without code change</td><td>All structural config (paths, column maps, thresholds, field definitions)</td></tr>
+                <tr><td><strong>.env file</strong></td><td>Secrets stay out of git</td><td>Strings only, no complex types</td><td>Only for <code>OPENAI_API_KEY</code></td></tr>
+                <tr><td><strong>YAML / JSON</strong></td><td>Language-agnostic</td><td>No type safety, needs parsing library, no computed values</td><td>Not used</td></tr>
+            </table>
+            <p><strong>Key insight:</strong> <code>settings.py</code> lets us define <code>DOCUMENT_FIELDS</code> as a list of tuples, <code>PROJECT_ROOT</code> as a computed <code>Path</code>, and thresholds as typed <code>int</code> — things that YAML/JSON can't express. Secrets (<code>OPENAI_API_KEY</code>) go in <code>.env</code> because they must be git-ignored.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 2. DATA PIPELINE ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="data"></div>
+    <div class="section-title"><span class="num">02</span> Data Pipeline & Cleaning</div>
+    <div class="section-sub">How raw CSVs become a clean, unified dataset of 134K startups</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are your data sources and why these two?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Source</th><th>Rows</th><th>Strength</th><th>Weakness</th></tr>
+                <tr><td><strong>Y Combinator</strong> (2 CSV snapshots)</td><td>~4,400</td><td>High-quality curated startups, long descriptions, clean tags</td><td>Small — only YC-funded companies</td></tr>
+                <tr><td><strong>Crunchbase</strong> (1 CSV)</td><td>~130K</td><td>Massive coverage, global, includes non-VC companies</td><td>Noisy — many entities aren't real startups, short descriptions</td></tr>
+            </table>
+            <p><strong>Why both?</strong> YC gives us <em>depth</em> (rich descriptions, high signal). Crunchbase gives us <em>breadth</em> (global coverage). Together they cover the full spectrum. The <code>source</code> metadata field lets users filter by source in the UI.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you unify two completely different CSV schemas?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>We define a <strong>STANDARD_COLUMNS</strong> schema in <code>settings.py</code>:</p>
+            <div class="highlight">STANDARD_COLUMNS = [
+    "startup_id", "name", "description", "industry",
+    "tags", "country", "founded_year", "source"
+]</div>
+            <p>Each source has its own <strong>column rename map</strong>:</p>
+            <div class="highlight"># YC: company_name → name, company_id → startup_id, year_founded → founded_year
+YC_COLUMN_MAP = {"company_id": "startup_id", "company_name": "name", ...}
+
+# Crunchbase: id → startup_id, country_code → country, founded_at → founded_at (parsed later)
+CRUNCHBASE_COLUMN_MAP = {"id": "startup_id", "country_code": "country", ...}</div>
+            <p><strong>Process:</strong> Rename columns → apply source-specific cleaning → <code>_finalize_dataframe()</code> applies universal cleaning (text normalization, dedup, description length filter) → <code>pd.concat([yc_df, cb_df])</code> merges into one unified DataFrame.</p>
+            <div class="callout">
+                <strong>Why not join/merge?</strong> These aren't relational datasets with a foreign key. They're independent lists of companies. We <em>concatenate</em> (stack vertically), not merge (join horizontally). Dedup handles overlapping companies.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you handle the description fallback chain?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Crunchbase has <strong>3 description fields</strong> with varying quality:</p>
+            <div class="highlight"># Priority: description > overview > short_description
+df["description"] = (
+    df["description"]
+    .replace("", pd.NA)
+    .fillna(df["overview"])
+    .fillna(df["short_description"])
+)
+
+# If ALL are empty, build a synthetic description:
+fallback_text = "Startup in " + df["industry"] + " industry. Tags: " + df["tags"]
+df["description"] = df["description"].fillna(fallback_text)</div>
+            <p><strong>Why a fallback chain?</strong> Without it, ~30% of Crunchbase records would have empty descriptions — making them invisible to semantic search. The synthetic fallback ensures every startup has <em>some</em> searchable text, even if minimal.</p>
+            <p>YC uses a simpler chain: <code>long_description → short_description</code>.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you handle deduplication?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">df["name_lower"] = df["name"].str.lower()
+df = df.drop_duplicates(subset=["name_lower", "founded_year"])
+df = df.drop(columns=["name_lower"])</div>
+            <p><strong>Why name_lower + founded_year?</strong></p>
+            <ul>
+                <li><strong>name_lower</strong> alone is too aggressive — "Apple" the fruit company vs "Apple" the tech company could exist.</li>
+                <li>Adding <strong>founded_year</strong> gives a second dimension. Two companies with the same name AND same founding year are almost certainly duplicates.</li>
+                <li>We don't use description for dedup because descriptions vary across sources even for the same company.</li>
+            </ul>
+            <div class="callout warn">
+                <strong>Known limitation:</strong> A company in both YC and Crunchbase with slightly different founding years (e.g., 2011 vs 2012 due to data entry) would NOT be deduplicated. A more robust approach would use fuzzy matching (e.g., Levenshtein distance + year tolerance), but for 134K records, exact match is a pragmatic starting point.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is the validation layer and why flag instead of delete?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><code>validation.py</code> adds an <code>is_suspicious</code> boolean column based on 5 rules:</p>
+            <div class="highlight">suspicious = (
+    (name_len < 2)                           # Name too short (e.g., "A")
+    | (desc_len < 20)                        # Description too short
+    | (name matches placeholder pattern)      # "test", "example", "demo", "company1"
+    | (founded_year < 1900)                   # Impossible year
+    | (founded_year > current_year + 1)       # Future year
+)</div>
+            <p><strong>Why flag, not delete?</strong></p>
+            <ul>
+                <li><strong>Non-destructive:</strong> Deleting records is irreversible. Flagging lets downstream consumers decide — the UI could filter them out, but a data analyst might want to inspect them.</li>
+                <li><strong>Metadata-based filtering:</strong> <code>is_suspicious</code> is stored as metadata in the vector store, so you could add a <code>where={"is_suspicious": "False"}</code> filter at query time.</li>
+                <li><strong>Auditability:</strong> You can always count flagged records to assess data quality.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why use ast.literal_eval for tags parsing?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>YC stores tags as Python list literals in CSV cells: <code>"['B2B', 'SaaS', 'Fintech']"</code>. When pandas reads this, it's a <em>string that looks like a list</em>, not an actual list.</p>
+            <div class="highlight"># Input:  "['B2B', 'SaaS', 'Fintech']"   ← string
+# After:  "B2B, SaaS, Fintech"             ← clean comma-separated string
+
+def _parse_tags(value):
+    candidate = value.strip()
+    if candidate.startswith("[") and candidate.endswith("]"):
+        parsed = ast.literal_eval(candidate)  # safely eval the list
+        return ", ".join(str(v).strip() for v in parsed if str(v).strip())
+    return candidate</div>
+            <p><strong>Why <code>ast.literal_eval</code> and not <code>json.loads</code> or <code>eval</code>?</strong></p>
+            <ul>
+                <li><code>eval()</code> — <span class="badge badge-red">DANGER</span> executes arbitrary Python code. Never use on untrusted data.</li>
+                <li><code>json.loads()</code> — Would fail because the list uses <em>single quotes</em> (Python syntax), not double quotes (JSON syntax).</li>
+                <li><code>ast.literal_eval()</code> — <span class="badge badge-green">SAFE</span> only evaluates Python literals (strings, numbers, lists, dicts). Cannot execute arbitrary code.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 3. FIELD SELECTION & TEXT vs METADATA ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="fields"></div>
+    <div class="section-title"><span class="num">03</span> Field Selection — Text vs Metadata</div>
+    <div class="section-sub">The most important architectural decision in any RAG system</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What goes into the embedded text vs metadata? Why?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>This is the <strong>most critical design decision</strong> in the entire pipeline. The split is defined in <code>settings.py</code>:</p>
+            <table class="vs-table">
+                <tr><th>Field</th><th>Text (Embedded)</th><th>Metadata (Filtered)</th><th>Why</th></tr>
+                <tr><td><strong>name</strong></td><td>✅</td><td></td><td>Semantically meaningful — "Stripe" maps to fintech in embedding space</td></tr>
+                <tr><td><strong>industry</strong></td><td>✅</td><td></td><td>Core semantic signal — "AI", "healthcare", "fintech" are what users search by</td></tr>
+                <tr><td><strong>tags</strong></td><td>✅</td><td></td><td>Rich keywords — "B2B, SaaS, API, payments" adds semantic dimensions</td></tr>
+                <tr><td><strong>description</strong></td><td>✅</td><td></td><td>The richest semantic content — what the company does</td></tr>
+                <tr><td><strong>country</strong></td><td>✅</td><td>✅ (DUAL)</td><td>Embedded for "Indian startups" queries + metadata for exact filter <code>{"country": "India"}</code></td></tr>
+                <tr><td><strong>founded_year</strong></td><td>✅</td><td>✅ (DUAL)</td><td>Embedded for "recent startups" queries + metadata for range filter</td></tr>
+                <tr><td><strong>startup_id</strong></td><td></td><td>✅</td><td>Identifier only — no semantic meaning</td></tr>
+                <tr><td><strong>source</strong></td><td></td><td>✅</td><td>Not semantic — but needed for filtering (YC vs Crunchbase)</td></tr>
+                <tr><td><strong>is_suspicious</strong></td><td></td><td>✅</td><td>Quality flag — never embed quality signals</td></tr>
+            </table>
+            <div class="callout success">
+                <strong>The DUAL_FIELDS concept</strong> is a key innovation: <code>country</code> and <code>founded_year</code> appear in BOTH text (for semantic similarity) AND metadata (for exact filtering). This gives users two ways to narrow results — semantic ("startups in India") and exact (sidebar filter for "India").
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why put country and founded_year in BOTH text and metadata?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>Scenario 1 — Semantic query:</strong> User asks <em>"AI startups in India founded after 2020"</em>. The word "India" and "2020" in the document text helps the embedding model find semantically relevant matches.</p>
+            <p><strong>Scenario 2 — Exact filter:</strong> User selects "YC" in the sidebar → we pass <code>where={"source": "YC"}</code> to the vector store. If we also had a country dropdown, we'd pass <code>{"country": "US"}</code>.</p>
+            <p><strong>If country was ONLY in text:</strong> We couldn't do exact filtering — the vector store would return "India" for queries about "Indiana" (semantic similarity).</p>
+            <p><strong>If country was ONLY in metadata:</strong> Searching "Indian fintech" wouldn't match — the embedding wouldn't know the startup is in India.</p>
+            <p><strong>DUAL = best of both worlds</strong> at the cost of slightly larger metadata storage (~8 bytes per field per doc).</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why "Style C" (labeled key-value) for document text format?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>We considered 3 styles:</p>
+            <table class="vs-table">
+                <tr><th>Style</th><th>Example</th><th>Verdict</th></tr>
+                <tr><td><strong>A: Prose</strong></td><td>"Stripe is a fintech company founded in 2010 in the US…"</td><td>❌ Hard to generate consistently from structured data; varies in quality</td></tr>
+                <tr><td><strong>B: Raw concatenation</strong></td><td>"Stripe fintech B2B SaaS US 2010"</td><td>❌ No structure — embedding model can't distinguish name from industry</td></tr>
+                <tr><td><strong>C: Labeled key-value</strong> ✅</td><td>"Name: Stripe\nIndustry: fintech\nTags: B2B, SaaS\nCountry: US\nFounded: 2010\nDescription: Online payments…"</td><td>✅ Best of both — structured labels help the model weight each field properly</td></tr>
+            </table>
+            <div class="highlight">Name: Stripe
+Industry: fintech
+Tags: B2B, SaaS, payments, API, developer tools
+Country: US
+Founded: 2010
+Description: Stripe is a technology company that builds economic infrastructure for the internet.</div>
+            <p><strong>Why this works:</strong> The labels ("Name:", "Industry:") act as <strong>semantic anchors</strong>. When the embedding model sees "Industry: fintech", it understands that "fintech" is the industry — not just a random word. Research on dense retrieval (e.g., DPR, E5) shows that structured text with labels consistently outperforms raw concatenation for retrieval tasks.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why vectorized document building instead of row-by-row?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>We build all 134K documents using <strong>vectorized pandas/numpy</strong> — no Python for-loops over rows:</p>
+            <div class="highlight"># Vectorized: np.where operates on entire columns at once
+labelled = np.where(cleaned != "", label + ": " + cleaned, "")
+
+# NOT: for i, row in df.iterrows(): ... (50x slower)</div>
+            <p><strong>Performance comparison for 134K rows:</strong></p>
+            <table class="vs-table">
+                <tr><th>Approach</th><th>Time</th><th>Why</th></tr>
+                <tr><td><code>df.iterrows()</code></td><td>~60s</td><td>Python loop overhead — each row is a separate Python operation</td></tr>
+                <tr><td><code>df.apply(lambda)</code></td><td>~25s</td><td>Better but still row-by-row under the hood</td></tr>
+                <tr><td><code>np.where + pd.concat</code> ✅</td><td>~2s</td><td>Operations happen in C/NumPy — no Python loop</td></tr>
+            </table>
+            <p>Metadata building is also vectorized: <code>df[meta_cols].to_dict("records")</code> converts the entire DataFrame to a list of dicts in one C-level operation.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why Pydantic for StartupDocument instead of a plain dict or dataclass?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">class StartupDocument(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    text: str
+    metadata: dict</div>
+            <table class="vs-table">
+                <tr><th>Option</th><th>Validation</th><th>Immutability</th><th>Serialization</th></tr>
+                <tr><td>Plain dict</td><td>❌ None</td><td>❌ Mutable</td><td>✅ Built-in</td></tr>
+                <tr><td>dataclass</td><td>❌ None (no type enforcement)</td><td>⚠️ Optional (frozen=True)</td><td>❌ Manual</td></tr>
+                <tr><td>NamedTuple</td><td>❌ None</td><td>✅ Immutable</td><td>❌ Manual</td></tr>
+                <tr><td><strong>Pydantic</strong> ✅</td><td>✅ Runtime type validation</td><td>✅ frozen=True</td><td>✅ .model_dump()</td></tr>
+            </table>
+            <p><strong>Why frozen?</strong> Documents should never change after creation. <code>frozen=True</code> makes the model immutable — any attempt to modify a field raises an error. This prevents bugs where downstream code accidentally mutates a document.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 4. EMBEDDINGS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="embed"></div>
+    <div class="section-title"><span class="num">04</span> Embedding Model & Strategy</div>
+    <div class="section-sub">Why all-MiniLM-L6-v2, batching, and 384 dimensions</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why all-MiniLM-L6-v2 instead of OpenAI embeddings or a larger model?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Model</th><th>Dimension</th><th>Speed (134K docs)</th><th>Cost</th><th>Quality (STS Bench)</th></tr>
+                <tr><td><strong>all-MiniLM-L6-v2</strong> ✅</td><td>384</td><td>~20 min (CPU)</td><td>$0 (local)</td><td>82.4</td></tr>
+                <tr><td>all-mpnet-base-v2</td><td>768</td><td>~60 min (CPU)</td><td>$0 (local)</td><td>83.4</td></tr>
+                <tr><td>OpenAI text-embedding-3-small</td><td>1536</td><td>~15 min (API)</td><td>~$8 for 134K docs</td><td>~83</td></tr>
+                <tr><td>OpenAI text-embedding-3-large</td><td>3072</td><td>~20 min (API)</td><td>~$16 for 134K docs</td><td>~85</td></tr>
+            </table>
+            <p><strong>Why MiniLM?</strong></p>
+            <ul>
+                <li><strong>Free & local:</strong> No API costs, no rate limits, no data leaving your machine — critical for 134K records.</li>
+                <li><strong>Small & fast:</strong> 384-dim vectors are 4x smaller than OpenAI's 1536-dim, meaning 4x less memory in the vector store, 4x faster similarity computation.</li>
+                <li><strong>Quality is sufficient:</strong> For structured labeled text (Style C), the 1-point quality gap vs larger models is negligible. Our labeled format compensates by giving the model more structure to work with.</li>
+                <li><strong>Same model for index + query:</strong> Both document embeddings and query embeddings use the same model, ensuring they live in the same vector space.</li>
+            </ul>
+            <div class="callout warn">
+                <strong>When would you switch?</strong> If query quality degrades on complex queries (e.g., multi-concept like "B2B SaaS in healthcare with AI for emerging markets"), upgrade to <code>all-mpnet-base-v2</code> (768-dim) or OpenAI embeddings. The Strategy Pattern in our vector store makes swapping trivial.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why manual batching instead of just model.encode(all_texts)?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># Our approach: manual batching with logging
+for i in range(n_batches):
+    batch_texts = texts[start_idx:end_idx]
+    embeddings = self._model.encode(batch_texts, show_progress_bar=False)
+    logger.info("Batch %d/%d done — %d docs in %.2fs", ...)</div>
+            <p><strong>Three reasons:</strong></p>
+            <ol>
+                <li><strong>Observability:</strong> At 134K docs (~20 min), you NEED to know progress. SentenceTransformer's built-in progress bar works for notebooks but not for production logging. Our approach logs each batch with timing.</li>
+                <li><strong>Memory control:</strong> Encoding 134K texts at once requires holding all embeddings in memory simultaneously. Batching at 500 docs means only 500 × 384 × 4 bytes ≈ 0.75 MB per batch, not 134K × 384 × 4 bytes ≈ 200 MB all at once.</li>
+                <li><strong>Crash resilience:</strong> If batch 200/268 fails, you know exactly where to resume. With a single call, you'd lose everything.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why return numpy arrays instead of Python lists?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><code>StartupEmbedder.encode()</code> returns <code>np.ndarray</code> of shape <code>(N, 384)</code>:</p>
+            <ul>
+                <li><strong>Memory:</strong> NumPy stores 134K × 384 floats as a contiguous C array (~200 MB). A Python list of lists would be ~800 MB (each float is a 28-byte Python object).</li>
+                <li><strong>Speed:</strong> FAISS <code>index.add()</code> and ChromaDB both accept numpy arrays natively. Converting from lists adds unnecessary overhead.</li>
+                <li><strong>Slicing:</strong> <code>embeddings[start:end]</code> is a zero-copy view on numpy. On a list, it creates a new list.</li>
+                <li><strong>Normalization:</strong> FAISS's <code>normalize_L2()</code> operates in-place on numpy — impossible with Python lists.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 5. VECTOR STORE ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="vector"></div>
+    <div class="section-title"><span class="num">05</span> Vector Store — Strategy Pattern</div>
+    <div class="section-sub">ChromaDB vs FAISS, cosine similarity, factory function</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why the Strategy Pattern (ABC + Factory) for vector stores?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># ABC base class
+class VectorStoreBase(ABC):
+    @abstractmethod def count(self): ...
+    @abstractmethod def add(self, texts, embeddings, metadatas): ...
+    @abstractmethod def query(self, query_embedding, top_k, where): ...
+    @abstractmethod def reset(self): ...
+
+# Factory function
+def create_vector_store(backend="chroma"):
+    if backend == "chroma": return ChromaStore()
+    if backend == "faiss":  return FAISSStore()
+
+# Usage — the rest of the code doesn't know which backend it's using
+store = create_vector_store(settings.VECTOR_STORE_BACKEND)</div>
+            <p><strong>Why this pattern?</strong></p>
+            <ol>
+                <li><strong>Open/Closed Principle:</strong> Adding a new backend (e.g., Pinecone, Weaviate, Qdrant) means creating a new class + one line in the factory. Zero changes to Retriever, Chain, UI.</li>
+                <li><strong>Testability:</strong> Unit tests can inject a mock vector store. Integration tests can use FAISS (fast, no server) while production uses ChromaDB.</li>
+                <li><strong>Config-driven swap:</strong> Change <code>VECTOR_STORE_BACKEND = "faiss"</code> in settings.py — entire system switches backends without touching any other file.</li>
+                <li><strong>Lazy imports:</strong> The factory uses <code>from ... import ChromaStore</code> inside the if-block, so FAISS is never imported if using ChromaDB (and vice versa). This avoids import errors if one library isn't installed.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">ChromaDB vs FAISS — when to choose which?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Feature</th><th>ChromaDB ✅ (Our default)</th><th>FAISS</th></tr>
+                <tr><td>Setup complexity</td><td>Zero — stores everything in one dir</td><td>Need JSON sidecar for text + metadata</td></tr>
+                <tr><td>Metadata filtering</td><td>✅ Native — <code>where={"source": "YC"}</code></td><td>❌ Post-filter only (over-fetch then discard)</td></tr>
+                <tr><td>Persistence</td><td>Built-in PersistentClient</td><td>Manual — <code>faiss.write_index()</code> + JSON save</td></tr>
+                <tr><td>Scalability</td><td>Good to ~1M docs</td><td>Excellent — handles billions with IVF/PQ indexes</td></tr>
+                <tr><td>GPU support</td><td>❌ Not direct</td><td>✅ faiss-gpu for massive scale</td></tr>
+                <tr><td>Approximate NN</td><td>HNSW (built-in)</td><td>IVF, PQ, HNSW — configurable</td></tr>
+                <tr><td>Ecosystem</td><td>Python-first, great for prototyping</td><td>Facebook Research, industry standard</td></tr>
+            </table>
+            <p><strong>Why ChromaDB as default:</strong> For 134K docs, ChromaDB's native metadata filtering and zero-config persistence are worth more than FAISS's raw speed. FAISS becomes essential at 10M+ docs or when GPU acceleration is needed.</p>
+            <div class="callout">
+                <strong>FAISS trick:</strong> We use <code>IndexFlatIP</code> (inner product) with <code>normalize_L2()</code> on all vectors. Inner product on L2-normalized vectors = cosine similarity. This is mathematically equivalent to <code>IndexFlatL2</code> with a distance-to-similarity conversion, but simpler — higher score = more similar.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why cosine similarity and not Euclidean distance or dot product?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Metric</th><th>What it measures</th><th>Issue for text</th></tr>
+                <tr><td><strong>Euclidean (L2)</strong></td><td>Straight-line distance in vector space</td><td>Sensitive to magnitude — a long document about fintech might be farther from a short fintech query than a long healthcare document</td></tr>
+                <tr><td><strong>Dot product</strong></td><td>Projection of one vector onto another</td><td>Biased toward longer vectors — favors documents with more text</td></tr>
+                <tr><td><strong>Cosine similarity</strong> ✅</td><td>Angle between vectors (direction, not magnitude)</td><td>✅ Ignores magnitude — a 3-word fintech description and a 100-word one are equally close to a fintech query if they point the same direction</td></tr>
+            </table>
+            <p><strong>In our system:</strong> Document lengths vary wildly — YC descriptions average ~200 chars, Crunchbase ~50 chars. Cosine similarity ensures short descriptions aren't disadvantaged.</p>
+            <p><strong>Implementation:</strong></p>
+            <ul>
+                <li><strong>ChromaDB:</strong> <code>metadata={"hnsw:space": "cosine"}</code> on collection creation</li>
+                <li><strong>FAISS:</strong> <code>faiss.normalize_L2(vectors)</code> + <code>IndexFlatIP</code> — mathematically equivalent to cosine</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does FAISS handle metadata filtering without native support?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>FAISS only stores vectors — no text, no metadata. Our FAISS backend uses a <strong>JSON sidecar</strong> pattern:</p>
+            <div class="highlight"># On add: store text + metadata in a JSON file
+self._docstore[f"doc_{j}"] = {"text": texts[j], "metadata": metadatas[j]}
+self._save_docstore()  # writes to docstore.json
+
+# On query: over-fetch then post-filter
+fetch_k = top_k * 3 if where else top_k   # fetch 3x more
+distances, indices = self._index.search(query_vec, fetch_k)
+
+for dist, idx in zip(distances, indices):
+    entry = self._docstore[f"doc_{idx}"]
+    if where and not self._matches_filter(entry["metadata"], where):
+        continue   # skip non-matching
+    results.append(...)
+    if len(results) >= top_k: break</div>
+            <p><strong>The 3x over-fetch strategy:</strong> If user wants top-5 with <code>source=YC</code>, we fetch top-15 from FAISS (without filter), then discard Crunchbase results in Python. The 3x multiplier is a heuristic — works well when the filtered subset is ≥30% of the data.</p>
+            <div class="callout warn">
+                <strong>Trade-off:</strong> Post-filtering can return fewer than top_k results if the filter is very selective (e.g., filtering for a rare country). ChromaDB's native filtering doesn't have this issue.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 6. RAG CHAIN ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="rag"></div>
+    <div class="section-title"><span class="num">06</span> RAG Chain & Query Expansion</div>
+    <div class="section-sub">The core intelligence — how queries become grounded answers</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is query expansion and why was it critical?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>The problem we discovered:</strong> When a user asks <em>"Find startups similar to Stripe"</em>, the embedding model encodes the word "Stripe" as-is. But our startup documents don't contain the word "Stripe" — they describe their OWN products. The embedding for "Stripe" is close to documents containing the word "Startup" (string similarity) rather than documents about fintech payments.</p>
+            <p><strong>Before query expansion:</strong></p>
+            <div class="highlight">Query: "Find startups similar to Stripe"
+Results: StartupBus, Startup Genome, Startupbootcamp  ← matched on "Startup", not fintech!</div>
+            <p><strong>After query expansion:</strong></p>
+            <div class="highlight">Query: "Find startups similar to Stripe"
+  ↓ LLM expands to:
+"online payment processing fintech developer API billing infrastructure internet commerce"
+  ↓ Embedding matches on actual business domains
+Results: Paid, Allied Payment Network, Intrannuity  ← real fintech companies!</div>
+            <p><strong>How it works:</strong> Before embedding the query, we send it to the LLM with a specialized prompt that rewrites it into <em>domain vocabulary</em>:</p>
+            <div class="highlight">_EXPAND_PROMPT = """You are a search query optimizer for a startup database.
+Rewrite it into a rich, descriptive search query that captures the
+BUSINESS DOMAIN, INDUSTRY, KEY PRODUCTS, and TECHNOLOGY.
+Output ONLY the rewritten query, nothing else.
+
+Examples:
+  User: Find startups similar to Stripe
+  Rewritten: online payment processing fintech developer API billing infrastructure
+
+  User: competitors of Airbnb
+  Rewritten: short-term rental marketplace vacation home booking hospitality travel"""</div>
+            <div class="callout success">
+                <strong>This is a form of "HyDE" (Hypothetical Document Embeddings)</strong> — a technique where you use the LLM to generate a hypothetical document that would answer the query, then embed THAT instead of the raw query. Our approach is a lightweight version: instead of generating a full hypothetical document, we generate expanded search terms.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why Dependency Injection in the Retriever?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">class StartupRetriever:
+    def __init__(self, embedder: StartupEmbedder, store: VectorStoreBase):
+        self._embedder = embedder   # injected, not created
+        self._store = store         # injected, not created
+
+# The retriever doesn't know or care which vector store it's using
+retriever = StartupRetriever(embedder, chroma_store)  # or faiss_store</div>
+            <p><strong>Benefits:</strong></p>
+            <ul>
+                <li><strong>Testability:</strong> In tests, inject a mock embedder that returns fixed vectors + a mock store that returns fixed results. Test retrieval logic without loading a 90MB model.</li>
+                <li><strong>Decoupling:</strong> Retriever doesn't import ChromaStore or FAISSStore. It works with any <code>VectorStoreBase</code>. Swap backends without touching retriever code.</li>
+                <li><strong>Single Responsibility:</strong> Retriever's only job: encode query + call store. It doesn't manage embedder lifecycle, store connections, or config.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why does the Chain use the original query for the prompt but the expanded query for retrieval?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># Step 1: Expand for RETRIEVAL (semantic search)
+search_query = self._expand_query(query)  # "Stripe" → "fintech payments API..."
+results = self._retriever.retrieve(query=search_query, ...)
+
+# Step 2: Use ORIGINAL query for LLM PROMPT
+prompt = get_prompt(analysis_type, query=query, documents=...)
+#                                   ↑ original "Find startups similar to Stripe"</div>
+            <p><strong>Why?</strong> The expanded query is optimized for the <em>embedding model</em> — it's a bag of keywords. But the LLM needs the <em>user's original intent</em> to generate a coherent response. If we sent "online payment processing fintech developer API billing" to the LLM, it wouldn't know the user was asking about Stripe specifically.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why TOP_K = 5 as the default?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ul>
+                <li><strong>Context window budget:</strong> Each document is ~200-500 chars of Style C text. 5 docs ≈ 1,500–2,500 chars ≈ 500-800 tokens. GPT-4o-mini has 128K context, but more context = more cost + slower + more noise.</li>
+                <li><strong>Relevance decay:</strong> In practice, results #6+ often have low relevance scores. Including them adds noise to the LLM prompt.</li>
+                <li><strong>UX:</strong> Users can cognitively process ~5 source cards. 20 source documents would overwhelm the UI.</li>
+                <li><strong>Configurable:</strong> The sidebar slider lets users increase to 20 for broader exploration or decrease to 3 for focused analysis.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 7. LLM & PROMPTS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="llm"></div>
+    <div class="section-title"><span class="num">07</span> LLM Choice & Prompt Engineering</div>
+    <div class="section-sub">GPT-4o-mini, temperature tuning, 6 specialized templates</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why GPT-4o-mini and not GPT-4o or Claude or an open-source LLM?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Model</th><th>Cost (per 1M tokens)</th><th>Speed</th><th>Quality</th><th>Verdict</th></tr>
+                <tr><td><strong>GPT-4o-mini</strong> ✅</td><td>$0.15 input / $0.60 output</td><td>Very fast (~1s)</td><td>Excellent for structured analysis</td><td>Best cost/quality ratio</td></tr>
+                <tr><td>GPT-4o</td><td>$2.50 / $10</td><td>Moderate (~3s)</td><td>Slightly better for complex reasoning</td><td>17x more expensive for marginal improvement</td></tr>
+                <tr><td>Claude 3.5 Sonnet</td><td>$3 / $15</td><td>Moderate</td><td>Excellent</td><td>Different API, similar price to GPT-4o</td></tr>
+                <tr><td>Llama 3 (local)</td><td>$0 (hardware cost)</td><td>Slow on CPU</td><td>Good but not as strong on structured output</td><td>Good for privacy-critical deployments</td></tr>
+            </table>
+            <p><strong>Key reasoning:</strong> Our prompts are well-structured with clear formatting instructions. GPT-4o-mini follows structured prompts extremely well — the quality gap vs GPT-4o is negligible for our use case. At 17x lower cost, it's the pragmatic choice.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why temperature=0.3 and not 0?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ul>
+                <li><strong>Temperature 0:</strong> Deterministic — always the same output for the same input. Good for factual Q&A, but produces robotic, repetitive text for analysis.</li>
+                <li><strong>Temperature 0.3:</strong> Mostly deterministic with slight creativity. The LLM can rephrase, find interesting angles, vary sentence structure — while staying grounded in the data.</li>
+                <li><strong>Temperature 0.7-1.0:</strong> Too creative for data analysis — might hallucinate connections or make unsupported claims.</li>
+            </ul>
+            <p><strong>Exception:</strong> Query expansion uses <code>temperature=0.0</code> because we want <em>consistent, predictable</em> keyword expansion — not creative rewriting.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why 6 separate prompt templates instead of one generic prompt?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>One generic prompt</strong> ("Analyze these startups based on the user's question") produces inconsistent output — sometimes a list, sometimes prose, sometimes a table.</p>
+            <p><strong>6 specialized templates</strong> give the LLM explicit output structure:</p>
+            <table class="vs-table">
+                <tr><th>Type</th><th>Template Forces</th><th>Example Output Structure</th></tr>
+                <tr><td>auto</td><td>LLM decides best format</td><td>Varies — good for ambiguous queries</td></tr>
+                <tr><td>similar</td><td>Numbered list with similarity explanations</td><td>"1. <strong>Paid</strong> (US, 2019) — Similar because..."</td></tr>
+                <tr><td>swot</td><td>## Strengths / Weaknesses / Opportunities / Threats</td><td>Structured 4-quadrant analysis</td></tr>
+                <tr><td>competitor</td><td>Direct / Indirect / Differentiators / Positioning</td><td>Competitive landscape map</td></tr>
+                <tr><td>comparison</td><td>Markdown table + narrative</td><td>Side-by-side comparison grid</td></tr>
+                <tr><td>ecosystem</td><td>Overview / Key Players / Sub-segments / Trends / Gaps</td><td>Industry ecosystem map</td></tr>
+            </table>
+            <p><strong>The "_BASE_ROLE" prefix</strong> is shared across all templates — it tells the LLM it's "BizIntel, an AI-powered startup intelligence analyst" with access to 134K+ startups and must use ONLY the provided data. This grounding instruction prevents hallucination.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you prevent the LLM from hallucinating startup data?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>Four layers of defense:</strong></p>
+            <ol>
+                <li><strong>Grounding instruction in prompt:</strong> <em>"Use ONLY the startup data provided below to answer. If the data is insufficient, say so clearly."</em></li>
+                <li><strong>Only retrieved documents in context:</strong> The LLM never sees the full database — only 5 relevant documents. It can't make up companies that aren't in the context.</li>
+                <li><strong>Source cards in UI:</strong> Every answer shows the exact documents used. Users can verify claims against sources.</li>
+                <li><strong>Low temperature (0.3):</strong> Reduces creative/hallucinatory tendencies.</li>
+            </ol>
+            <div class="callout">
+                <strong>Verified in testing:</strong> We queried "Find startups similar to Stripe" and confirmed every result (Paid, Allied Payment Network, Intrannuity) exists in our dataset with matching metadata (source=YC/Crunchbase, correct countries and founding years).
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 8. STREAMLIT UI ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="ui"></div>
+    <div class="section-title"><span class="num">08</span> Streamlit UI & State Management</div>
+    <div class="section-sub">Chat interface, session state, @st.cache_resource</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why Streamlit and not Flask/FastAPI or React?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Framework</th><th>Pros</th><th>Cons</th><th>Best For</th></tr>
+                <tr><td><strong>Streamlit</strong> ✅</td><td>Python-only, built-in chat UI, <code>@st.cache_resource</code>, rapid prototyping</td><td>Not production-scale (single process)</td><td>Data apps, ML demos, internal tools</td></tr>
+                <tr><td>Gradio</td><td>Simple, great for ML demos</td><td>Limited layout control, no chat history</td><td>Quick model demos</td></tr>
+                <tr><td>FastAPI + React</td><td>Production-grade, scalable, full control</td><td>2 codebases (Python + JS), 10x more code</td><td>Production SaaS</td></tr>
+                <tr><td>Flask + Jinja</td><td>Flexible, well-known</td><td>Manual everything — no built-in chat, no state</td><td>Traditional web apps</td></tr>
+            </table>
+            <p><strong>Key reasons:</strong> Streamlit's <code>st.chat_message</code>, <code>st.chat_input</code>, and <code>st.session_state</code> give us a ChatGPT-like interface in ~170 lines of Python. With FastAPI + React, the same UI would be ~1,000+ lines across two codebases.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why @st.cache_resource and not @st.cache_data?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">@st.cache_resource(show_spinner="Loading embedding model…")
+def load_embedder() -> StartupEmbedder:
+    return StartupEmbedder()  # loads 90MB model
+
+@st.cache_resource(show_spinner="Connecting to vector store…")
+def load_vector_store() -> VectorStoreBase:
+    return create_vector_store()  # opens ChromaDB connection</div>
+            <p><strong>Streamlit reruns the entire script on every user interaction</strong> (every click, every keystroke). Without caching, we'd reload the 90MB embedding model and reconnect to ChromaDB 50+ times per session.</p>
+            <table class="vs-table">
+                <tr><th>Decorator</th><th>Returns</th><th>Serialization</th><th>Use For</th></tr>
+                <tr><td><code>@st.cache_data</code></td><td>Serializable data (dicts, DataFrames)</td><td>Pickles the return value</td><td>Data transformations, CSV loading</td></tr>
+                <tr><td><code>@st.cache_resource</code> ✅</td><td>Shared objects (models, DB connections)</td><td>Stores the reference (no copy)</td><td>ML models, DB clients, API clients</td></tr>
+            </table>
+            <p><strong>Why not <code>@st.cache_data</code>?</strong> Our embedder contains a PyTorch model — it can't be pickled/serialized efficiently. <code>@st.cache_resource</code> stores the object reference directly, so all users share the same model instance in memory.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you handle the "quick action buttons" triggering a query?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># In render_welcome():
+if st.button(icon_label, key=f"ex_{icon_label}"):
+    st.session_state.messages.append({"role": "user", "content": query})
+    st.session_state._pending_query = query
+    st.rerun()   # force a re-execution
+
+# At the bottom of streamlit_app.py:
+pending = st.session_state.pop("_pending_query", None)
+if pending:
+    _process_query(pending)</div>
+            <p><strong>The trick:</strong> Streamlit button clicks trigger a rerun. We can't call <code>_process_query()</code> directly inside the button handler because the function definition might not exist yet (Streamlit's top-to-bottom execution model). So we:</p>
+            <ol>
+                <li>Store the query in <code>st.session_state._pending_query</code></li>
+                <li>Call <code>st.rerun()</code> to restart the script</li>
+                <li>At the bottom of the script, check for pending queries and process them</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 9. TRADE-OFFS & KNOWN LIMITATIONS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="tradeoffs"></div>
+    <div class="section-title"><span class="num">09</span> Trade-offs & Known Limitations</div>
+    <div class="section-sub">What you'd improve with more time — shows maturity in interviews</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are the known limitations and how would you fix them?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Limitation</th><th>Impact</th><th>Fix</th></tr>
+                <tr><td>Country code inconsistency (YC: "US", CB: "USA")</td><td>Filtering by country may miss results</td><td>Add a country code normalizer in preprocessing (e.g., pycountry library)</td></tr>
+                <tr><td>No streaming LLM responses</td><td>User waits 2-4s for full response</td><td>Use <code>stream=True</code> in OpenAI SDK + <code>st.write_stream()</code></td></tr>
+                <tr><td>Single-process Streamlit</td><td>Can't handle many concurrent users</td><td>Deploy with load balancer + multiple Streamlit instances, or migrate to FastAPI</td></tr>
+                <tr><td>No hybrid search (semantic + keyword)</td><td>Exact name matches may be missed</td><td>Add BM25 keyword search alongside semantic, then fuse results (Reciprocal Rank Fusion)</td></tr>
+                <tr><td>No incremental indexing</td><td>Must re-embed everything on data update</td><td>Hash document text, only embed new/changed docs</td></tr>
+                <tr><td>FAISS post-filter may return < top_k</td><td>Rare — when filter is very selective</td><td>Increase over-fetch multiplier, or use FAISS with IDSelector for pre-filtering</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How would you make this production-ready?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ol>
+                <li><strong>API layer:</strong> FastAPI REST API wrapping the chain → decouple backend from UI</li>
+                <li><strong>Auth:</strong> API key / OAuth for multi-tenant access</li>
+                <li><strong>Managed vector DB:</strong> Pinecone / Weaviate Cloud for zero-ops, automatic scaling, backups</li>
+                <li><strong>Streaming:</strong> SSE (Server-Sent Events) for real-time LLM token streaming</li>
+                <li><strong>Caching:</strong> Redis cache for repeated queries (same query + analysis type → cached response)</li>
+                <li><strong>Monitoring:</strong> LangSmith / Langfuse for tracing RAG pipeline (retrieval quality, LLM latency, token usage)</li>
+                <li><strong>CI/CD:</strong> GitHub Actions → build → test → deploy to Cloud Run / ECS</li>
+                <li><strong>Evaluation:</strong> Build an eval dataset (50+ question-answer pairs) and measure retrieval precision@5, answer faithfulness, answer relevance</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How would you evaluate RAG quality systematically?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>Three-level evaluation framework (RAGAs pattern):</strong></p>
+            <table class="vs-table">
+                <tr><th>Level</th><th>Metric</th><th>What It Measures</th><th>How to Compute</th></tr>
+                <tr><td><strong>Retrieval</strong></td><td>Precision@K</td><td>% of retrieved docs that are relevant</td><td>Human-labeled relevance judgments</td></tr>
+                <tr><td><strong>Retrieval</strong></td><td>Recall@K</td><td>% of relevant docs that were retrieved</td><td>Need a ground-truth set of relevant docs per query</td></tr>
+                <tr><td><strong>Generation</strong></td><td>Faithfulness</td><td>Is every claim in the answer supported by retrieved docs?</td><td>LLM-as-judge: "Does the answer only use information from the sources?"</td></tr>
+                <tr><td><strong>Generation</strong></td><td>Answer Relevance</td><td>Does the answer actually address the query?</td><td>LLM-as-judge: "Does this answer the user's question?"</td></tr>
+                <tr><td><strong>End-to-End</strong></td><td>User Satisfaction</td><td>Would a user find this response helpful?</td><td>Human evaluation on 1-5 scale</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 10. ADVANCED / FOLLOW-UP ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="advanced"></div>
+    <div class="section-title"><span class="num">10</span> Advanced Questions & Follow-ups</div>
+    <div class="section-sub">Deep-dive questions an interviewer might ask to test depth</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why not use LangChain instead of building your own chain?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Aspect</th><th>LangChain</th><th>Our Custom Chain ✅</th></tr>
+                <tr><td>Lines of code</td><td>~20 lines (high-level API)</td><td>~70 lines (chain.py)</td></tr>
+                <tr><td>Understanding</td><td>Black box — hard to debug what's happening inside</td><td>Every step is visible and debuggable</td></tr>
+                <tr><td>Dependencies</td><td>Massive — LangChain pulls 50+ transitive deps</td><td>Just <code>openai</code> SDK — one direct dependency</td></tr>
+                <tr><td>Customization</td><td>Must learn LangChain's abstraction hierarchy (Chains, Agents, Runnable)</td><td>Plain Python — query expansion was 15 lines to add</td></tr>
+                <tr><td>Lock-in</td><td>Tied to LangChain's versioning (frequent breaking changes)</td><td>Only tied to OpenAI SDK (stable, well-documented)</td></tr>
+            </table>
+            <div class="callout success">
+                <strong>Interview framing:</strong> "I chose to build a custom chain because I wanted to understand every step of the RAG pipeline — query expansion, retrieval, prompt engineering, response packaging. LangChain is great for rapid prototyping, but for a project where I'm learning and demonstrating understanding, explicit code is more valuable."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why not chunk the documents? RAG systems typically use chunking.</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>Chunking is for long documents</strong> (PDFs, articles, books) where a single document exceeds the embedding model's token limit (typically 256-512 tokens). Our startup documents are <strong>short</strong>:</p>
+            <ul>
+                <li>Average document: ~100-250 tokens (Style C format)</li>
+                <li>Max document: ~400 tokens (rich YC descriptions)</li>
+                <li>Model limit: 512 tokens (all-MiniLM-L6-v2)</li>
+            </ul>
+            <p><strong>Every startup is ONE document = ONE embedding.</strong> No need to chunk because:</p>
+            <ol>
+                <li>Documents fit within the model's context window</li>
+                <li>Each startup is an atomic entity — splitting it would lose meaning</li>
+                <li>No chunk-boundary issues (e.g., a sentence split across two chunks)</li>
+                <li>Retrieval is at startup level, not passage level — we want to find <em>companies</em>, not paragraphs</li>
+            </ol>
+            <div class="callout warn">
+                <strong>When would you chunk?</strong> If we added long-form data (press releases, SEC filings, blog posts), we'd need chunking. A good strategy: <code>RecursiveCharacterTextSplitter</code> at 500 tokens with 50-token overlap, preserving the startup_id in chunk metadata for parent-document retrieval.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does ChromaDB's HNSW index work at a high level?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>HNSW (Hierarchical Navigable Small World)</strong> is an approximate nearest-neighbor algorithm:</p>
+            <ol>
+                <li><strong>Multi-layer graph:</strong> Imagine a skip-list but for vectors. Top layers have few nodes (long-range connections), bottom layers have all nodes (short-range connections).</li>
+                <li><strong>Search:</strong> Start at the top layer, greedily walk toward the query vector. Drop to lower layers for finer navigation. Like zooming in on Google Maps.</li>
+                <li><strong>Trade-off:</strong> <code>ef_construction</code> (build quality) and <code>ef_search</code> (search quality) control speed vs accuracy. Higher = more accurate but slower.</li>
+            </ol>
+            <p><strong>For our 134K dataset:</strong> HNSW query takes ~5ms (vs ~50ms for brute-force flat scan). At 134K documents, even brute force is fast enough, but HNSW gives us headroom to scale to millions.</p>
+            <p><strong>Contrast with FAISS IndexFlatIP:</strong> Our FAISS backend uses exact (brute-force) search — it checks every vector. This is simpler, always correct, but O(n). HNSW is O(log n) amortized. For 134K, the difference is negligible; for 10M+, HNSW wins decisively.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why OpenAI SDK directly and not through an abstraction?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># Our approach — direct SDK call
+response = self._client.chat.completions.create(
+    model=self._model,
+    messages=[{"role": "user", "content": prompt}],
+    temperature=self._temperature,
+    max_tokens=self._max_tokens,
+)
+answer = response.choices[0].message.content</div>
+            <p><strong>Why direct?</strong></p>
+            <ul>
+                <li><strong>Transparency:</strong> You can see exactly what's being sent to the API — the model, the messages array, the temperature. No hidden prompt injection from a framework.</li>
+                <li><strong>Debugging:</strong> If something goes wrong, the stack trace points to <em>our code</em>, not into a framework's internals.</li>
+                <li><strong>Minimal dependency:</strong> <code>openai</code> SDK is the thinnest possible layer over the HTTP API. Frameworks add layers that can break, have bugs, or change APIs.</li>
+                <li><strong>Easy to swap:</strong> To switch to Claude, replace <code>OpenAI()</code> with <code>Anthropic()</code> and adjust the message format. The interface is nearly identical.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you handle secrets (OPENAI_API_KEY)?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight"># chain.py — loads .env at import time
+from dotenv import load_dotenv
+_env_path = Path(__file__).resolve().parents[3] / ".env"
+load_dotenv(_env_path)
+
+# Later:
+api_key = os.environ.get("OPENAI_API_KEY")</div>
+            <p><strong>Three layers of protection:</strong></p>
+            <ol>
+                <li><strong>.env file</strong> stores the key in the project root — never committed to git</li>
+                <li><strong>.gitignore</strong> explicitly excludes <code>.env</code></li>
+                <li><strong>.env.example</strong> committed to git with <code>OPENAI_API_KEY=sk-your-key-here</code> — shows other developers what's needed without exposing the actual key</li>
+            </ol>
+            <p><strong>Why <code>parents[3]</code>?</strong> <code>chain.py</code> is at <code>src/bizintel/rag/chain.py</code> — 3 levels up from the file reaches the project root where <code>.env</code> lives.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What design patterns did you use and why?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Pattern</th><th>Where</th><th>Why</th></tr>
+                <tr><td><strong>Strategy</strong></td><td>VectorStoreBase ABC + ChromaStore / FAISSStore</td><td>Swap vector store backends via config without changing business logic</td></tr>
+                <tr><td><strong>Factory</strong></td><td><code>create_vector_store(backend)</code></td><td>Centralized object creation — caller doesn't need to know class names</td></tr>
+                <tr><td><strong>Dependency Injection</strong></td><td>Retriever, Chain</td><td>Components receive dependencies, don't create them — testable, decoupled</td></tr>
+                <tr><td><strong>Immutable Value Object</strong></td><td>StartupDocument, SearchResult (frozen Pydantic)</td><td>Prevent accidental mutation of data flowing through the pipeline</td></tr>
+                <tr><td><strong>Template Method</strong></td><td>Prompt templates (shared _BASE_ROLE + type-specific body)</td><td>Common behavior (role definition) + variable behavior (output format)</td></tr>
+                <tr><td><strong>Pipeline</strong></td><td>Offline: CSV → Clean → Docs → Embed → Store<br>Online: Query → Expand → Retrieve → Prompt → LLM</td><td>Each stage transforms data for the next — clear, testable, debuggable</td></tr>
+                <tr><td><strong>Singleton (via cache)</strong></td><td><code>@st.cache_resource</code> loaders</td><td>Expensive resources (model, DB connection) created once, shared across reruns</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Walk me through exactly what happens when a user types "Find startups similar to Stripe".</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ol>
+                <li><strong>Streamlit captures input</strong> → <code>st.chat_input()</code> returns "Find startups similar to Stripe"</li>
+                <li><strong>Message saved</strong> → appended to <code>st.session_state.messages</code></li>
+                <li><strong><code>chain.analyze()</code> called</strong> with <code>query="Find startups similar to Stripe"</code>, <code>analysis_type="similar"</code></li>
+                <li><strong>Query expansion</strong> → LLM call (temp=0.0): "Stripe" → <em>"online payment processing fintech developer API billing infrastructure internet commerce"</em></li>
+                <li><strong>Retriever.retrieve()</strong> → <code>embedder.encode_single(expanded_query)</code> → 384-dim numpy vector</li>
+                <li><strong>Vector store query</strong> → ChromaDB <code>.query(embedding, top_k=5)</code> → returns 5 SearchResults with text + metadata + cosine distances</li>
+                <li><strong>Prompt building</strong> → <code>get_prompt("similar", original_query, documents_text)</code> → complete prompt with retrieved docs + formatting instructions</li>
+                <li><strong>LLM call</strong> → OpenAI <code>chat.completions.create()</code> with the prompt → gets structured analysis</li>
+                <li><strong>Response packaging</strong> → <code>{"answer": "...", "sources": [...], "analysis_type": "similar", "model": "gpt-4o-mini"}</code></li>
+                <li><strong>UI rendering</strong> → <code>st.markdown(answer)</code> + <code>render_sources(sources)</code> + timing footer</li>
+                <li><strong>State saved</strong> → response appended to <code>st.session_state.messages</code> for chat history</li>
+            </ol>
+            <p><strong>Total latency breakdown:</strong></p>
+            <div class="highlight">Query expansion:     ~0.5s  (LLM call, temp=0.0, 120 tokens)
+Query embedding:     ~0.01s (single text, local model)
+Vector search:       ~0.01s (ChromaDB HNSW on 134K docs)
+Prompt building:     ~0.001s (string formatting)
+LLM generation:      ~2-4s  (gpt-4o-mini, ~500 output tokens)
+────────────────────────────
+Total:               ~3-5s</div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">If the dataset grew to 10 million startups, what would break and how would you fix it?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Component</th><th>Would it break?</th><th>Fix</th></tr>
+                <tr><td>CSV loading (pandas)</td><td>⚠️ ~40GB CSV won't fit in memory</td><td>Switch to Polars, DuckDB, or Spark for out-of-core processing</td></tr>
+                <tr><td>Document building</td><td>⚠️ 10M Pydantic objects = ~20GB RAM</td><td>Streaming/generator pattern — build and embed in chunks, don't hold all docs in memory</td></tr>
+                <tr><td>Embedding (MiniLM on CPU)</td><td>❌ ~24 hours on CPU</td><td>GPU embedding (A100: ~20 min), or OpenAI batch API</td></tr>
+                <tr><td>ChromaDB</td><td>⚠️ Slow at 10M, no horizontal scaling</td><td>Switch to Qdrant, Weaviate, or Pinecone for distributed vector search</td></tr>
+                <tr><td>FAISS (IndexFlatIP)</td><td>⚠️ Brute force too slow at 10M</td><td>Switch to <code>IndexIVFFlat</code> or <code>IndexIVFPQ</code> for approximate search (100x faster)</td></tr>
+                <tr><td>Query expansion</td><td>✅ Fine — single LLM call per query</td><td>No change needed</td></tr>
+                <tr><td>LLM generation</td><td>✅ Fine — only sees top-K docs</td><td>No change needed</td></tr>
+            </table>
+            <div class="callout">
+                <strong>Key insight:</strong> The offline pipeline scales linearly — 10x data = 10x time. But the online pipeline (per-query) doesn't change because we only retrieve top-K. RAG's retrieval step is the scalability bottleneck, which is solved by approximate NN indexes (HNSW, IVF, PQ).
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What was the hardest bug you encountered and how did you fix it?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><strong>The semantic mismatch bug.</strong></p>
+            <p>When we first tested <em>"Find startups similar to Stripe"</em>, the results were StartupBus, Startup Genome, Startupbootcamp — companies with "Startup" in their name, not fintech companies.</p>
+            <p><strong>Root cause analysis:</strong></p>
+            <ol>
+                <li>The embedding model encodes "Stripe" as a short, ambiguous token</li>
+                <li>The word "Startup" appears in many company names, creating a high-frequency cluster in embedding space</li>
+                <li>Cosine similarity between "Stripe" and "StartupBus" was higher than between "Stripe" and "online payment processing" because the embedding model doesn't have world knowledge about what Stripe does</li>
+            </ol>
+            <p><strong>Solution:</strong> Query expansion — use the LLM (which DOES have world knowledge) to translate "Stripe" into the domain vocabulary that actually appears in our documents: "online payment processing fintech developer API billing infrastructure".</p>
+            <p><strong>Result:</strong> After adding <code>_expand_query()</code> (15 lines of code), the same query returned Paid, Allied Payment Network, Intrannuity — real fintech companies verified in our dataset.</p>
+            <div class="callout success">
+                <strong>Interview framing:</strong> "This bug taught me that embedding models are <em>encoders</em>, not <em>knowledge bases</em>. They encode text into geometric positions based on linguistic patterns. For proper noun queries, you need a bridge — an LLM that can translate proper nouns into the domain vocabulary that the embedding model was trained on."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why not use a knowledge graph instead of/alongside vector search?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>A knowledge graph (e.g., Neo4j) would model explicit relationships: "Stripe → funded_by → YC", "Stripe → competes_with → Adyen". This is powerful but:</p>
+            <ul>
+                <li><strong>We don't have relationship data.</strong> Our CSVs are flat records — no investor, acquisition, or partnership edges. Building a KG from scratch would require entity resolution and relationship extraction (a separate ML pipeline).</li>
+                <li><strong>Semantic search is more flexible.</strong> A KG can answer "Who competes with Stripe?" only if that edge exists. Vector search answers it by finding companies with similar descriptions — even if no explicit "competes_with" edge was ever created.</li>
+                <li><strong>Hybrid opportunity:</strong> In a future version, we could add a KG for <em>explicit</em> relationships (investor, market) and use vector search for <em>implicit</em> similarity. This is called <strong>GraphRAG</strong> — Microsoft Research has shown it significantly improves RAG quality for complex queries.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════ FOOTER ════════════════════════ -->
+<div class="footer">
+    <p><strong>BizIntel Interview Preparation Guide</strong></p>
+    <p>Built by Shubhank Dubey · GitHub: <a href="https://github.com/InsightfulShubh/BizIntel" style="color:#60a5fa;">InsightfulShubh/BizIntel</a></p>
+    <p style="margin-top:8px;">50+ questions · 10 sections · Every "why" answered</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+    // Optional: expand all / collapse all functionality
+    document.addEventListener('keydown', function(e) {
+        // Press 'E' to expand all, 'C' to collapse all
+        if (e.key === 'e' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+            document.querySelectorAll('.qa').forEach(qa => qa.classList.add('open'));
+        }
+        if (e.key === 'c' && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== 'INPUT') {
+            document.querySelectorAll('.qa').forEach(qa => qa.classList.remove('open'));
+        }
+    });
+</script>
+
+</body>
+</html>

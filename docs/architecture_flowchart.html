@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel — Architecture Flowchart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        /* ── Legend ─────────────────────────────────── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+        }
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        /* ── Stage sections ────────────────────────── */
+        .stage {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stage-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .stage-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #c4b5fd;
+        }
+        .stage-file {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15);
+            color: #a5b4fc;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+
+        /* ── Flow rows ─────────────────────────────── */
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Cards (nodes) ─────────────────────────── */
+        .card {
+            flex: 1;
+            min-width: 220px;
+            max-width: 380px;
+            border-radius: 12px;
+            padding: 16px 18px;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Card types */
+        .card-input {
+            background: linear-gradient(135deg, #1e3a5f, #1a2744);
+            border: 1px solid #2563eb;
+        }
+        .card-custom {
+            background: linear-gradient(135deg, #2d1b4e, #1a1033);
+            border: 1px solid #7c3aed;
+        }
+        .card-builtin {
+            background: linear-gradient(135deg, #1a3c34, #0f2922);
+            border: 1px solid #10b981;
+        }
+        .card-output {
+            background: linear-gradient(135deg, #4a2c17, #2d1a0e);
+            border: 1px solid #f59e0b;
+        }
+        .card-model {
+            background: linear-gradient(135deg, #3b1a3b, #2a0f2a);
+            border: 1px solid #ec4899;
+        }
+
+        .card-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .card-method {
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: #c4b5fd;
+            margin-bottom: 6px;
+        }
+        .card-desc {
+            font-size: 0.78rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+        .card-example {
+            margin-top: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.72rem;
+            color: #86efac;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ── Arrow connector ───────────────────────── */
+        .arrow-down {
+            text-align: center;
+            font-size: 1.4rem;
+            color: #6366f1;
+            margin: 4px 0 8px;
+            animation: pulse 2s infinite;
+        }
+        .arrow-right {
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+            color: #6366f1;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ── Design pattern badges ─────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            margin-right: 4px;
+            margin-top: 6px;
+        }
+        .badge-pattern { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .badge-lib { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .badge-api { background: #ec489933; color: #f9a8d4; border: 1px solid #ec489955; }
+
+        /* ── Summary table ─────────────────────────── */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        .summary-table th {
+            background: rgba(99,102,241,0.15);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.8rem;
+            color: #a5b4fc;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .summary-table td {
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: top;
+        }
+        .summary-table tr:hover { background: rgba(255,255,255,0.03); }
+        .mono { font-family: 'Cascadia Code', 'Fira Code', monospace; color: #c4b5fd; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 BizIntel — Architecture Flowchart</h1>
+<p class="subtitle">AI-Powered Startup Intelligence Engine · 134K Startups · RAG Pipeline</p>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div> Input / Data</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div> Custom Method</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div> Built-in / Library</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> Output</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899;"></div> ML Model / API</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 1: DATA PREPROCESSING                      -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">1</div>
+        <div class="stage-title">Data Preprocessing</div>
+        <div class="stage-file">preprocessing/data_preprocess.py · validation.py · main.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">📂 Input</div>
+            <div class="card-title">Raw CSV Files</div>
+            <div class="card-desc">2 YC CSVs + 1 Crunchbase CSV</div>
+            <div class="card-example">2023-02-27-yc-companies.csv  (6,269 rows)
+2023-07-13-yc-companies.csv  (6,269 rows)
+crunchbase-organizations.csv (462,651 rows)</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">load_yc_companies()</div>
+            <div class="card-method">data_preprocess.py</div>
+            <div class="card-desc">Concat both CSVs, rename columns via <code>YC_COLUMN_MAP</code>, fallback chain: long_description → short_description</div>
+            <div class="card-example">df = pd.concat([csv1, csv2])
+df = df.rename(columns=YC_COLUMN_MAP)
+df["description"] = long_desc.fillna(short_desc)</div>
+            <span class="badge badge-lib">pd.concat()</span>
+            <span class="badge badge-lib">pd.read_csv()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">load_crunchbase_companies()</div>
+            <div class="card-method">data_preprocess.py</div>
+            <div class="card-desc">Filter entity_type=="Company", 4-level description fallback: description → overview → short_desc → generated text</div>
+            <div class="card-example">df = df[df["entity_type"] == "Company"]
+df["description"] = desc.fillna(overview)
+                         .fillna(short_desc)</div>
+            <span class="badge badge-lib">pd.DataFrame.fillna()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_clean_text_series()</div>
+            <div class="card-method">data_preprocess.py</div>
+            <div class="card-desc">Strip whitespace, collapse multi-spaces, remove \u00a0</div>
+            <div class="card-example">series.fillna("").astype(str)
+  .str.replace(r"\s+", " ", regex=True)
+  .str.strip()</div>
+            <span class="badge badge-lib">pd.Series.str.replace()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_parse_tags()</div>
+            <div class="card-method">data_preprocess.py</div>
+            <div class="card-desc">Parse tags from string/list/JSON list → comma-separated string</div>
+            <div class="card-example">"['AI', 'SaaS']" → "AI, SaaS"
+["ML", "Health"]  → "ML, Health"</div>
+            <span class="badge badge-lib">ast.literal_eval()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_finalize_dataframe()</div>
+            <div class="card-method">data_preprocess.py</div>
+            <div class="card-desc">Drop empty names, weak descriptions (≤10 chars), deduplicate by name_lower + founded_year</div>
+            <div class="card-example">df = df[df["name"] != ""]
+df = df[df["description"].str.len() > 10]
+df = df.drop_duplicates(subset=DEDUP_SUBSET)</div>
+            <span class="badge badge-lib">pd.drop_duplicates()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">add_suspicious_flags()</div>
+            <div class="card-method">validation.py</div>
+            <div class="card-desc">Flag (not drop) suspicious records: short names, weak descriptions, placeholder names, bad years</div>
+            <div class="card-example">suspicious = (name_len < 2)
+  | (desc_len < 20)
+  | name.match(r"^(test|demo|sample)$")
+  | (year < 1900) | (year > 2027)</div>
+            <span class="badge badge-lib">re.compile()</span>
+            <span class="badge badge-lib">pd.to_numeric()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">startups_unified.csv</div>
+            <div class="card-desc">134,092 cleaned rows with 8 columns + is_suspicious flag</div>
+            <div class="card-example">Columns: startup_id, name, description,
+industry, tags, country, founded_year,
+source, is_suspicious
+YC: 4,399 | Crunchbase: 129,693</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 2: DOCUMENT BUILDING                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">2</div>
+        <div class="stage-title">Document Building</div>
+        <div class="stage-file">embeddings/document_builder.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">📂 Input</div>
+            <div class="card-title">pd.DataFrame</div>
+            <div class="card-desc">134K rows from startups_unified.csv</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_build_text_column()</div>
+            <div class="card-method">document_builder.py</div>
+            <div class="card-desc">Vectorized — builds "Label: value" per field using np.where, joins non-empty parts with \n</div>
+            <div class="card-example">np.where(cleaned != "",
+  "Name: " + cleaned, "")
+
+# Output per row:
+Name: Stripe
+Industry: Fintech
+Tags: Payments, API
+Country: US
+Description: Online payments...</div>
+            <span class="badge badge-lib">np.where()</span>
+            <span class="badge badge-lib">pd.concat()</span>
+            <span class="badge badge-lib">df.apply()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_build_metadata_records()</div>
+            <div class="card-method">document_builder.py</div>
+            <div class="card-desc">Bulk convert meta columns → list[dict] in one call</div>
+            <div class="card-example">meta_df = df[meta_cols].fillna("")
+  .astype(str).map(str.strip)
+return meta_df.to_dict("records")
+
+# → {"startup_id": "123",
+#    "source": "YC", ...}</div>
+            <span class="badge badge-lib">df.to_dict("records")</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">build_documents()</div>
+            <div class="card-method">document_builder.py → Public API</div>
+            <div class="card-desc">Zips texts + metadatas, filters empty docs, returns list[StartupDocument]</div>
+            <div class="card-example">docs = [StartupDocument(text=t, metadata=m)
+        for t, m in zip(texts, metas)
+        if t.strip()]
+# → 134,092 StartupDocument objects</div>
+            <span class="badge badge-pattern">Pydantic BaseModel</span>
+            <span class="badge badge-pattern">frozen=True</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">list[StartupDocument]</div>
+            <div class="card-desc">Each doc has .text (Style C) + .metadata (dict)</div>
+            <div class="card-example">StartupDocument(
+  text="Name: Paid\nIndustry: Fintech\n...",
+  metadata={"startup_id":"42",
+            "source":"YC",
+            "country":"US"}
+)</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 3: EMBEDDING                               -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">3</div>
+        <div class="stage-title">Batch Embedding</div>
+        <div class="stage-file">embeddings/embedder.py · scripts/batch_embed.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">📂 Input</div>
+            <div class="card-title">list[str] — texts</div>
+            <div class="card-desc">134K document texts from Stage 2</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-model">
+            <div class="card-label">🤖 ML Model</div>
+            <div class="card-title">StartupEmbedder.__init__()</div>
+            <div class="card-method">embedder.py</div>
+            <div class="card-desc">Loads all-MiniLM-L6-v2 (384-dim) once</div>
+            <div class="card-example">self._model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+# 22M params, 384-dim output</div>
+            <span class="badge badge-lib">SentenceTransformer()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">StartupEmbedder.encode()</div>
+            <div class="card-method">embedder.py</div>
+            <div class="card-desc">Manual batching (500/batch), per-batch logging, returns np.ndarray</div>
+            <div class="card-example">for i in range(n_batches):
+  batch = texts[i*500 : (i+1)*500]
+  emb = model.encode(batch)
+  all_embeddings.append(emb)
+return np.vstack(all_embeddings)
+# → shape (134092, 384)</div>
+            <span class="badge badge-lib">model.encode()</span>
+            <span class="badge badge-lib">np.vstack()</span>
+            <span class="badge badge-lib">math.ceil()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">np.ndarray (134092, 384)</div>
+            <div class="card-desc">134K embedding vectors, each 384-dimensional float32</div>
+            <div class="card-example">Embed time  : 1,255s (~21 min)
+Throughput  : 107 docs/sec
+Memory      : ~200 MB</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 4: VECTOR STORE                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">4</div>
+        <div class="stage-title">Vector Store (Strategy Pattern)</div>
+        <div class="stage-file">vectorstore/base.py · chroma_store.py · faiss_store.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🏗️ Design Pattern</div>
+            <div class="card-title">VectorStoreBase (ABC)</div>
+            <div class="card-method">base.py</div>
+            <div class="card-desc">Abstract base with Strategy Pattern — swap backends via config</div>
+            <div class="card-example">@abstractmethod count → int
+@abstractmethod add(texts, embeddings, metas)
+@abstractmethod query(embedding, top_k, where)
+@abstractmethod reset()</div>
+            <span class="badge badge-pattern">Strategy Pattern</span>
+            <span class="badge badge-pattern">ABC</span>
+            <span class="badge badge-pattern">Factory Function</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-builtin">
+            <div class="card-label">📗 Backend A</div>
+            <div class="card-title">ChromaStore</div>
+            <div class="card-method">chroma_store.py</div>
+            <div class="card-desc">PersistentClient, cosine HNSW index, native metadata filtering</div>
+            <div class="card-example">client = chromadb.PersistentClient(path)
+collection = client.get_or_create_collection(
+  name="startups",
+  metadata={"hnsw:space": "cosine"}
+)
+collection.add(ids, documents,
+  embeddings, metadatas)</div>
+            <span class="badge badge-lib">chromadb.PersistentClient</span>
+            <span class="badge badge-lib">collection.query()</span>
+        </div>
+    </div>
+
+    <div class="flow-row" style="margin-top:12px;">
+        <div class="card card-custom" style="visibility:hidden; flex:1; min-width:220px; max-width:380px;"></div>
+        <div class="arrow-right" style="visibility:hidden;">→</div>
+        <div class="card card-builtin">
+            <div class="card-label">📗 Backend B</div>
+            <div class="card-title">FAISSStore</div>
+            <div class="card-method">faiss_store.py</div>
+            <div class="card-desc">IndexFlatIP + L2 normalize = cosine. JSON sidecar for text/meta. Post-filter for where.</div>
+            <div class="card-example">index = faiss.IndexFlatIP(384)
+faiss.normalize_L2(vectors)
+index.add(vectors)
+# Sidecar: docstore.json
+# Post-filter: _matches_filter()</div>
+            <span class="badge badge-lib">faiss.IndexFlatIP()</span>
+            <span class="badge badge-lib">faiss.normalize_L2()</span>
+            <span class="badge badge-lib">faiss.write_index()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🏭 Factory</div>
+            <div class="card-title">create_vector_store()</div>
+            <div class="card-method">base.py</div>
+            <div class="card-desc">Factory function — returns ChromaStore or FAISSStore based on config</div>
+            <div class="card-example">def create_vector_store(backend="chroma"):
+    if backend == "chroma":
+        return ChromaStore()
+    if backend == "faiss":
+        return FAISSStore()</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">Persisted Vector DB</div>
+            <div class="card-desc">134,092 vectors stored on disk</div>
+            <div class="card-example">ChromaDB: data/chroma_db/
+FAISS:    data/faiss_db/index.faiss
+          data/faiss_db/docstore.json</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 5: RAG CHAIN (QUERY TIME)                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">5</div>
+        <div class="stage-title">RAG Chain (Query Time)</div>
+        <div class="stage-file">rag/retriever.py · prompt_templates.py · chain.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">💬 Input</div>
+            <div class="card-title">User Query</div>
+            <div class="card-desc">Natural language from Streamlit chat</div>
+            <div class="card-example">"Find startups similar to Stripe"</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">BizIntelChain._expand_query()</div>
+            <div class="card-method">chain.py</div>
+            <div class="card-desc">LLM rewrites vague/name-based queries into rich semantic terms for better embedding match</div>
+            <div class="card-example">IN:  "Find startups similar to Stripe"
+OUT: "online payment processing fintech
+      developer API billing infrastructure
+      internet commerce"</div>
+            <span class="badge badge-api">OpenAI gpt-4o-mini</span>
+            <span class="badge badge-lib">client.chat.completions.create()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-model">
+            <div class="card-label">🤖 Encode</div>
+            <div class="card-title">StartupEmbedder.encode_single()</div>
+            <div class="card-method">embedder.py</div>
+            <div class="card-desc">Encode expanded query → 384-dim vector</div>
+            <div class="card-example">query_vec = model.encode(
+  "online payment processing..."
+)  # → np.ndarray shape (384,)</div>
+            <span class="badge badge-lib">model.encode()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">StartupRetriever.retrieve()</div>
+            <div class="card-method">retriever.py — Dependency Injection</div>
+            <div class="card-desc">Calls embedder.encode_single() + store.query(). Receives both via DI constructor.</div>
+            <div class="card-example">results = store.query(
+  query_embedding=vec,
+  top_k=5,
+  where={"source": "YC"}  # optional
+)
+# → list[SearchResult]</div>
+            <span class="badge badge-pattern">Dependency Injection</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">get_prompt()</div>
+            <div class="card-method">prompt_templates.py</div>
+            <div class="card-desc">6 templates: auto, similar, swot, competitor, comparison, ecosystem. Injects docs + query.</div>
+            <div class="card-example">TEMPLATES["swot"].format(
+  documents="Name: Paid\n...",
+  query="SWOT of fintech startups"
+)
+# → "You are BizIntel...
+#    ## Strengths\n..."</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-model">
+            <div class="card-label">🤖 LLM</div>
+            <div class="card-title">BizIntelChain.analyze()</div>
+            <div class="card-method">chain.py</div>
+            <div class="card-desc">Sends prompt to OpenAI, returns structured response with answer + sources</div>
+            <div class="card-example">response = client.chat.completions.create(
+  model="gpt-4o-mini",
+  messages=[{"role":"user",
+             "content": prompt}],
+  temperature=0.3,
+  max_tokens=2048
+)</div>
+            <span class="badge badge-api">OpenAI gpt-4o-mini</span>
+            <span class="badge badge-lib">openai.OpenAI()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">Response Dict</div>
+            <div class="card-desc">Structured result sent to Streamlit UI</div>
+            <div class="card-example">{"answer": "## Similar Startups\n1. Paid...",
+ "sources": [{"doc_id":"doc_42",
+    "text":"Name: Paid\n...",
+    "metadata":{"source":"YC"},
+    "distance": 0.412}],
+ "analysis_type": "similar",
+ "model": "gpt-4o-mini"}</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- STAGE 6: STREAMLIT UI                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">6</div>
+        <div class="stage-title">Streamlit UI</div>
+        <div class="stage-file">app/streamlit_app.py · components.py · state.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">init_session_state()</div>
+            <div class="card-method">state.py</div>
+            <div class="card-desc">Sets defaults: messages=[], analysis_type="auto", source_filter="All", top_k=5</div>
+            <span class="badge badge-lib">st.session_state</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Cached</div>
+            <div class="card-title">load_embedder() / load_vector_store() / load_chain()</div>
+            <div class="card-method">state.py</div>
+            <div class="card-desc">@st.cache_resource — loaded once, persist across reruns</div>
+            <div class="card-example">@st.cache_resource
+def load_embedder():
+    return StartupEmbedder()
+# Only runs once per app lifetime</div>
+            <span class="badge badge-lib">@st.cache_resource</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">render_sidebar()</div>
+            <div class="card-method">components.py</div>
+            <div class="card-desc">Analysis Type dropdown, Source filter radio, Top-K slider, DB stats, Clear button</div>
+            <span class="badge badge-lib">st.selectbox()</span>
+            <span class="badge badge-lib">st.radio()</span>
+            <span class="badge badge-lib">st.slider()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">render_welcome() / render_chat_history()</div>
+            <div class="card-method">components.py</div>
+            <div class="card-desc">Welcome screen with 5 example query buttons, or scrollable chat history</div>
+            <span class="badge badge-lib">st.chat_message()</span>
+            <span class="badge badge-lib">st.button()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">_process_query()</div>
+            <div class="card-method">streamlit_app.py</div>
+            <div class="card-desc">Calls chain.analyze(), displays answer + source cards + timing footer</div>
+            <div class="card-example">result = chain.analyze(
+  query=user_input,
+  analysis_type="swot",
+  top_k=5,
+  where={"source":"YC"}
+)
+st.markdown(result["answer"])</div>
+            <span class="badge badge-lib">st.chat_input()</span>
+            <span class="badge badge-lib">st.spinner()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">render_sources()</div>
+            <div class="card-method">components.py</div>
+            <div class="card-desc">Expandable styled cards with source tags, metadata, truncated text</div>
+            <span class="badge badge-lib">st.expander()</span>
+            <span class="badge badge-lib">st.markdown()</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COMPLETE METHOD REFERENCE TABLE                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">📋</div>
+        <div class="stage-title">Complete Method Reference</div>
+    </div>
+
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>Method</th>
+                <th>Type</th>
+                <th>Key Libraries Used</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Config -->
+            <tr>
+                <td>config/settings.py</td>
+                <td class="mono">PROJECT_ROOT, OUTPUT_DIR, YC_COLUMN_MAP, STANDARD_COLUMNS, DOCUMENT_FIELDS, METADATA_FIELDS, EMBEDDING_MODEL_NAME, VECTOR_STORE_BACKEND, LLM_MODEL, ANALYSIS_TYPES</td>
+                <td>Constants</td>
+                <td class="mono">pathlib.Path</td>
+            </tr>
+            <!-- Preprocessing -->
+            <tr>
+                <td>preprocessing/data_preprocess.py</td>
+                <td class="mono">_clean_text_series(series)</td>
+                <td>Custom</td>
+                <td class="mono">pd.Series.str.replace(), .fillna(), .str.strip()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">_parse_tags(value)</td>
+                <td>Custom</td>
+                <td class="mono">ast.literal_eval()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">_extract_first_tag(tags)</td>
+                <td>Custom</td>
+                <td class="mono">str.split()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">_finalize_dataframe(df, source)</td>
+                <td>Custom</td>
+                <td class="mono">pd.drop_duplicates(), pd.to_numeric()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">load_yc_companies(paths)</td>
+                <td>Custom</td>
+                <td class="mono">pd.read_csv(), pd.concat(), df.rename()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">load_crunchbase_companies(path)</td>
+                <td>Custom</td>
+                <td class="mono">pd.read_csv(), df.fillna()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">run_preprocessing()</td>
+                <td>Custom</td>
+                <td class="mono">pd.concat()</td>
+            </tr>
+            <tr>
+                <td>preprocessing/validation.py</td>
+                <td class="mono">add_suspicious_flags(df)</td>
+                <td>Custom</td>
+                <td class="mono">re.compile(), pd.to_numeric(), datetime.utcnow()</td>
+            </tr>
+            <!-- Document Builder -->
+            <tr>
+                <td>embeddings/document_builder.py</td>
+                <td class="mono">_build_text_column(df)</td>
+                <td>Custom</td>
+                <td class="mono">np.where(), pd.concat(), df.apply()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">_build_metadata_records(df)</td>
+                <td>Custom</td>
+                <td class="mono">df.to_dict("records"), df.map()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">build_documents(df)</td>
+                <td>Custom</td>
+                <td class="mono">Pydantic BaseModel, zip()</td>
+            </tr>
+            <!-- Embedder -->
+            <tr>
+                <td>embeddings/embedder.py</td>
+                <td class="mono">StartupEmbedder.__init__(model_name)</td>
+                <td>Custom</td>
+                <td class="mono">SentenceTransformer(model_name)</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">StartupEmbedder.encode(texts, batch_size)</td>
+                <td>Custom</td>
+                <td class="mono">model.encode(), np.vstack(), math.ceil()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">StartupEmbedder.encode_single(text)</td>
+                <td>Custom</td>
+                <td class="mono">model.encode()</td>
+            </tr>
+            <!-- Vector Store -->
+            <tr>
+                <td>vectorstore/base.py</td>
+                <td class="mono">VectorStoreBase (ABC)</td>
+                <td>Abstract</td>
+                <td class="mono">abc.ABC, @abstractmethod</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">create_vector_store(backend)</td>
+                <td>Factory</td>
+                <td class="mono">—</td>
+            </tr>
+            <tr>
+                <td>vectorstore/chroma_store.py</td>
+                <td class="mono">ChromaStore.add() / .query() / .reset()</td>
+                <td>Custom</td>
+                <td class="mono">chromadb.PersistentClient, collection.add/query</td>
+            </tr>
+            <tr>
+                <td>vectorstore/faiss_store.py</td>
+                <td class="mono">FAISSStore.add() / .query() / .reset()</td>
+                <td>Custom</td>
+                <td class="mono">faiss.IndexFlatIP, faiss.normalize_L2, json.dump/load</td>
+            </tr>
+            <!-- RAG -->
+            <tr>
+                <td>rag/retriever.py</td>
+                <td class="mono">StartupRetriever.retrieve(query, top_k, where)</td>
+                <td>Custom</td>
+                <td class="mono">Dependency Injection pattern</td>
+            </tr>
+            <tr>
+                <td>rag/prompt_templates.py</td>
+                <td class="mono">get_prompt(analysis_type, query, documents)</td>
+                <td>Custom</td>
+                <td class="mono">str.format()</td>
+            </tr>
+            <tr>
+                <td>rag/chain.py</td>
+                <td class="mono">BizIntelChain._expand_query(query)</td>
+                <td>Custom</td>
+                <td class="mono">openai.OpenAI(), client.chat.completions.create()</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">BizIntelChain.analyze(query, analysis_type, top_k, where)</td>
+                <td>Custom</td>
+                <td class="mono">openai.OpenAI(), client.chat.completions.create()</td>
+            </tr>
+            <!-- Streamlit -->
+            <tr>
+                <td>app/state.py</td>
+                <td class="mono">load_embedder() / load_vector_store() / load_chain()</td>
+                <td>Cached</td>
+                <td class="mono">@st.cache_resource</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="mono">init_session_state()</td>
+                <td>Custom</td>
+                <td class="mono">st.session_state</td>
+            </tr>
+            <tr>
+                <td>app/components.py</td>
+                <td class="mono">render_sidebar() / render_welcome() / render_chat_history() / render_sources() / build_where_filter()</td>
+                <td>Custom</td>
+                <td class="mono">st.selectbox, st.radio, st.slider, st.chat_message, st.expander</td>
+            </tr>
+            <tr>
+                <td>app/streamlit_app.py</td>
+                <td class="mono">_process_query(query)</td>
+                <td>Custom</td>
+                <td class="mono">st.chat_input, st.spinner, st.markdown</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<p style="text-align:center; color:#6b7280; font-size:0.8rem; margin-top:20px;">
+    BizIntel v0.1.0 · Python 3.13 · uv · sentence-transformers · ChromaDB · FAISS · OpenAI · Streamlit
+</p>
+
+</body>
+</html>

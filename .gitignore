@@ -13,5 +13,8 @@ wheels/
 .env
 
 # Pipeline output data (regenerable)
-/data/
+#Datasource-Link
+#YC: https://www.kaggle.com/datasets/miguelcorraljr/y-combinator-directory
+#Crunchbase: https://www.kaggle.com/datasets/justinas/startup-investments
+/data1/
 /data-source/
