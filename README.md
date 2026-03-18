@@ -6,12 +6,14 @@
 
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-F55036?logo=groq&logoColor=white)](https://console.groq.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white)](https://openai.com)
 [![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-green)](https://www.trychroma.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Ask natural-language questions about **134,000+ startups** from Y Combinator & Crunchbase.  
-Powered by **RAG (Retrieval-Augmented Generation)** — semantic search + LLM reasoning.
+Powered by **Hybrid RAG** — semantic search + BM25 keyword search + cross-encoder reranking + LLM reasoning.  
+**Free to run** — uses Groq's free API by default (switchable to OpenAI).
 
 [Features](#-features) · [Demo](#-demo) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Project Structure](#-project-structure) · [Usage](#-usage) · [Tech Stack](#-tech-stack)
 
@@ -44,6 +46,11 @@ Powered by **RAG (Retrieval-Augmented Generation)** — semantic search + LLM re
 | 📚 **Source Transparency** | Every answer shows the exact source documents used — no hallucination |
 | 🔄 **Query Expansion** | LLM-powered query rewriting for better semantic matching |
 | 🗂️ **Dual Vector Store** | Strategy Pattern — swap between ChromaDB and FAISS via config |
+| 🆕 **Hybrid Search** | Combines semantic (embedding) + keyword (BM25) search for better recall |
+| 🆕 **Weighted RRF Fusion** | Merges ranked lists with tunable weights (semantic=1.0, BM25=0.4) |
+| 🆕 **Cross-Encoder Reranker** | Rescores candidates with `ms-marco-MiniLM-L-6-v2` for +0.13 relevancy gain |
+| 🆕 **Multi-Provider LLM** | Switch between Groq (free) and OpenAI (paid) via one config flag |
+| 🆕 **RAG Evaluation Pipeline** | 30 test queries, 6 metrics (3 LLM-as-Judge + 3 deterministic) |
 
 ---
 
@@ -53,7 +60,7 @@ Powered by **RAG (Retrieval-Augmented Generation)** — semantic search + LLM re
 
 - **Python 3.13+**
 - **[uv](https://docs.astral.sh/uv/)** (fast Python package manager)
-- **OpenAI API Key** ([Get one here](https://platform.openai.com/api-keys))
+- **Groq API Key (free)** ([Get one here](https://console.groq.com/keys)) — *or* OpenAI API Key ([paid](https://platform.openai.com/api-keys))
 
 ### 1. Clone & Install
 
@@ -66,9 +73,19 @@ uv sync
 ### 2. Set Up Environment
 
 ```bash
-# Copy the example env file and add your OpenAI API key
 cp .env.example .env
-# Edit .env and set: OPENAI_API_KEY=sk-your-key-here
+```
+
+**Option A — Groq (free, default):**
+```env
+GROQ_API_KEY=gsk_your-groq-key-here
+# LLM_PROVIDER=groq  ← already the default in settings.py
+```
+
+**Option B — OpenAI (paid):**
+```env
+OPENAI_API_KEY=sk-your-key-here
+LLM_PROVIDER=openai   # override the default
 ```
 
 ### 3. Run the Data Pipeline
@@ -103,24 +120,41 @@ Open **http://localhost:8501** in your browser. 🎉
 │                     ▼                                     ▼          │
 │              Unified CSV                          Vector Store       │
 │              (134K rows)                     (ChromaDB / FAISS)      │
+│                                                     │                │
+│                                                     ▼                │
+│                                              BM25 Index (in-memory)  │
+│                                              (rank-bm25 / BM25Okapi) │
 └──────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                       ONLINE PIPELINE (per query)                    │
 │                                                                      │
-│  User Query ──→ Query Expansion ──→ Encode ──→ Vector Search         │
-│                   (LLM rewrite)     (MiniLM)    (top-K docs)        │
-│                                                       │              │
-│                                                       ▼              │
-│                                              Prompt Template         │
-│                                              (6 analysis types)      │
-│                                                       │              │
-│                                                       ▼              │
-│                                              OpenAI GPT-4o-mini      │
-│                                                       │              │
-│                                                       ▼              │
-│                                              Streamlit Chat UI       │
-│                                              (answer + sources)      │
+│  User Query ──→ Query Expansion ──→ Encode (MiniLM)                  │
+│                   (LLM rewrite)          │                           │
+│                                          ├──────────────────┐        │
+│                                          ▼                  ▼        │
+│                                   Semantic Search     BM25 Search    │
+│                                    (top 20 docs)      (top 20 docs)  │
+│                                          │                  │        │
+│                                          └────────┬─────────┘        │
+│                                                   ▼                  │
+│                                       Weighted RRF Fusion            │
+│                                     (sem=1.0, bm25=0.4, k=60)       │
+│                                                   │                  │
+│                                                   ▼                  │
+│                                       Cross-Encoder Reranker         │
+│                                      (ms-marco-MiniLM, top 5)       │
+│                                                   │                  │
+│                                                   ▼                  │
+│                                          Prompt Template             │
+│                                          (6 analysis types)          │
+│                                                   │                  │
+│                                                   ▼                  │
+│                                        LLM (Groq / OpenAI)          │
+│                                                   │                  │
+│                                                   ▼                  │
+│                                          Streamlit Chat UI           │
+│                                          (answer + sources)          │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -129,8 +163,11 @@ Open **http://localhost:8501** in your browser. 🎉
 | Decision | Choice | Why |
 |---|---|---|
 | **Embedding Model** | `all-MiniLM-L6-v2` (384-dim) | Free, local, fast — no API costs for 134K docs |
-| **LLM** | GPT-4o-mini | Best cost/quality ratio for structured analysis |
+| **LLM** | Groq `llama-3.3-70b` (default) / OpenAI GPT-4o-mini | One-flag switch; Groq is free, OpenAI is more grounded |
 | **Vector Store** | ChromaDB (default) + FAISS | Strategy Pattern — swap via config, no code changes |
+| **Hybrid Search** | Semantic + BM25 keyword search | Catches exact-match terms that embeddings miss |
+| **Fusion** | Weighted RRF (sem=1.0, bm25=0.4) | Equal weights regressed relevancy; tuned weights fix it |
+| **Reranker** | `ms-marco-MiniLM-L-6-v2` (22 MB) | +0.13 context relevancy gain; only 22 MB, 150ms/query |
 | **Document Format** | Style C (labeled key-value) | Labels act as semantic anchors for the embedding model |
 | **Query Expansion** | LLM-based rewriting | Solves the "Stripe → fintech" semantic gap problem |
 | **No Chunking** | 1 startup = 1 document | Documents are short (~200 tokens), fit within model limit |
@@ -144,7 +181,8 @@ Open **http://localhost:8501** in your browser. 🎉
 BizIntel/
 ├── src/bizintel/                  # Main package (src-layout)
 │   ├── config/
-│   │   └── settings.py            # Centralized config — paths, thresholds, model names
+│   │   ├── settings.py            # Centralized config — paths, thresholds, model names
+│   │   └── llm_client.py          # LLM client factory — Groq / OpenAI via one flag
 │   ├── preprocessing/
 │   │   ├── data_preprocess.py     # Load, clean, unify YC + Crunchbase CSVs
 │   │   ├── validation.py          # Flag suspicious records (is_suspicious)
@@ -156,8 +194,13 @@ BizIntel/
 │   │   ├── base.py                # ABC base class + SearchResult + factory
 │   │   ├── chroma_store.py        # ChromaDB backend (cosine, HNSW)
 │   │   └── faiss_store.py         # FAISS backend (IndexFlatIP + JSON sidecar)
+│   ├── search/                    # Keyword search & fusion (NEW)
+│   │   ├── __init__.py
+│   │   ├── bm25_search.py         # BM25Okapi index over 134K docs
+│   │   └── fusion.py              # Weighted Reciprocal Rank Fusion
 │   ├── rag/
-│   │   ├── retriever.py           # Encode query + search vector store (DI)
+│   │   ├── retriever.py           # 4-stage pipeline: semantic → BM25 → RRF → reranker
+│   │   ├── reranker.py            # Cross-encoder reranker (ms-marco-MiniLM)
 │   │   ├── prompt_templates.py    # 6 analysis templates + shared base role
 │   │   └── chain.py               # RAG orchestrator + query expansion
 │   └── app/
@@ -167,12 +210,15 @@ BizIntel/
 ├── scripts/
 │   └── batch_embed.py             # One-time batch embedding script (CLI)
 ├── notebooks/
-│   └── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
+│   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
+│   └── eval_visualization.ipynb   # Evaluation results visualization
 ├── data-source/                   # Raw CSVs (not in git)
 ├── data/                          # Cleaned CSVs + vector DB (not in git)
 ├── docs/
-│   ├── architecture_flowchart.html # Interactive architecture diagram
-│   └── interview_prep.html        # 50+ Q&A for interview preparation
+│   ├── architecture_flowchart.html     # v1 interactive architecture diagram
+│   ├── architecture_flowchart_v2.html  # v2 with hybrid search, reranker, Groq
+│   ├── interview_prep.html             # 50+ Q&A for interview preparation
+│   └── design_decisions_v2.html        # 65+ Q&A — reranker, hybrid, RRF, Groq
 ├── tests/
 │   └── spot_check.py              # Verify real companies in results
 ├── eval/
@@ -180,7 +226,7 @@ BizIntel/
 │   ├── evaluator.py               # LLM-as-Judge + deterministic scorers
 │   ├── run_eval.py                # CLI evaluation runner → JSON + CSV
 │   └── results/                   # Timestamped eval outputs
-├── .env.example                   # Template for API keys
+├── .env.example                   # Template for API keys (GROQ + OpenAI)
 ├── .gitignore
 ├── pyproject.toml                 # Hatch build backend, dependencies
 └── .python-version                # Python 3.13
@@ -236,7 +282,9 @@ uv run python scripts/batch_embed.py --batch-size 1000 --reset
 | **Validation** | Pydantic v2 | Immutable document models with runtime type checking |
 | **Embeddings** | sentence-transformers (`all-MiniLM-L6-v2`) | 384-dim local embeddings |
 | **Vector Store** | ChromaDB / FAISS | Cosine similarity search (Strategy Pattern) |
-| **LLM** | OpenAI GPT-4o-mini | Grounded analysis generation |
+| **Keyword Search** | rank-bm25 (`BM25Okapi`) | TF-IDF keyword matching for hybrid retrieval |
+| **Reranker** | cross-encoder (`ms-marco-MiniLM-L-6-v2`) | Pair-wise relevancy rescoring |
+| **LLM** | Groq (`llama-3.3-70b-versatile`) / OpenAI (`gpt-4o-mini`) | Grounded analysis generation — free or paid |
 | **UI** | Streamlit | Chat interface with sidebar controls |
 | **Secrets** | python-dotenv | `.env` file for API keys |
 
@@ -307,11 +355,12 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | Pattern | Where | Why |
 |---|---|---|
 | **Strategy** | `VectorStoreBase` ABC + ChromaStore/FAISSStore | Swap backends via config |
-| **Factory** | `create_vector_store(backend)` | Centralized object creation |
+| **Factory** | `create_vector_store(backend)`, `get_llm_client()` | Centralized object creation for stores & LLMs |
 | **Dependency Injection** | Retriever, Chain | Testable, decoupled components |
 | **Immutable Value Object** | `StartupDocument`, `SearchResult` (frozen Pydantic) | Prevent accidental mutation |
 | **Template Method** | Prompt templates (shared `_BASE_ROLE`) | Common + variable behavior |
 | **Pipeline** | Offline & online data flow | Clear, testable stages |
+| **LLM Client Factory** | `config/llm_client.py` → `get_llm_client(provider)` | One-flag swap between Groq (free) and OpenAI (paid) |
 
 ---
 
@@ -323,9 +372,13 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | Embedding time (CPU) | ~21 min |
 | Embedding throughput | ~107 docs/sec |
 | Vector search latency | ~5ms (ChromaDB HNSW) |
-| End-to-end query time | ~3–5s (including LLM) |
+| BM25 search latency | ~30ms |
+| RRF fusion latency | ~1ms |
+| Reranker latency | ~150ms (cross-encoder, 20 → 5 docs) |
+| End-to-end query time | ~2–4s (Groq) / ~3–5s (OpenAI) |
 | Embedding dimensions | 384 |
 | Index size (ChromaDB) | ~500 MB on disk |
+| BM25 index (in-memory) | ~200 MB, builds in ~3s |
 
 ---
 
@@ -333,8 +386,10 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 
 | Document | Description |
 |---|---|
-| [Architecture Flowchart](docs/architecture_flowchart.html) | Interactive HTML diagram of the entire code flow with methods |
+| [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
+| [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
 | [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
+| [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 
 ---
 
