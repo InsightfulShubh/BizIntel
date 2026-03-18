@@ -10,6 +10,7 @@ passed in, not created internally.
 from __future__ import annotations
 
 import logging
+from typing import NamedTuple
 
 from bizintel.config.settings import (
     TOP_K,
@@ -19,11 +20,23 @@ from bizintel.config.settings import (
     BM25_TOP_K,
     RRF_WEIGHT_SEMANTIC,
     RRF_WEIGHT_BM25,
+    GUARDRAILS_ENABLED,
+    CONFIDENCE_THRESHOLD_SOFT,
+    CONFIDENCE_THRESHOLD_HARD,
 )
 from bizintel.embeddings.embedder import StartupEmbedder
 from bizintel.vectorstore.base import VectorStoreBase, SearchResult
 
 logger = logging.getLogger(__name__)
+
+
+class RetrievalResult(NamedTuple):
+    """Output of the retriever — documents + confidence metadata."""
+
+    documents: list[SearchResult]
+    confidence: str        # "high" | "low" | "none"
+    best_score: float      # highest reranker score (0.0 if no reranker)
+    mean_score: float      # mean reranker score across kept docs
 
 
 class StartupRetriever:
@@ -46,7 +59,7 @@ class StartupRetriever:
         query: str,
         top_k: int = TOP_K,
         where: dict | None = None,
-    ) -> list[SearchResult]:
+    ) -> RetrievalResult:
         """
         Encode the query and return the top-K most relevant startup documents.
 
@@ -55,6 +68,7 @@ class StartupRetriever:
             2. BM25 keyword search         → top 20
             3. RRF fusion (merge + dedup)  → top 20
             4. Cross-encoder reranker      → top 5
+            5. Confidence check            → high / low / none
 
         Parameters
         ----------
@@ -67,8 +81,8 @@ class StartupRetriever:
 
         Returns
         -------
-        list[SearchResult]
-            Ranked by relevance (best first).
+        RetrievalResult
+            Named tuple of (documents, confidence, best_score, mean_score).
         """
         logger.info("Retrieving top-%d for: '%s'", top_k, query[:80])
 
@@ -98,13 +112,44 @@ class StartupRetriever:
             candidates = semantic_results
 
         # ── Step 4: Rerank (if enabled) ──────────────────────────────
+        reranker_scores: list[float] = []
+
         if use_reranker and len(candidates) > top_k:
-            results = self._reranker.rerank(query, candidates, top_k=top_k)
+            reranked = self._reranker.rerank(query, candidates, top_k=top_k)
+            results = reranked.documents
+            reranker_scores = reranked.scores
         else:
             results = candidates[:top_k]
 
+        # ── Step 5: Compute confidence ───────────────────────────────
+        if reranker_scores:
+            best_score = reranker_scores[0]
+            mean_score = sum(reranker_scores) / len(reranker_scores)
+        else:
+            # No reranker — fall back to optimistic (we can't measure)
+            best_score = 1.0
+            mean_score = 1.0
+
+        # Classify confidence (only when guardrails are enabled)
+        if not GUARDRAILS_ENABLED:
+            confidence = "high"
+        elif best_score < CONFIDENCE_THRESHOLD_HARD:
+            confidence = "none"
+        elif best_score < CONFIDENCE_THRESHOLD_SOFT:
+            confidence = "low"
+        else:
+            confidence = "high"
+
         logger.info(
-            "Retrieved %d results (hybrid=%s, reranked=%s)",
+            "Retrieved %d results (hybrid=%s, reranked=%s) | "
+            "confidence=%s  best_score=%.3f  mean_score=%.3f",
             len(results), use_hybrid, use_reranker,
+            confidence, best_score, mean_score,
         )
-        return results
+
+        return RetrievalResult(
+            documents=results,
+            confidence=confidence,
+            best_score=best_score,
+            mean_score=mean_score,
+        )

@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel v3 — Architecture Flowchart (Confidence Guardrails)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .version-row {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .ver-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0 4px;
+        }
+        .ver-old { background: linear-gradient(135deg, #6b7280, #4b5563); color: #d1d5db; }
+        .ver-v2  { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .ver-new { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+
+        /* ── Legend ─────────────────────────────────── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+        /* ── Stage sections ────────────────────────── */
+        .stage {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .stage.new-stage   { border-color: rgba(245,158,11,0.45); background: rgba(245,158,11,0.04); }
+        .stage.v2-stage    { border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.02); }
+        .stage.upd-stage   { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.03); }
+        .stage-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stage-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1rem; flex-shrink: 0;
+        }
+        .stage-num.sn-new  { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stage-num.sn-v2   { background: linear-gradient(135deg, #10b981, #059669); }
+        .stage-num.sn-upd  { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stage-title { font-size: 1.25rem; font-weight: 700; color: #c4b5fd; }
+        .stage-file {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15); color: #a5b4fc;
+            padding: 4px 14px; border-radius: 20px; font-size: 0.76rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+        .stag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-left: 8px; }
+        .stag-new { background: #f59e0b33; color: #fbbf24; border: 1px solid #f59e0b55; }
+        .stag-v2  { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .stag-upd { background: #f59e0b33; color: #fbbf24; border: 1px solid #f59e0b55; }
+        .stag-same { background: #6b728033; color: #9ca3af; border: 1px solid #6b728055; }
+
+        /* ── Flow rows ─────────────────────────────── */
+        .flow-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        /* ── Cards ─────────────────────────────────── */
+        .card {
+            flex: 1; min-width: 220px; max-width: 400px;
+            border-radius: 12px; padding: 16px 18px;
+            transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-input   { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 1px solid #2563eb; }
+        .card-custom  { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .card-builtin { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 1px solid #10b981; }
+        .card-output  { background: linear-gradient(135deg,#4a2c17,#2d1a0e); border: 1px solid #f59e0b; }
+        .card-model   { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 1px solid #ec4899; }
+        .card-v2      { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 1px solid #10b981; }
+        .card-new     { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #f59e0b; }
+        .card-danger   { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; }
+        .card-warn     { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #fbbf24; }
+        .card-safe     { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; }
+
+        .card-label  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
+        .card-title  { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        .card-method { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.78rem; color: #c4b5fd; margin-bottom: 6px; }
+        .card-desc   { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+        .card-example {
+            margin-top: 8px; background: rgba(0,0,0,0.3); border-radius: 8px;
+            padding: 8px 12px; font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.72rem; color: #86efac; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        .arrow-down  { text-align: center; font-size: 1.4rem; color: #6366f1; margin: 4px 0 8px; animation: pulse 2s infinite; }
+        .arrow-right { display: flex; align-items: center; font-size: 1.3rem; color: #6366f1; flex-shrink: 0; }
+        .arrow-split { text-align: center; font-size: 1.1rem; color: #10b981; margin: 8px 0; letter-spacing: 2px; }
+        .arrow-branch { text-align: center; font-size: 1.1rem; color: #f59e0b; margin: 8px 0; letter-spacing: 2px; }
+
+        @keyframes pulse { 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-right: 4px; margin-top: 6px; }
+        .badge-pattern { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .badge-lib     { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .badge-api     { background: #ec489933; color: #f9a8d4; border: 1px solid #ec489955; }
+        .badge-v2      { background: #10b98155; color: #a7f3d0; border: 1px solid #10b98188; }
+        .badge-new     { background: #f59e0b55; color: #fde68a; border: 1px solid #f59e0b88; }
+
+        /* ── Comparison columns ───────────────────── */
+        .cmp  { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+        .cmp-col { flex: 1; min-width: 280px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 18px; }
+        .cmp-col h3 { font-size: 0.9rem; margin-bottom: 12px; }
+        .pstep { padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-family: 'Cascadia Code','Fira Code',monospace; margin-bottom: 6px; }
+        .ps-old { background: rgba(107,114,128,0.2); border: 1px solid rgba(107,114,128,0.3); }
+        .ps-v2  { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); }
+        .ps-new { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); }
+        .ps-arrow { text-align: center; color: #6366f1; font-size: 0.9rem; margin: 2px 0; }
+        .ps-branch { text-align: center; color: #f59e0b; font-size: 0.8rem; margin: 4px 0; }
+
+        /* ── Guardrail decision diagram ───────────── */
+        .guard-flow {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .guard-path {
+            flex: 1;
+            min-width: 240px;
+            max-width: 300px;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+        .guard-path h4 { margin-bottom: 10px; font-size: 0.95rem; }
+        .guard-path .gp-condition {
+            font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+        .guard-path .gp-action {
+            font-size: 0.78rem;
+            line-height: 1.6;
+        }
+        .gp-none  { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; }
+        .gp-low   { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #fbbf24; }
+        .gp-high  { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; }
+
+        /* ── Tables ────────────────────────────────── */
+        .stbl { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .stbl th { background: rgba(99,102,241,0.15); padding: 10px 14px; text-align: left; font-size: 0.8rem; color: #a5b4fc; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .stbl td { padding: 8px 14px; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+        .stbl tr:hover { background: rgba(255,255,255,0.03); }
+        .mono { font-family: 'Cascadia Code','Fira Code',monospace; color: #c4b5fd; }
+
+        /* ── Score gauge ──────────────────────────── */
+        .score-bar {
+            height: 24px;
+            border-radius: 12px;
+            position: relative;
+            margin: 12px 0;
+            background: linear-gradient(90deg, #ef4444 0%, #ef4444 15%, #fbbf24 15%, #fbbf24 40%, #10b981 40%, #10b981 100%);
+            overflow: visible;
+        }
+        .score-marker {
+            position: absolute;
+            top: -8px;
+            width: 2px;
+            height: 40px;
+            background: white;
+        }
+        .score-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+        .score-zone-labels {
+            display: flex;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .szl { text-align: center; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 BizIntel v3 — Architecture Flowchart</h1>
+<p class="subtitle">AI-Powered Startup Intelligence Engine · Confidence Guardrails · Know When NOT to Answer</p>
+<div class="version-row">
+    <span class="ver-badge ver-old">v1 — Semantic Only · OpenAI</span>
+    <span class="ver-badge ver-v2">v2 — Hybrid Search + Reranker + Groq</span>
+    <span class="ver-badge ver-new">v3 — Confidence Guardrails + Fallback Logic</span>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div>Input / Data</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>Custom Method</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Built-in / v2</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Output</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899;"></div>ML Model / API</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b; border:2px solid #fde68a;"></div>NEW in v3</div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PIPELINE EVOLUTION — v1 vs v2 vs v3                                  -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚡</div>
+        <div class="stage-title">Pipeline Evolution — v1 → v2 → v3</div>
+    </div>
+    <div class="cmp">
+        <div class="cmp-col">
+            <h3 style="color:#9ca3af;">❌ v1 — Always Answers</h3>
+            <div class="pstep ps-old">User Query</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">Query Expansion → OpenAI</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">ChromaDB → top 5</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">OpenAI → answer</div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#fca5a5;">
+                ⚠️ <strong>No confidence check</strong> — even garbage context gets sent to LLM.<br>
+                Risk: hallucinated answers on out-of-domain queries.
+            </div>
+        </div>
+        <div class="cmp-col">
+            <h3 style="color:#6ee7b7;">✅ v2 — Hybrid + Reranker</h3>
+            <div class="pstep ps-old">User Query</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Query Expansion → Groq/OpenAI</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Semantic(20) + BM25(20) → RRF</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Cross-Encoder Reranker → top 5</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Groq → answer</div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#fca5a5;">
+                ⚠️ Reranker scores are <strong>computed but discarded</strong>.<br>
+                Still always answers, even when best score is -3.0.
+            </div>
+        </div>
+        <div class="cmp-col">
+            <h3 style="color:#fbbf24;">🛡️ v3 — Confidence Guardrails</h3>
+            <div class="pstep ps-old">User Query</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Query Expansion → Groq/OpenAI</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-v2">Semantic(20) + BM25(20) → RRF</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-new">🆕 Reranker → top 5 + SCORES</div>
+            <div class="ps-branch">⬇ confidence check ⬇</div>
+            <div style="display:flex; gap:4px;">
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); font-size:0.72rem;">🚫 &lt;0.15<br>REFUSE</div>
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(251,191,36,0.15); border:1px solid rgba(251,191,36,0.3); font-size:0.72rem;">⚠️ 0.15–0.4<br>WARN + LLM</div>
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); font-size:0.72rem;">✅ ≥0.4<br>LLM</div>
+            </div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#fbbf24;">
+                ✅ <strong>Scores flow through pipeline</strong> → confidence computed.<br>
+                Hard refusal <strong>skips LLM</strong> → saves cost + prevents hallucination.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CORE CONCEPT: WHY GUARDRAILS                                         -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">💡</div>
+        <div class="stage-title">Why Guardrails? — The Problem v3 Solves</div>
+        <span class="stag stag-new">NEW in v3</span>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-danger" style="max-width:500px;">
+            <div class="card-label">❌ Without Guardrails</div>
+            <div class="card-title">User: "Best pizza restaurants in NYC"</div>
+            <div class="card-desc" style="color:#fca5a5;">This is a STARTUP database — no pizza restaurants exist. But v1/v2 would retrieve the 5 "closest" garbage docs and ask the LLM to generate an analysis. The LLM hallucinates confidently.</div>
+            <div class="card-example" style="color:#fca5a5;">Retrieved docs:
+  1. "FoodTech SaaS platform" (score: -2.1)
+  2. "Delivery logistics API"  (score: -3.4)
+  3. "Restaurant POS system"   (score: -4.0)
+
+LLM: "Here are the top pizza restaurants..."
+     ← HALLUCINATED — none are restaurants!</div>
+        </div>
+        <div class="arrow-right" style="font-size:2rem; color:#f59e0b;">→</div>
+        <div class="card card-safe" style="max-width:500px;">
+            <div class="card-label">✅ With Guardrails (v3)</div>
+            <div class="card-title">Same query — now handled correctly</div>
+            <div class="card-desc" style="color:#6ee7b7;">Reranker scores are checked. Best score -2.1 &lt; 0.15 threshold → <strong>hard refusal</strong>. LLM is never called. User gets a helpful "I don't know" message.</div>
+            <div class="card-example" style="color:#6ee7b7;">Reranker scores checked:
+  best_score = -2.1  (< 0.15 HARD threshold)
+  
+→ confidence = "none"
+→ SKIP LLM (save API cost!)
+→ Return: "🚫 I don't have enough
+   information to answer this reliably."</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGES 1–4½: UNCHANGED                                               -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">1–4½</div>
+        <div class="stage-title">Data → Embeddings → Vector Store → BM25 Index → LLM Client</div>
+        <span class="stag stag-same">UNCHANGED from v2</span>
+    </div>
+    <div class="card-desc" style="text-align:center; padding:12px;">
+        Stages 1–4½ remain identical to v2. See
+        <a href="architecture_flowchart_v2.html" style="color:#a5b4fc;">architecture_flowchart_v2.html</a>
+        for full details.<br><br>
+        <code style="color:#86efac;">Raw CSVs → Cleaning → Documents → Embeddings → ChromaDB + BM25 Index + LLM Client Factory</code>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 5A: RERANKER — UPDATED TO RETURN SCORES                        -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage upd-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-upd">5A</div>
+        <div class="stage-title">Cross-Encoder Reranker — Now Returns Scores</div>
+        <span class="stag stag-upd">UPDATED in v3</span>
+        <div class="stage-file">rag/reranker.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-v2">
+            <div class="card-label">v2 Behaviour</div>
+            <div class="card-title">rerank() → list[SearchResult]</div>
+            <div class="card-desc">Computed cross-encoder scores internally but <strong style="color:#fca5a5;">discarded them</strong> — only returned sorted documents.</div>
+            <div class="card-example" style="color:#fca5a5;">scored = sorted(zip(docs, scores), ...)
+reranked = [doc for doc, _score in scored]
+#                          ^^^^^^ discarded!
+return reranked  # no scores</div>
+        </div>
+        <div class="arrow-right" style="font-size:2rem; color:#f59e0b;">→</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 v3 Behaviour</div>
+            <div class="card-title">rerank() → RerankedResults</div>
+            <div class="card-method">RerankedResults(documents, scores)</div>
+            <div class="card-desc">New <code>NamedTuple</code> carries both documents AND their cross-encoder scores through the pipeline.</div>
+            <div class="card-example" style="color:#fde68a;">class RerankedResults(NamedTuple):
+    documents: list[SearchResult]
+    scores: list[float]  # parallel, best-first
+
+top_scored = scored[:top_k]
+return RerankedResults(
+    documents=[doc for doc, _ in top_scored],
+    scores=[float(s) for _, s in top_scored],
+)</div>
+            <span class="badge badge-new">RerankedResults</span>
+            <span class="badge badge-pattern">NamedTuple</span>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:10px; font-size:0.8rem;">
+        <strong style="color:#fbbf24;">Key insight:</strong> The cross-encoder was already doing the expensive work of scoring every (query, doc) pair.
+        v3 simply <strong>preserves those scores</strong> instead of throwing them away. Zero extra compute cost.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 5B: RETRIEVER — CONFIDENCE COMPUTATION                         -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage upd-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-upd">5B</div>
+        <div class="stage-title">Retriever — Confidence Computation</div>
+        <span class="stag stag-upd">UPDATED in v3</span>
+        <div class="stage-file">rag/retriever.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-new" style="max-width:450px;">
+            <div class="card-label">🆕 Return Type</div>
+            <div class="card-title">RetrievalResult(NamedTuple)</div>
+            <div class="card-method">retriever.py</div>
+            <div class="card-desc">New named tuple replaces the plain <code>list[SearchResult]</code> return. Carries confidence metadata alongside documents.</div>
+            <div class="card-example" style="color:#fde68a;">class RetrievalResult(NamedTuple):
+    documents: list[SearchResult]
+    confidence: str     # "high"|"low"|"none"
+    best_score: float   # top reranker score
+    mean_score: float   # mean across kept docs</div>
+            <span class="badge badge-new">RetrievalResult</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new" style="max-width:500px;">
+            <div class="card-label">🆕 Logic</div>
+            <div class="card-title">Confidence Classification</div>
+            <div class="card-method">retrieve() → Step 5</div>
+            <div class="card-desc">After reranking, the best cross-encoder score is checked against two configurable thresholds.</div>
+            <div class="card-example" style="color:#fde68a;"># From settings.py:
+CONFIDENCE_THRESHOLD_SOFT = 0.4
+CONFIDENCE_THRESHOLD_HARD = 0.15
+
+# Confidence logic:
+if best_score < 0.15:
+    confidence = "none"     # 🚫 refuse
+elif best_score < 0.4:
+    confidence = "low"      # ⚠️ warn
+else:
+    confidence = "high"     # ✅ normal</div>
+            <span class="badge badge-new">CONFIDENCE_THRESHOLD_*</span>
+        </div>
+    </div>
+
+    <!-- Score gauge -->
+    <div style="max-width:700px; margin:20px auto 0;">
+        <div style="font-size:0.85rem; font-weight:600; text-align:center; margin-bottom:8px; color:#c4b5fd;">Cross-Encoder Score Scale</div>
+        <div class="score-bar">
+            <div class="score-marker" style="left:15%; "></div>
+            <div class="score-marker" style="left:40%;"></div>
+        </div>
+        <div class="score-zone-labels">
+            <div class="szl" style="width:15%; color:#ef4444;">🚫 REFUSE<br><span style="font-size:0.65rem; opacity:0.7;">score &lt; 0.15</span></div>
+            <div class="szl" style="width:25%; color:#fbbf24;">⚠️ LOW CONFIDENCE<br><span style="font-size:0.65rem; opacity:0.7;">0.15 ≤ score &lt; 0.4</span></div>
+            <div class="szl" style="width:60%; color:#10b981;">✅ HIGH CONFIDENCE<br><span style="font-size:0.65rem; opacity:0.7;">score ≥ 0.4</span></div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 5C: CHAIN — GUARDRAIL DECISION                                 -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">5C</div>
+        <div class="stage-title">RAG Chain — Guardrail Decision Gate</div>
+        <span class="stag stag-new">NEW in v3</span>
+        <div class="stage-file">rag/chain.py</div>
+    </div>
+
+    <div class="flow-row" style="justify-content:center;">
+        <div class="card card-new" style="max-width:650px;">
+            <div class="card-label">🆕 Decision Gate</div>
+            <div class="card-title">Confidence → Branch Decision</div>
+            <div class="card-method">chain.py → analyze() — Step 2: Guardrail check</div>
+            <div class="card-desc">After retrieval, the chain inspects <code>retrieval.confidence</code> to decide whether to proceed, warn, or refuse.</div>
+            <div class="card-example" style="color:#fde68a;">retrieval = self._retriever.retrieve(query, ...)
+confidence = retrieval.confidence
+
+if confidence == "none":
+    return _REFUSAL_MSG     # ← SKIP LLM entirely
+elif confidence == "low":
+    answer = LLM(prompt)    # ← call LLM
+    answer = DISCLAIMER + answer  # prepend ⚠️
+else:   # "high"
+    answer = LLM(prompt)    # ← normal path</div>
+        </div>
+    </div>
+
+    <div class="arrow-branch">⬇ ⬇ three paths ⬇ ⬇</div>
+
+    <!-- Three paths -->
+    <div class="guard-flow">
+        <div class="guard-path gp-none">
+            <h4 style="color:#ef4444;">🚫 confidence = "none"</h4>
+            <div class="gp-condition">best_score &lt; 0.15</div>
+            <div class="gp-action" style="color:#fca5a5;">
+                <strong>Hard Refusal</strong><br><br>
+                ❌ LLM is <strong>NOT called</strong><br>
+                💰 Saves API cost<br>
+                🛡️ Prevents hallucination<br><br>
+                Returns a structured message:<br>
+                <em>"I don't have enough information to answer this reliably."</em><br><br>
+                📚 Sources still included for transparency
+            </div>
+        </div>
+        <div class="guard-path gp-low">
+            <h4 style="color:#fbbf24;">⚠️ confidence = "low"</h4>
+            <div class="gp-condition">0.15 ≤ best_score &lt; 0.4</div>
+            <div class="gp-action" style="color:#fde68a;">
+                <strong>Soft Warning</strong><br><br>
+                ✅ LLM IS called<br>
+                ⚠️ Disclaimer prepended<br>
+                🔍 User reviews critically<br><br>
+                Answer starts with:<br>
+                <em>"⚠️ Low confidence — the retrieved context may not fully match your query."</em><br><br>
+                Full analysis follows below
+            </div>
+        </div>
+        <div class="guard-path gp-high">
+            <h4 style="color:#10b981;">✅ confidence = "high"</h4>
+            <div class="gp-condition">best_score ≥ 0.4</div>
+            <div class="gp-action" style="color:#6ee7b7;">
+                <strong>Normal Path</strong><br><br>
+                ✅ LLM is called<br>
+                ✅ No disclaimer<br>
+                ✅ Standard analysis<br><br>
+                This is the <em>usual</em> path for well-formed startup queries.<br><br>
+                Confidence badge: <span style="background:#10b981; color:white; padding:2px 8px; border-radius:8px; font-size:0.7rem;">✅ High confidence</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 5D: PROMPT + LLM (unchanged from v2)                           -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">5D</div>
+        <div class="stage-title">Prompt Template + LLM Generation</div>
+        <span class="stag stag-same">UNCHANGED from v2</span>
+        <div class="stage-file">chain.py · prompt_templates.py</div>
+    </div>
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom</div>
+            <div class="card-title">get_prompt()</div>
+            <div class="card-desc">6 templates: auto, similar, swot, competitor, comparison, ecosystem. Only reached when confidence ≠ "none".</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-model">
+            <div class="card-label">🤖 LLM</div>
+            <div class="card-title">Groq / OpenAI → answer</div>
+            <div class="card-desc">Same as v2. Uses <code>get_llm_client()</code>. Skipped entirely on hard refusal.</div>
+            <span class="badge badge-api">Groq llama-3.3-70b / OpenAI gpt-4o-mini</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Response Dict (updated)</div>
+            <div class="card-title">answer + sources + confidence</div>
+            <div class="card-example" style="color:#fde68a;">return {
+  "answer": answer,
+  "sources": [...],
+  "analysis_type": "similar",
+  "model": "llama-3.3-70b-versatile",
+  "confidence": "high",   # 🆕
+  "best_score": 2.34,     # 🆕
+  "mean_score": 1.12,     # 🆕
+}</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 6: STREAMLIT UI — CONFIDENCE BADGES                            -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage upd-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-upd">6</div>
+        <div class="stage-title">Streamlit UI — Confidence Badges</div>
+        <span class="stag stag-upd">UPDATED in v3</span>
+        <div class="stage-file">app/streamlit_app.py · app/components.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-new" style="max-width:400px;">
+            <div class="card-label">🆕 components.py</div>
+            <div class="card-title">format_confidence_badge()</div>
+            <div class="card-desc">Generates styled HTML badge based on confidence level. Three CSS classes for green/yellow/red.</div>
+            <div class="card-example" style="color:#fde68a;">_CONFIDENCE_LABELS = {
+  "high": ("✅ High confidence", "green"),
+  "low":  ("⚠️ Low confidence", "yellow"),
+  "none": ("🚫 Refused", "red"),
+}
+
+# Returns HTML:
+# &lt;span class="confidence-high"&gt;
+#   ✅ High confidence (score: 2.34)
+# &lt;/span&gt;</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new" style="max-width:550px;">
+            <div class="card-label">🆕 UI Display</div>
+            <div class="card-title">Footer with Confidence Badge</div>
+            <div class="card-desc">Every response now shows a colour-coded confidence badge alongside latency, model, and source count.</div>
+            <div class="card-example" style="color:#fde68a;">⏱️ 2.3s · 📋 similar · 🤖 llama-3.3-70b
+📚 5 sources · ✅ High confidence (score: 2.34)
+
+# Or for low confidence:
+⏱️ 1.8s · 📋 auto · 🤖 llama-3.3-70b
+📚 5 sources · ⚠️ Low confidence (score: 0.28)
+
+# Or for refusal:
+📚 5 sources · 🚫 Refused (score: 0.08)</div>
+        </div>
+    </div>
+
+    <div style="margin-top:16px;">
+        <div class="flow-row">
+            <div class="card card-new" style="max-width:350px;">
+                <div class="card-label">🆕 Chat History</div>
+                <div class="card-title">Confidence persisted in session</div>
+                <div class="card-desc">Confidence + best_score saved in <code>st.session_state.messages</code>. Replayed by <code>render_chat_history()</code> on re-render.</div>
+                <div class="card-example" style="color:#fde68a;">st.session_state.messages.append({
+  "role": "assistant",
+  "content": answer,
+  "sources": sources,
+  "confidence": "high",  # 🆕
+  "best_score": 2.34,    # 🆕
+})</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGES 7: EVAL — UNCHANGED                                           -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">7</div>
+        <div class="stage-title">RAG Evaluation Pipeline</div>
+        <span class="stag stag-same">UNCHANGED from v2</span>
+    </div>
+    <div class="card-desc" style="text-align:center; padding:12px;">
+        Evaluation pipeline is backward-compatible. New <code>confidence</code>, <code>best_score</code>, <code>mean_score</code> keys
+        are additive — <code>run_eval.py</code> accesses <code>result["answer"]</code> and <code>result["sources"]</code> which are unchanged.<br><br>
+        <code style="color:#86efac;">eval_dataset.py → evaluator.py → run_eval.py → JSON + CSV</code>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DATA FLOW DIAGRAM — SCORE PROPAGATION                                -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">📊</div>
+        <div class="stage-title">Score Propagation — End-to-End Data Flow</div>
+        <span class="stag stag-new">NEW in v3</span>
+    </div>
+
+    <div style="font-size:0.82rem; line-height:2; padding:8px;">
+        <table class="stbl">
+            <thead>
+                <tr><th>Stage</th><th>What Happens</th><th>Score State</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="mono">CrossEncoder.predict()</td>
+                    <td>Scores 20 (query, doc) pairs</td>
+                    <td class="mono" style="color:#fca5a5;">float[] — raw scores (was discarded in v2)</td>
+                </tr>
+                <tr style="background:rgba(245,158,11,0.05);">
+                    <td class="mono">🆕 reranker.rerank()</td>
+                    <td>Sort + take top 5</td>
+                    <td class="mono" style="color:#fde68a;">→ RerankedResults(documents=[5], scores=[5])</td>
+                </tr>
+                <tr style="background:rgba(245,158,11,0.05);">
+                    <td class="mono">🆕 retriever.retrieve()</td>
+                    <td>Compute confidence from best_score</td>
+                    <td class="mono" style="color:#fde68a;">→ RetrievalResult(docs, "high"|"low"|"none", 2.34, 1.12)</td>
+                </tr>
+                <tr style="background:rgba(245,158,11,0.05);">
+                    <td class="mono">🆕 chain.analyze()</td>
+                    <td>Branch on confidence</td>
+                    <td class="mono" style="color:#fde68a;">→ {"confidence": "high", "best_score": 2.34, "mean_score": 1.12}</td>
+                </tr>
+                <tr style="background:rgba(245,158,11,0.05);">
+                    <td class="mono">🆕 Streamlit UI</td>
+                    <td>Render confidence badge</td>
+                    <td class="mono" style="color:#fde68a;">→ <span style="background:#10b981; color:white; padding:1px 6px; border-radius:6px; font-size:0.65rem;">✅ High confidence (2.34)</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- NEW & UPDATED MODULES TABLE                                          -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">📋</div>
+        <div class="stage-title">v3 Changed Modules — Complete Reference</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Module</th><th>Class / Function</th><th>Status</th><th>What Changed</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="mono">config/settings.py</td>
+                <td class="mono">CONFIDENCE_THRESHOLD_SOFT = 0.4<br>CONFIDENCE_THRESHOLD_HARD = 0.15</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>Two new configurable thresholds for confidence gating</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/reranker.py</td>
+                <td class="mono">RerankedResults(NamedTuple)<br>rerank() → RerankedResults</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>New return type carries (documents, scores) — was list[SearchResult]</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/retriever.py</td>
+                <td class="mono">RetrievalResult(NamedTuple)<br>retrieve() → RetrievalResult</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>New return type with confidence + scores. Classifies "high"/"low"/"none"</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/chain.py</td>
+                <td class="mono">_REFUSAL_MSG, _LOW_CONFIDENCE_DISCLAIMER<br>analyze() — Step 2: Guardrail check</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>Guardrail gate: none→refuse (skip LLM), low→warn+answer, high→normal. Response dict has 3 new keys.</td>
+            </tr>
+            <tr>
+                <td class="mono">app/components.py</td>
+                <td class="mono">format_confidence_badge()<br>render_chat_history() — badge replay<br>CSS: .confidence-high/low/none</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>New badge renderer + 3 CSS classes (green/yellow/red). History replays badge.</td>
+            </tr>
+            <tr>
+                <td class="mono">app/streamlit_app.py</td>
+                <td class="mono">_process_query() — badge in footer<br>Session state includes confidence</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td>Shows confidence badge in response footer. Saves confidence to message history.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- GUARDRAIL MESSAGES REFERENCE                                         -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">💬</div>
+        <div class="stage-title">Guardrail Messages — Exact Text</div>
+        <span class="stag stag-new">NEW in v3</span>
+        <div class="stage-file">rag/chain.py</div>
+    </div>
+    <div class="flow-row">
+        <div class="card card-danger" style="max-width:500px;">
+            <div class="card-label">🚫 Hard Refusal (_REFUSAL_MSG)</div>
+            <div class="card-title">confidence = "none"</div>
+            <div class="card-example" style="color:#fca5a5;">🚫 **I don't have enough information
+to answer this reliably.**
+
+The retrieved context doesn't appear
+relevant to your query. This can happen
+when:
+- The topic is outside the startup
+  database's coverage
+- The query is too vague or ambiguous
+- No matching startups exist in our
+  134K dataset
+
+*Try rephrasing your query or broadening
+your search terms.*</div>
+        </div>
+        <div class="card card-warn" style="max-width:500px;">
+            <div class="card-label">⚠️ Soft Warning (_LOW_CONFIDENCE_DISCLAIMER)</div>
+            <div class="card-title">confidence = "low"</div>
+            <div class="card-example" style="color:#fde68a;">⚠️ **Low confidence** — the retrieved
+context may not fully match your query.
+Results below should be reviewed
+critically.
+
+---
+
+[normal LLM analysis follows here]</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONFIG REFERENCE — v3 additions                                      -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚙️</div>
+        <div class="stage-title">v3 Configuration Reference</div>
+        <div class="stage-file">config/settings.py</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Setting</th><th>Value</th><th>Purpose</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(245,158,11,0.05);">
+                <td class="mono">CONFIDENCE_THRESHOLD_SOFT</td>
+                <td class="mono">0.4</td>
+                <td>Below this → prepend low-confidence disclaimer</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr style="background:rgba(245,158,11,0.05);">
+                <td class="mono">CONFIDENCE_THRESHOLD_HARD</td>
+                <td class="mono">0.15</td>
+                <td>Below this → refuse to answer, skip LLM</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr>
+                <td class="mono">RERANK_ENABLED</td>
+                <td class="mono">True</td>
+                <td>Toggle reranking (required for confidence scoring)</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">RERANKER_MODEL_NAME</td>
+                <td class="mono">cross-encoder/ms-marco-MiniLM-L-6-v2</td>
+                <td>22 MB cross-encoder — provides the raw scores</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">LLM_PROVIDER</td>
+                <td class="mono">"groq"</td>
+                <td>Active LLM backend</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">HYBRID_SEARCH_ENABLED</td>
+                <td class="mono">True</td>
+                <td>Toggle hybrid retrieval</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top:16px; padding:14px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:10px; font-size:0.8rem;">
+        <strong style="color:#fbbf24;">⚠️ Fallback when reranker is disabled:</strong>
+        If <code>RERANK_ENABLED = False</code>, no cross-encoder scores are available.
+        In that case, confidence defaults to <code>"high"</code> (optimistic) — the system behaves identically to v2.
+        Guardrails require the reranker to function.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DESIGN DECISIONS                                                     -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">🧠</div>
+        <div class="stage-title">v3 Design Decisions — Why These Choices?</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Decision</th><th>Choice</th><th>Alternatives Considered</th><th>Why This?</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Confidence signal source</td>
+                <td class="mono">Cross-encoder best_score</td>
+                <td>Cosine distance, LLM self-rating, embedding distance</td>
+                <td>Cross-encoder is the most accurate relevance signal — reads query+doc jointly. Already computed, zero extra cost.</td>
+            </tr>
+            <tr>
+                <td>Two-tier thresholds</td>
+                <td class="mono">Hard (0.15) + Soft (0.4)</td>
+                <td>Single threshold, three tiers, probabilistic</td>
+                <td>Two tiers balance UX (most queries pass) with safety (garbage gets caught). Tuneable via config.</td>
+            </tr>
+            <tr>
+                <td>Hard refusal skips LLM</td>
+                <td class="mono">Return immediately, no API call</td>
+                <td>Call LLM anyway, let it decide</td>
+                <td>If context is garbage, LLM can only hallucinate. Skipping saves cost + prevents misleading answers.</td>
+            </tr>
+            <tr>
+                <td>Include sources in refusal</td>
+                <td class="mono">Yes — sources still returned</td>
+                <td>Hide sources on refusal</td>
+                <td>Transparency — user can inspect WHY the system refused. Builds trust.</td>
+            </tr>
+            <tr>
+                <td>No-reranker fallback</td>
+                <td class="mono">Default to "high" (optimistic)</td>
+                <td>Force reranker, use cosine as fallback</td>
+                <td>Cosine distance is a weak proxy. Better to not guard than to guard poorly with wrong signal.</td>
+            </tr>
+            <tr>
+                <td>Score type</td>
+                <td class="mono">NamedTuple (RerankedResults, RetrievalResult)</td>
+                <td>Dict, dataclass, Pydantic model</td>
+                <td>NamedTuple is lightweight, immutable, typed, and has tuple unpacking. Matches existing codebase style.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<p style="text-align:center; color:#6b7280; font-size:0.8rem; margin-top:20px;">
+    BizIntel v3 · Confidence Guardrails · Python 3.13 · uv · Groq / OpenAI · CrossEncoder scores → confidence → branch
+</p>
+
+</body>
+</html>

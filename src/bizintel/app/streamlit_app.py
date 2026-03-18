@@ -38,6 +38,7 @@ from bizintel.app.components import (
     render_chat_history,
     render_sources,
     build_where_filter,
+    format_confidence_badge,
 )
 
 # ── Logging ──────────────────────────────────────────────────────────────
@@ -120,12 +121,19 @@ def _process_query(query: str) -> None:
                 if result["sources"]:
                     render_sources(result["sources"])
 
+                # Confidence badge
+                confidence = result.get("confidence", "high")
+                best_score = result.get("best_score", 0.0)
+                badge_html = format_confidence_badge(confidence, best_score)
+
                 # Footer with metadata
-                st.caption(
+                st.markdown(
                     f"⏱️ {elapsed:.1f}s · "
                     f"📋 {result['analysis_type']} · "
                     f"🤖 {result['model']} · "
-                    f"📚 {len(result['sources'])} sources"
+                    f"📚 {len(result['sources'])} sources · "
+                    f"{badge_html}",
+                    unsafe_allow_html=True,
                 )
 
                 # Save to session state
@@ -133,6 +141,8 @@ def _process_query(query: str) -> None:
                     "role": "assistant",
                     "content": result["answer"],
                     "sources": result["sources"],
+                    "confidence": confidence,
+                    "best_score": best_score,
                 })
 
             except Exception as e:

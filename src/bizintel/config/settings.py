@@ -130,6 +130,23 @@ FAISS_DOCSTORE_FILENAME = "docstore.json"
 TOP_K = 5                        # final number of docs sent to the LLM
 
 
+# ── Confidence / guardrail config ────────────────────────────────────────
+#
+# GUARDRAILS_ENABLED = True activates the confidence gate.
+# When False, the system behaves like v2 — always answers, no refusals.
+#
+# After reranking, the best cross-encoder score is checked against these
+# thresholds to decide whether to answer, warn, or refuse.
+#
+#   score >= SOFT    → normal answer (high confidence)
+#   HARD <= score < SOFT → answer with "⚠️ low confidence" disclaimer
+#   score < HARD     → refuse: "I don't have enough information…"
+
+GUARDRAILS_ENABLED: bool = True          # master toggle for confidence gate
+CONFIDENCE_THRESHOLD_SOFT: float = 0.4   # below this → add disclaimer
+CONFIDENCE_THRESHOLD_HARD: float = 0.15  # below this → refuse to answer
+
+
 # ── Reranker config ──────────────────────────────────────────────────────
 
 RERANK_ENABLED = True                                          # toggle reranking on/off

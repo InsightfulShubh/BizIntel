@@ -96,6 +96,37 @@ CUSTOM_CSS = """
         border-top: 1px solid #e0e0e0;
     }
 
+    /* Confidence badges */
+    .confidence-high {
+        display: inline-block;
+        background: #28a745;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .confidence-low {
+        display: inline-block;
+        background: #ffc107;
+        color: #212529;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .confidence-none {
+        display: inline-block;
+        background: #dc3545;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
     /* Welcome message */
     .welcome-box {
         text-align: center;
@@ -132,6 +163,26 @@ CUSTOM_CSS = """
 def render_header() -> None:
     """Render the app header with branding."""
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# ── Confidence badge ─────────────────────────────────────────────────────
+
+_CONFIDENCE_LABELS = {
+    "high": ("✅ High confidence", "confidence-high"),
+    "low": ("⚠️ Low confidence", "confidence-low"),
+    "none": ("🚫 Refused — no relevant context", "confidence-none"),
+}
+
+
+def format_confidence_badge(confidence: str, best_score: float) -> str:
+    """Return an HTML badge string for the confidence level."""
+    label, css_class = _CONFIDENCE_LABELS.get(
+        confidence, ("❓ Unknown", "confidence-low"),
+    )
+    return (
+        f'<span class="{css_class}">{label} '
+        f"(score: {best_score:.2f})</span>"
+    )
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────
@@ -276,6 +327,13 @@ def render_chat_history() -> None:
             # Render source cards if present (assistant messages)
             if msg.get("sources"):
                 render_sources(msg["sources"])
+
+            # Render confidence badge if present
+            if msg.get("confidence"):
+                badge = format_confidence_badge(
+                    msg["confidence"], msg.get("best_score", 0.0),
+                )
+                st.markdown(badge, unsafe_allow_html=True)
 
 
 def render_sources(sources: list[dict]) -> None:

@@ -1,0 +1,79 @@
+id,query,analysis_type,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"Based on the provided startup data, here are the similar startups to Stripe, ranked by relevance:
+
+1. **Dots** (US, 2021) — Similar to Stripe, Dots provides a developer-friendly API for payments, allo…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.36,396
+sim_02,Find startups similar to Airbnb,similar,Proper-noun test — Airbnb → short-term rental marketplace,"Based on the provided startup data, here are the similar startups to Airbnb, ranked by relevance:
+
+1. **Rentalo** (USA, 1998.0) — Similarity explanation: Rentalo is a worldwide travel accommodation on…",5,0.8,0.8,1.0,0.8,1.0,1.0,2.07,464
+sim_03,AI healthcare startups in India,similar,Descriptive query — should match without heavy expansion,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.4,1.0,0.0,1.0,1.0,1.0,2.22,116
+sim_06,Climate tech and clean energy startups,similar,Emerging sector — climate / cleantech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,2.31,116
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,Must produce all 4 SWOT quadrants with healthcare context,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.6,0.0,1.0,2.24,116
+swot_03,SWOT of food delivery startups,swot,SWOT for food delivery sector,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.98,116
+swot_04,SWOT analysis for cybersecurity companies,swot,SWOT for cybersecurity domain,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.87,116
+comp_01,Who are the main competitors in the food delivery space?,competitor,Competitor landscape for food delivery,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,1.26,116
+comp_02,Competitive landscape for cloud infrastructure startups,competitor,Competitor analysis for cloud infra,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.94,116
+comp_05,Competitive analysis of project management tools,competitor,Project management tool competitors,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.84,116
+cmp_01,Compare YC-backed edtech startups vs Crunchbase edtech companies,comparison,Cross-source comparison for edtech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.6,1.0,1.0,1.04,116
+cmp_05,Side-by-side comparison of SaaS companies in B2B vs B2C,comparison,Business model comparison — B2B vs B2C SaaS,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,0.92,116
+eco_01,Map the autonomous vehicle startup ecosystem,ecosystem,AV ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.8,0.0,1.0,0.58,116
+eco_02,Explore the blockchain and Web3 startup ecosystem,ecosystem,Blockchain/Web3 ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.77,116
+eco_03,Map the proptech real estate technology ecosystem,ecosystem,PropTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.71,116
+eco_04,Startup ecosystem for mental health and wellness,ecosystem,Mental health/wellness ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.8,0.0,1.0,0.71,116
+eco_05,Map the agriculture technology (agtech) startup ecosystem,ecosystem,AgTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,0.74,116
+auto_02,What's happening in the space tech industry?,auto,Open-ended question — should auto-detect ecosystem or overview,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,0.9,116
+auto_03,Analyse the gaming startup landscape in the US,auto,Analysis request — should auto-detect competitor or ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,1.56,116
+auto_04,Find me something interesting in quantum computing,auto,Very vague — tests query expansion + auto format selection,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,0.68,116
