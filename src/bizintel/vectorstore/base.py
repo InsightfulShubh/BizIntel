@@ -71,6 +71,17 @@ class VectorStoreBase(ABC):
     def reset(self) -> None:
         """Delete all documents from the store."""
 
+    @abstractmethod
+    def get_all_documents(
+        self,
+        batch_size: int = 5000,
+    ) -> tuple[list[str], list[str], list[dict]]:
+        """
+        Return ALL (doc_ids, texts, metadatas) from the store.
+
+        Used to build auxiliary indices (e.g. BM25) at startup.
+        """
+
 
 # ── Factory ──────────────────────────────────────────────────────────────
 

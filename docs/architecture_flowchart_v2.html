@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel v2 — Architecture Flowchart (Hybrid RAG + Groq)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .version-row {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .ver-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0 4px;
+        }
+        .ver-old { background: linear-gradient(135deg, #6b7280, #4b5563); color: #d1d5db; }
+        .ver-new { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+
+        /* ── Legend ─────────────────────────────────── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+        /* ── Stage sections ────────────────────────── */
+        .stage {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .stage.new-stage   { border-color: rgba(16,185,129,0.35); background: rgba(16,185,129,0.03); }
+        .stage.upd-stage   { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.03); }
+        .stage-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stage-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1rem; flex-shrink: 0;
+        }
+        .stage-num.sn-new  { background: linear-gradient(135deg, #10b981, #059669); }
+        .stage-num.sn-upd  { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stage-title { font-size: 1.25rem; font-weight: 700; color: #c4b5fd; }
+        .stage-file {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15); color: #a5b4fc;
+            padding: 4px 14px; border-radius: 20px; font-size: 0.76rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+        .stag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-left: 8px; }
+        .stag-new { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .stag-upd { background: #f59e0b33; color: #fbbf24; border: 1px solid #f59e0b55; }
+        .stag-same { background: #6b728033; color: #9ca3af; border: 1px solid #6b728055; }
+
+        /* ── Flow rows ─────────────────────────────── */
+        .flow-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        /* ── Cards ─────────────────────────────────── */
+        .card {
+            flex: 1; min-width: 220px; max-width: 400px;
+            border-radius: 12px; padding: 16px 18px;
+            transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-input   { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 1px solid #2563eb; }
+        .card-custom  { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .card-builtin { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 1px solid #10b981; }
+        .card-output  { background: linear-gradient(135deg,#4a2c17,#2d1a0e); border: 1px solid #f59e0b; }
+        .card-model   { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 1px solid #ec4899; }
+        .card-new     { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; }
+
+        .card-label  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
+        .card-title  { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        .card-method { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.78rem; color: #c4b5fd; margin-bottom: 6px; }
+        .card-desc   { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+        .card-example {
+            margin-top: 8px; background: rgba(0,0,0,0.3); border-radius: 8px;
+            padding: 8px 12px; font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.72rem; color: #86efac; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        .arrow-down  { text-align: center; font-size: 1.4rem; color: #6366f1; margin: 4px 0 8px; animation: pulse 2s infinite; }
+        .arrow-right { display: flex; align-items: center; font-size: 1.3rem; color: #6366f1; flex-shrink: 0; }
+        .arrow-split { text-align: center; font-size: 1.1rem; color: #10b981; margin: 8px 0; letter-spacing: 2px; }
+
+        @keyframes pulse { 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-right: 4px; margin-top: 6px; }
+        .badge-pattern { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .badge-lib     { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .badge-api     { background: #ec489933; color: #f9a8d4; border: 1px solid #ec489955; }
+        .badge-new     { background: #10b98155; color: #a7f3d0; border: 1px solid #10b98188; }
+
+        /* ── Comparison columns ───────────────────── */
+        .cmp  { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+        .cmp-col { flex: 1; min-width: 300px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 18px; }
+        .cmp-col h3 { font-size: 0.9rem; margin-bottom: 12px; }
+        .pstep { padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-family: 'Cascadia Code','Fira Code',monospace; margin-bottom: 6px; }
+        .ps-old { background: rgba(107,114,128,0.2); border: 1px solid rgba(107,114,128,0.3); }
+        .ps-new { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); }
+        .ps-arrow { text-align: center; color: #6366f1; font-size: 0.9rem; margin: 2px 0; }
+
+        /* ── Tables ────────────────────────────────── */
+        .stbl { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .stbl th { background: rgba(99,102,241,0.15); padding: 10px 14px; text-align: left; font-size: 0.8rem; color: #a5b4fc; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .stbl td { padding: 8px 14px; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+        .stbl tr:hover { background: rgba(255,255,255,0.03); }
+        .mono { font-family: 'Cascadia Code','Fira Code',monospace; color: #c4b5fd; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 BizIntel v2 — Architecture Flowchart</h1>
+<p class="subtitle">AI-Powered Startup Intelligence Engine · 134 K Startups · Hybrid RAG · Multi-Provider LLM</p>
+<div class="version-row">
+    <span class="ver-badge ver-old">v1 — Semantic Only · OpenAI</span>
+    <span class="ver-badge ver-new">v2 — Hybrid Search + Reranker + Groq (Free)</span>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div>Input / Data</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>Custom Method</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Built-in / Library</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Output</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899;"></div>ML Model / API</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981; border:2px solid #a7f3d0;"></div>NEW in v2</div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PIPELINE COMPARISON — v1 vs v2                                       -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚡</div>
+        <div class="stage-title">Pipeline Evolution — v1 vs v2</div>
+    </div>
+    <div class="cmp">
+        <div class="cmp-col">
+            <h3 style="color:#9ca3af;">❌ v1 — Semantic Only + OpenAI</h3>
+            <div class="pstep ps-old">User Query</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">_expand_query() → OpenAI gpt-4o-mini</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">Embedder → 384-dim vector</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">ChromaDB → top 5 (cosine)</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">OpenAI gpt-4o-mini → answer</div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#9ca3af;">
+                ⚠️ No keyword matching · No reranking · Paid API only<br>
+                Context Relevancy: <strong style="color:#fca5a5;">0.70</strong>
+            </div>
+        </div>
+        <div class="cmp-col">
+            <h3 style="color:#6ee7b7;">✅ v2 — Hybrid + Reranker + Free LLM</h3>
+            <div class="pstep ps-old">User Query</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-new">🆕 get_llm_client() → auto-select provider</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">_expand_query() → Groq / OpenAI</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old" style="display:flex; justify-content:center; gap:30px;">
+                <span>Embedder → vector</span>
+                <span style="color:#6366f1;">│</span>
+                <span style="color:#6ee7b7;">Tokeniser → words</span>
+            </div>
+            <div class="ps-arrow">⬇ ⬇</div>
+            <div style="display:flex; gap:8px;">
+                <div class="pstep ps-old" style="flex:1; text-align:center;">ChromaDB → top 20</div>
+                <div class="pstep ps-new" style="flex:1; text-align:center;">🆕 BM25 → top 20</div>
+            </div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-new">🆕 Weighted RRF Fusion → top 20 merged</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-new">🆕 Cross-Encoder Reranker → top 5</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-new">🆕 Groq llama-3.3-70b (FREE) → answer</div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#9ca3af;">
+                ✅ Semantic + Keyword · Cross-encoder · Free API<br>
+                Context Relevancy: <strong style="color:#6ee7b7;">0.83</strong> (+0.13)
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGES 1–4: UNCHANGED                                                -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">1–4</div>
+        <div class="stage-title">Data → Documents → Embeddings → Vector Store</div>
+        <span class="stag stag-same">UNCHANGED from v1</span>
+    </div>
+    <div class="card-desc" style="text-align:center; padding:12px;">
+        Stages 1–4 remain identical to v1. See
+        <a href="architecture_flowchart.html" style="color:#a5b4fc;">architecture_flowchart.html</a>
+        for full details.<br><br>
+        <code style="color:#86efac;">Raw CSVs → data_preprocess.py → document_builder.py → embedder.py → ChromaDB (134,092 docs × 384-dim)</code>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 4½: BM25 INDEX (NEW)                                           -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">4½</div>
+        <div class="stage-title">BM25 Keyword Index</div>
+        <span class="stag stag-new">NEW in v2</span>
+        <div class="stage-file">search/bm25_search.py</div>
+    </div>
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">📂 Input</div>
+            <div class="card-title">All 134 K Document Texts</div>
+            <div class="card-desc">Fetched from ChromaDB via <code>get_all_documents()</code> at startup</div>
+            <div class="card-example">store.get_all_documents(batch_size=5000)
+# → (doc_ids, texts, metadatas)
+# Fetches all 134,092 docs in ~10 s</div>
+            <span class="badge badge-new">NEW: get_all_documents()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 Custom</div>
+            <div class="card-title">_tokenise(text)</div>
+            <div class="card-method">bm25_search.py</div>
+            <div class="card-desc">Regex tokeniser — lowercase, keep alphanumeric tokens ≥ 2 chars</div>
+            <div class="card-example">_TOKEN_RE = re.compile(r"[a-z0-9]{2,}")
+
+"Stripe — Payment API $99"
+→ ["stripe", "payment", "api", "99"]</div>
+            <span class="badge badge-lib">re.compile()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 Library</div>
+            <div class="card-title">BM25Okapi Index</div>
+            <div class="card-method">rank_bm25.BM25Okapi</div>
+            <div class="card-desc">Builds IDF table + doc-length stats over all 134 K tokenised docs. One-time cost ~3 s.</div>
+            <div class="card-example">tokenised = [_tokenise(t) for t in texts]
+bm25 = BM25Okapi(tokenised)
+
+# Precomputes:
+#   IDF("payment") = 4.2  (rare → high)
+#   IDF("the")     = 0.1  (common → low)
+#   avg_doc_len    = 47.3 tokens</div>
+            <span class="badge badge-lib">rank_bm25</span>
+        </div>
+    </div>
+    <div class="arrow-down">⬇</div>
+    <div class="flow-row">
+        <div class="card card-new">
+            <div class="card-label">🆕 Custom</div>
+            <div class="card-title">BM25Index.search(query, top_k=20)</div>
+            <div class="card-method">bm25_search.py</div>
+            <div class="card-desc">Tokenise query → score all 134 K docs → return top 20 by BM25 score. ~30 ms per query.</div>
+            <div class="card-example">tokens = _tokenise(query)
+scores = bm25.get_scores(tokens)   # 134 K scores
+top_idx = np.argsort(scores)[::-1][:20]
+
+# Returns list[SearchResult]
+#   distance = -bm25_score
+#   (negative so lower = better)</div>
+            <span class="badge badge-lib">np.argsort()</span>
+            <span class="badge badge-lib">BM25Okapi.get_scores()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">BM25 Search Results</div>
+            <div class="card-desc">Top 20 keyword-matched docs (ranked by BM25 score). Catches exact keyword matches semantic search might miss.</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 4¾: LLM CLIENT FACTORY (NEW)                                   -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">4¾</div>
+        <div class="stage-title">LLM Client Factory — Multi-Provider</div>
+        <span class="stag stag-new">NEW in v2</span>
+        <div class="stage-file">config/llm_client.py · config/settings.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-new">
+            <div class="card-label">🆕 Config</div>
+            <div class="card-title">LLM_PROVIDER flag</div>
+            <div class="card-method">config/settings.py</div>
+            <div class="card-desc">Single flag controls which backend is used across <strong>all</strong> LLM calls (chain, query expansion, eval judge).</div>
+            <div class="card-example">LLM_PROVIDER = "groq"     # ← flip to "openai"
+
+# Auto-resolves:
+#  "groq"   → llama-3.3-70b-versatile (FREE)
+#  "openai" → gpt-4o-mini              (paid)
+
+LLM_MODEL = GROQ_MODEL if LLM_PROVIDER == "groq"
+            else OPENAI_MODEL</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new" style="max-width:450px;">
+            <div class="card-label">🆕 Factory</div>
+            <div class="card-title">get_llm_client(provider?)</div>
+            <div class="card-method">config/llm_client.py</div>
+            <div class="card-desc">Returns an <code>OpenAI</code>-compatible client pointed at the right endpoint. Groq's API is OpenAI-compatible → same <code>chat.completions.create()</code> interface.</div>
+            <div class="card-example">_API_KEY_ENV = {
+  "openai": "OPENAI_API_KEY",
+  "groq":   "GROQ_API_KEY",
+}
+_BASE_URLS = {
+  "openai": None,   # default endpoint
+  "groq":   "https://api.groq.com/openai/v1",
+}
+
+client = OpenAI(
+  api_key  = os.environ[env_var],
+  base_url = _BASE_URLS[provider],
+)</div>
+            <span class="badge badge-new">Zero new dependencies!</span>
+            <span class="badge badge-lib">openai.OpenAI</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Shared Client</div>
+            <div class="card-title">OpenAI-compatible Client</div>
+            <div class="card-desc">Used by 3 call sites:</div>
+            <div class="card-example">1. chain.py  → _expand_query()   (temp=0.0)
+2. chain.py  → analyze()         (temp=0.3)
+3. evaluator → _judge()          (temp=0.0)
+
+# All three call:
+#   client.chat.completions.create(
+#     model=LLM_MODEL, ...
+#   )</div>
+        </div>
+    </div>
+
+    <div style="margin-top:12px; display:flex; gap:16px; flex-wrap:wrap;">
+        <div class="card card-model" style="flex:1; min-width:200px;">
+            <div class="card-label">🤖 Provider A (default)</div>
+            <div class="card-title">Groq — FREE</div>
+            <div class="card-desc">
+                Model: <code>llama-3.3-70b-versatile</code><br>
+                Rate: 30 RPM free tier<br>
+                Latency: ~0.5 s (LPU inference)<br>
+                Cost: <strong style="color:#6ee7b7;">$0</strong>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; font-size:1.2rem; color:#6366f1;">or</div>
+        <div class="card card-model" style="flex:1; min-width:200px;">
+            <div class="card-label">🤖 Provider B</div>
+            <div class="card-title">OpenAI — Paid</div>
+            <div class="card-desc">
+                Model: <code>gpt-4o-mini</code><br>
+                Rate: Tier-based<br>
+                Latency: ~2 s<br>
+                Cost: $0.15 / 1M input tokens
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 5: RAG CHAIN — UPDATED                                         -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage upd-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-upd">5</div>
+        <div class="stage-title">RAG Chain — Hybrid Retrieval Pipeline</div>
+        <span class="stag stag-upd">UPDATED in v2</span>
+        <div class="stage-file">rag/retriever.py · reranker.py · search/fusion.py · chain.py</div>
+    </div>
+
+    <!-- 5.1: Query Expansion -->
+    <div class="flow-row">
+        <div class="card card-input">
+            <div class="card-label">💬 Input</div>
+            <div class="card-title">User Query</div>
+            <div class="card-desc">From Streamlit chat</div>
+            <div class="card-example">"Find startups similar to Stripe"</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom (updated)</div>
+            <div class="card-title">_expand_query()</div>
+            <div class="card-method">chain.py → self._client</div>
+            <div class="card-desc">Now uses <code>get_llm_client()</code> — works with Groq or OpenAI automatically.</div>
+            <div class="card-example">"Find startups similar to Stripe"
+→ "online payment processing fintech
+   developer API billing infrastructure"</div>
+            <span class="badge badge-api">Groq / OpenAI (temp=0.0)</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- 5.2: Dual search -->
+    <div class="flow-row">
+        <div class="card card-model">
+            <div class="card-label">🤖 Semantic Search</div>
+            <div class="card-title">ChromaDB → Top 20</div>
+            <div class="card-method">encode_single() → store.query(top_k=20)</div>
+            <div class="card-desc">Bi-encoder cosine similarity. Over-fetches (was top-5, now top-20) to give reranker more candidates.</div>
+            <div class="card-example">query_vec = embedder.encode_single(q)
+semantic = store.query(
+  query_vec, top_k=20, where=...
+)  # cosine distance</div>
+            <span class="badge badge-lib">all-MiniLM-L6-v2</span>
+            <span class="badge badge-lib">ChromaDB HNSW</span>
+        </div>
+        <div class="arrow-right" style="font-size:1.8rem; color:#10b981;">+</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 Keyword Search</div>
+            <div class="card-title">BM25 → Top 20</div>
+            <div class="card-method">bm25_index.search(query, top_k=20)</div>
+            <div class="card-desc">Exact keyword matches that semantic search might miss. Catches "Stripe", "API", etc.</div>
+            <span class="badge badge-new">BM25Okapi</span>
+        </div>
+    </div>
+
+    <div class="arrow-split">⬇ ⬇ merge ⬇ ⬇</div>
+
+    <!-- 5.3: RRF Fusion -->
+    <div class="flow-row">
+        <div class="card card-new" style="max-width:620px;">
+            <div class="card-label">🆕 Custom</div>
+            <div class="card-title">Weighted Reciprocal Rank Fusion (RRF)</div>
+            <div class="card-method">search/fusion.py → reciprocal_rank_fusion()</div>
+            <div class="card-desc">Merges both ranked lists. Docs in BOTH lists get boosted. Semantic weight = 1.0, BM25 weight = 0.4 (semantic dominates).</div>
+            <div class="card-example">RRF_score(doc) = Σ  weight_i / (60 + rank_i)
+
+Semantic:  [A(r1), C(r2), F(r3), B(r4)]  w=1.0
+BM25:      [C(r1), A(r2), D(r3), B(r4)]  w=0.4
+
+Doc_A: 1.0/(60+1) + 0.4/(60+2) = 0.023
+Doc_C: 1.0/(60+2) + 0.4/(60+1) = 0.023  ← both!
+Doc_D: 0           + 0.4/(60+3) = 0.006  ← BM25 only
+
+→ top 20 unique docs by RRF score</div>
+            <span class="badge badge-new">Weighted RRF</span>
+            <span class="badge badge-pattern">k=60</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- 5.4: Cross-Encoder Reranker -->
+    <div class="flow-row">
+        <div class="card card-new" style="max-width:620px;">
+            <div class="card-label">🆕 ML Model</div>
+            <div class="card-title">Cross-Encoder Reranker → Top 5</div>
+            <div class="card-method">rag/reranker.py → StartupReranker.rerank()</div>
+            <div class="card-desc">Reads each (query, doc) pair jointly through all transformer layers. Scores 20 candidates → keeps the 5 most relevant. ~150 ms latency.</div>
+            <div class="card-example">pairs = [(query, doc.text) for doc in candidates]
+scores = model.predict(pairs)  # 20 scores
+
+# score = 5.12  → excellent match
+# score = -3.4  → irrelevant
+
+sorted → keep top 5 by score</div>
+            <span class="badge badge-new">cross-encoder/ms-marco-MiniLM-L-6-v2</span>
+            <span class="badge badge-lib">CrossEncoder.predict()</span>
+        </div>
+    </div>
+
+    <div class="arrow-down">⬇</div>
+
+    <!-- 5.5: Prompt + LLM -->
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 Custom (unchanged)</div>
+            <div class="card-title">get_prompt()</div>
+            <div class="card-method">prompt_templates.py</div>
+            <div class="card-desc">6 templates: auto, similar, swot, competitor, comparison, ecosystem</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-model">
+            <div class="card-label">🤖 LLM (updated)</div>
+            <div class="card-title">BizIntelChain.analyze()</div>
+            <div class="card-method">chain.py → self._client</div>
+            <div class="card-desc">Now uses <code>get_llm_client()</code> — generates analysis via Groq or OpenAI. Same <code>chat.completions.create()</code> call.</div>
+            <span class="badge badge-api">Groq llama-3.3-70b / OpenAI gpt-4o-mini</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-output">
+            <div class="card-label">📦 Output</div>
+            <div class="card-title">Response Dict</div>
+            <div class="card-desc">answer + sources + analysis_type + model</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 6: STREAMLIT UI — UPDATED                                      -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage upd-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-upd">6</div>
+        <div class="stage-title">Streamlit UI</div>
+        <span class="stag stag-upd">UPDATED in v2</span>
+        <div class="stage-file">app/streamlit_app.py · state.py</div>
+    </div>
+    <div class="flow-row">
+        <div class="card card-custom">
+            <div class="card-label">🔧 state.py (updated)</div>
+            <div class="card-title">Cached Resource Loaders</div>
+            <div class="card-desc">Added two new <code>@st.cache_resource</code> loaders alongside the existing ones:</div>
+            <div class="card-example">@st.cache_resource
+def load_reranker():
+    return StartupReranker(RERANKER_MODEL_NAME)
+
+@st.cache_resource
+def load_bm25_index(_store):
+    ids, texts, metas = _store.get_all_documents()
+    return BM25Index(ids, texts, metas)
+
+# Existing (unchanged):
+# load_embedder(), load_store(), load_chain()</div>
+            <span class="badge badge-new">load_reranker()</span>
+            <span class="badge badge-new">load_bm25_index()</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-builtin">
+            <div class="card-label">🖥️ UI (unchanged)</div>
+            <div class="card-title">Streamlit Chat Interface</div>
+            <div class="card-desc">Sidebar controls, chat history, source expandos. No UI changes needed — hybrid retrieval is transparent.</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- STAGE 7: EVALUATION PIPELINE (NEW)                                   -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage new-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">7</div>
+        <div class="stage-title">RAG Evaluation Pipeline</div>
+        <span class="stag stag-new">NEW in v2</span>
+        <div class="stage-file">eval/eval_dataset.py · evaluator.py · run_eval.py</div>
+    </div>
+    <div class="flow-row">
+        <div class="card card-new">
+            <div class="card-label">🆕 Dataset</div>
+            <div class="card-title">EVAL_DATASET — 30 Queries</div>
+            <div class="card-method">eval/eval_dataset.py</div>
+            <div class="card-desc">6 similar, 5 SWOT, 5 competitor, 5 comparison, 5 ecosystem, 4 auto. Each has expected_domains, bad_results, expected_sections.</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 Evaluator</div>
+            <div class="card-title">RAGEvaluator — 6 Metrics</div>
+            <div class="card-method">eval/evaluator.py</div>
+            <div class="card-desc">3 LLM-as-Judge + 3 deterministic. Now uses <code>get_llm_client()</code> → same provider as the main chain.</div>
+            <div class="card-example">LLM Judge (via Groq / OpenAI):
+  score_context_relevancy()
+  score_groundedness()
+  score_answer_relevancy()
+
+Deterministic:
+  score_precision_at_k()
+  score_structure()
+  score_bad_result_check()</div>
+            <span class="badge badge-api">Groq / OpenAI (judge)</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-new">
+            <div class="card-label">🆕 Runner</div>
+            <div class="card-title">run_eval.py — CLI</div>
+            <div class="card-method">eval/run_eval.py</div>
+            <div class="card-desc">Runs all 30 queries, scores each, saves JSON + CSV.</div>
+            <div class="card-example">uv run python eval/run_eval.py
+uv run python eval/run_eval.py --limit 5
+
+# Output:
+# eval/results/eval_YYYYMMDD_HHMMSS.json
+# eval/results/eval_YYYYMMDD_HHMMSS.csv</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- NEW & UPDATED MODULES TABLE                                          -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num sn-new">📋</div>
+        <div class="stage-title">New & Updated Modules — Complete Reference</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Module</th><th>Class / Function</th><th>Status</th><th>Key Libraries</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="mono">config/settings.py</td>
+                <td class="mono">LLM_PROVIDER, OPENAI_MODEL, GROQ_MODEL, GROQ_BASE_URL, LLM_MODEL (auto-resolves), RERANK_*, HYBRID_*, RRF_*, BM25_*</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">pathlib.Path</td>
+            </tr>
+            <tr>
+                <td class="mono">config/llm_client.py</td>
+                <td class="mono">get_llm_client(provider?)</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">openai.OpenAI (base_url override)</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/chain.py</td>
+                <td class="mono">BizIntelChain.__init__() → get_llm_client()<br>_expand_query() + analyze() (same client)</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">get_llm_client()</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/reranker.py</td>
+                <td class="mono">StartupReranker.__init__(model)<br>StartupReranker.rerank(query, candidates, top_k)</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">sentence_transformers.CrossEncoder</td>
+            </tr>
+            <tr>
+                <td class="mono">rag/retriever.py</td>
+                <td class="mono">StartupRetriever.__init__(..., reranker, bm25_index)<br>4-step pipeline: semantic → BM25 → RRF → reranker</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">DI Pattern</td>
+            </tr>
+            <tr>
+                <td class="mono">search/bm25_search.py</td>
+                <td class="mono">_tokenise(text)<br>BM25Index.__init__(ids, texts, metas)<br>BM25Index.search(query, top_k)</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">rank_bm25.BM25Okapi, np.argsort()</td>
+            </tr>
+            <tr>
+                <td class="mono">search/fusion.py</td>
+                <td class="mono">reciprocal_rank_fusion(ranked_lists, weights, k, top_k)</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">collections.defaultdict</td>
+            </tr>
+            <tr>
+                <td class="mono">vectorstore/base.py</td>
+                <td class="mono">VectorStoreBase.get_all_documents(batch_size)</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">abc.ABC, @abstractmethod</td>
+            </tr>
+            <tr>
+                <td class="mono">vectorstore/chroma_store.py</td>
+                <td class="mono">ChromaStore.get_all_documents(batch_size)</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">collection.get(limit, offset)</td>
+            </tr>
+            <tr>
+                <td class="mono">vectorstore/faiss_store.py</td>
+                <td class="mono">FAISSStore.get_all_documents(batch_size)</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">dict iteration</td>
+            </tr>
+            <tr>
+                <td class="mono">app/state.py</td>
+                <td class="mono">load_reranker(), load_bm25_index(_store)</td>
+                <td><span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">@st.cache_resource</td>
+            </tr>
+            <tr>
+                <td class="mono">eval/evaluator.py</td>
+                <td class="mono">RAGEvaluator.__init__() → get_llm_client()<br>_judge(), 6 scoring methods</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span> <span class="stag stag-upd" style="margin:0;">UPDATED</span></td>
+                <td class="mono">get_llm_client(), re.search()</td>
+            </tr>
+            <tr>
+                <td class="mono">eval/eval_dataset.py</td>
+                <td class="mono">EVAL_DATASET — 30 test queries</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">—</td>
+            </tr>
+            <tr>
+                <td class="mono">eval/run_eval.py</td>
+                <td class="mono">run_evaluation(output_dir, limit)</td>
+                <td><span class="stag stag-new" style="margin:0;">NEW</span></td>
+                <td class="mono">argparse, json, csv, time</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- LATENCY BREAKDOWN                                                    -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⏱️</div>
+        <div class="stage-title">Latency Breakdown — Per Query</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Step</th><th>v1 Time</th><th>v2 Time</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Query Expansion (LLM)</td>
+                <td class="mono">~2 s (OpenAI)</td>
+                <td class="mono" style="color:#6ee7b7;">~0.5 s (Groq)</td>
+                <td style="color:#6ee7b7;">4× faster with Groq LPU</td>
+            </tr>
+            <tr>
+                <td>Semantic Search (ChromaDB)</td>
+                <td class="mono">~50 ms (top 5)</td>
+                <td class="mono">~50 ms (top 20)</td>
+                <td>Negligible diff for HNSW</td>
+            </tr>
+            <tr style="background:rgba(16,185,129,0.05);">
+                <td>BM25 Search</td>
+                <td class="mono">—</td>
+                <td class="mono" style="color:#6ee7b7;">~30 ms</td>
+                <td style="color:#6ee7b7;">NEW — pure CPU, 134 K docs</td>
+            </tr>
+            <tr style="background:rgba(16,185,129,0.05);">
+                <td>Weighted RRF Merge</td>
+                <td class="mono">—</td>
+                <td class="mono" style="color:#6ee7b7;">~1 ms</td>
+                <td style="color:#6ee7b7;">NEW — dict + sort</td>
+            </tr>
+            <tr style="background:rgba(16,185,129,0.05);">
+                <td>Cross-Encoder Reranker</td>
+                <td class="mono">—</td>
+                <td class="mono" style="color:#6ee7b7;">~150 ms</td>
+                <td style="color:#6ee7b7;">NEW — 20 pairs, CPU</td>
+            </tr>
+            <tr>
+                <td>LLM Generation</td>
+                <td class="mono">~5–8 s (OpenAI)</td>
+                <td class="mono" style="color:#6ee7b7;">~1–3 s (Groq)</td>
+                <td style="color:#6ee7b7;">3–5× faster with Groq</td>
+            </tr>
+            <tr style="border-top:2px solid rgba(255,255,255,0.1);">
+                <td><strong>Total</strong></td>
+                <td class="mono"><strong>~7–10 s</strong></td>
+                <td class="mono" style="color:#6ee7b7;"><strong>~2–4 s</strong></td>
+                <td style="color:#6ee7b7;"><strong>2–3× faster overall + FREE</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONFIG REFERENCE                                                     -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚙️</div>
+        <div class="stage-title">v2 Configuration Reference</div>
+        <div class="stage-file">config/settings.py</div>
+    </div>
+    <table class="stbl">
+        <thead>
+            <tr><th>Setting</th><th>Value</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+            <tr><td class="mono">LLM_PROVIDER</td><td class="mono">"groq"</td><td>Active LLM backend (<code>"openai"</code> | <code>"groq"</code>)</td></tr>
+            <tr><td class="mono">GROQ_MODEL</td><td class="mono">llama-3.3-70b-versatile</td><td>Free Groq model (30 RPM)</td></tr>
+            <tr><td class="mono">GROQ_BASE_URL</td><td class="mono">https://api.groq.com/openai/v1</td><td>OpenAI-compatible endpoint</td></tr>
+            <tr><td class="mono">OPENAI_MODEL</td><td class="mono">gpt-4o-mini</td><td>Fallback paid model</td></tr>
+            <tr><td class="mono">RERANK_ENABLED</td><td class="mono">True</td><td>Toggle cross-encoder reranking</td></tr>
+            <tr><td class="mono">RERANKER_MODEL_NAME</td><td class="mono">cross-encoder/ms-marco-MiniLM-L-6-v2</td><td>22 MB cross-encoder</td></tr>
+            <tr><td class="mono">RERANK_TOP_K_INITIAL</td><td class="mono">20</td><td>Over-fetch size for reranking pool</td></tr>
+            <tr><td class="mono">HYBRID_SEARCH_ENABLED</td><td class="mono">True</td><td>Toggle hybrid (semantic + BM25)</td></tr>
+            <tr><td class="mono">BM25_TOP_K</td><td class="mono">20</td><td>BM25 candidate count</td></tr>
+            <tr><td class="mono">RRF_K</td><td class="mono">60</td><td>RRF smoothing constant</td></tr>
+            <tr><td class="mono">RRF_WEIGHT_SEMANTIC</td><td class="mono">1.0</td><td>Semantic weight in fusion</td></tr>
+            <tr><td class="mono">RRF_WEIGHT_BM25</td><td class="mono">0.4</td><td>BM25 weight (lower = less noise)</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- .env REFERENCE                                                       -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">🔑</div>
+        <div class="stage-title">Environment Variables (.env)</div>
+        <div class="stage-file">.env.example</div>
+    </div>
+    <div class="card card-new" style="max-width:500px; margin:0 auto;">
+        <div class="card-example"># Set the key matching your LLM_PROVIDER:
+
+# Groq (FREE) — https://console.groq.com/keys
+GROQ_API_KEY=gsk_your-key-here
+
+# OpenAI (paid)
+OPENAI_API_KEY=sk-your-key-here</div>
+    </div>
+</div>
+
+
+<p style="text-align:center; color:#6b7280; font-size:0.8rem; margin-top:20px;">
+    BizIntel v2 · Python 3.13 · uv · Groq / OpenAI · sentence-transformers · CrossEncoder · rank-bm25 · ChromaDB · FAISS · Streamlit
+</p>
+
+</body>
+</html>

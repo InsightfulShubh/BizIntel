@@ -1,0 +1,89 @@
+id,query,analysis_type,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"Based on the provided data, here are startups that are similar to Stripe, ranked by relevance:
+
+1. **Capital Processing Int'l** (USA, Founded 2006) — This startup offers an online payment processing a…",5,1.0,1.0,1.0,1.0,1.0,1.0,7.95,460
+sim_02,Find startups similar to Airbnb,similar,Proper-noun test — Airbnb → short-term rental marketplace,"1. **MyVR** (US, 2012) — MyVR is similar to Airbnb as it provides a platform for short-term rental businesses to manage their listings across multiple marketing channels, including Airbnb itself. This…",5,1.0,1.0,1.0,1.0,1.0,1.0,6.57,418
+sim_03,AI healthcare startups in India,similar,Descriptive query — should match without heavy expansion,"1. **CureSkin** (India, Not specified) — CureSkin is an AI-powered dermatology solution that operates in the healthcare sector, specifically focusing on skin health through a smartphone application. I…",5,0.5,1.0,1.0,1.0,1.0,1.0,6.06,334
+sim_04,Find edtech companies that teach coding to kids,similar,Multi-concept query — edtech + coding + children,"Here are the startups that align with your query for edtech companies teaching coding to kids, ranked by relevance:
+
+1. **Codingal** (IN, 2020) — Codingal specifically targets K-12 students and offers…",5,1.0,1.0,1.0,1.0,1.0,1.0,7.34,470
+sim_05,Startups building developer tools and APIs,similar,Technical domain query — developer tooling,"1. **Raycast** (GB, 2020) — Raycast is a productivity tool specifically designed for engineering teams, focusing on improving efficiency in non-coding tasks related to development. Its emphasis on enh…",5,1.0,1.0,1.0,1.0,1.0,1.0,6.76,436
+sim_06,Climate tech and clean energy startups,similar,Emerging sector — climate / cleantech,"1. **EASENET** (Country: Not specified, Founded: 2012) — EASENET is a sustainable energy technology developer focused on renewable and alternative energy solutions, making it highly relevant to the cl…",5,1.0,1.0,1.0,1.0,1.0,1.0,6.78,352
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,Must produce all 4 SWOT quadrants with healthcare context,"## Strengths
+- **Innovative Technology**: Startups like RedBrick AI and Quadrant Health leverage advanced AI technologies to enhance healthcare delivery. RedBrick AI focuses on building medical imagin…",5,0.5,0.5,1.0,1.0,1.0,1.0,11.3,778
+swot_02,SWOT analysis of fintech startups in the US,swot,SWOT for fintech — should reference US market specifics,"## Strengths
+- **Diverse Offerings**: Startups like CoRise and JustPaid provide a range of services from digital media merchant banking to AI-enhanced financial workflows, showcasing the versatility a…",5,0.5,0.5,1.0,1.0,1.0,1.0,8.4,688
+swot_03,SWOT of food delivery startups,swot,SWOT for food delivery sector,"## Strengths
+- **Market Leadership**: FoodCourt is identified as Africa's leading virtual restaurant company, having served over 350,000 meals in the last 12 months. This strong market presence indica…",5,0.5,0.5,1.0,0.6,1.0,1.0,10.62,836
+swot_04,SWOT analysis for cybersecurity companies,swot,SWOT for cybersecurity domain,"## Strengths
+- **Diverse Offerings**: Companies like Application Security provide a comprehensive suite of database security solutions, including vulnerability assessment and compliance tools, which c…",5,1.0,0.5,1.0,1.0,1.0,1.0,10.78,904
+swot_05,SWOT of e-commerce startups in India,swot,SWOT for Indian e-commerce,"## Strengths
+- **Diverse Product Offerings**: Startups like Meesho and Biziby Online Marketplace provide a wide range of products and services across various categories, which attracts a larger custom…",5,0.5,0.5,1.0,1.0,1.0,1.0,9.56,820
+comp_01,Who are the main competitors in the food delivery space?,competitor,Competitor landscape for food delivery,"## Direct Competitors
+1. **Zoomer**
+   - Focuses on high volume delivery restaurants, connecting them with independent drivers to enhance delivery efficiency and customer satisfaction.
+
+2. **Dinner2Go…",5,1.0,1.0,1.0,1.0,1.0,1.0,9.39,710
+comp_02,Competitive landscape for cloud infrastructure startups,competitor,Competitor analysis for cloud infra,"## Direct Competitors
+1. **CloudByte**
+   - Focuses on storage virtualization solutions for both private and public cloud environments.
+   
+2. **Sanity Solutions**
+   - Offers data storage, cloud virt…",5,0.5,1.0,1.0,1.0,1.0,1.0,8.34,712
+comp_03,Competitors of ride-sharing platforms,competitor,Ride-sharing competitor map,"## Direct Competitors
+1. **Carticipate** (USA) - iPhone ride sharing application focusing on carpooling and rideshare.
+2. **Amovens** (Spain) - Software facilitating carpooling and ridesharing with an…",5,1.0,1.0,1.0,1.0,1.0,1.0,8.81,560
+comp_04,Who competes in the online education market?,competitor,Online education competitors,"## Direct Competitors
+- **TechChange**: Focuses on scalable and interactive technology training for social change, providing online certificate courses and customized learning experiences.
+- **Sapling…",5,1.0,1.0,1.0,1.0,1.0,1.0,11.26,616
+comp_05,Competitive analysis of project management tools,competitor,Project management tool competitors,"## Direct Competitors
+- **Vertabase**: Offers a suite of productivity solutions including project management and task management tools aimed at both enterprise and individual users.
+- **Projecturf**: …",5,1.0,1.0,1.0,1.0,1.0,1.0,17.0,772
+cmp_01,Compare YC-backed edtech startups vs Crunchbase edtech companies,comparison,Cross-source comparison for edtech,"Based on the provided data, here’s a structured comparison of the edtech startups from Y Combinator (YC) and Crunchbase:
+
+| Aspect         | Edyst                          | Higher Learning Technologi…",5,0.5,1.0,1.0,1.0,1.0,1.0,9.5,646
+cmp_02,Compare fintech startups in India vs the US,comparison,Geography comparison — India vs US fintech,"Here’s a structured comparison of the fintech startups in India and the US based on the provided data:
+
+| Aspect       | Inri                      | Drip Capital               |
+|--------------|------…",5,0.5,1.0,0.5,0.8,1.0,1.0,6.44,422
+cmp_03,Compare AI startups founded before 2015 vs after 2020,comparison,Time-period comparison for AI,"Based on the provided startup data, here is a structured comparison of the AI startups founded before 2015 and those founded after 2020:
+
+| Aspect       | Startup A (Nextera Robotics) | Startup B (Mak…",5,0.5,1.0,1.0,1.0,1.0,1.0,9.1,656
+cmp_04,Compare healthcare vs biotech startups,comparison,Sector comparison — healthcare vs biotech,"Based on the provided startup data, here is a structured comparison of the relevant startups:
+
+| Aspect       | Innovative Healthcare                     | Eastern Biotech and Life Sciences | Biolaunc…",5,0.5,1.0,1.0,1.0,1.0,1.0,11.99,684
+cmp_05,Side-by-side comparison of SaaS companies in B2B vs B2C,comparison,Business model comparison — B2B vs B2C SaaS,"Based on the provided data, here is a structured comparison of the relevant startups:
+
+| Aspect       | Buissy.com Ltd                               | Smart Online                | TargetingMantra    …",5,0.5,1.0,1.0,1.0,1.0,1.0,12.63,668
+eco_01,Map the autonomous vehicle startup ecosystem,ecosystem,AV ecosystem mapping,"## Ecosystem Overview
+The autonomous vehicle startup ecosystem encompasses companies focused on the development and deployment of self-driving technologies, including autonomous cars, trucks, and deli…",5,1.0,1.0,1.0,0.8,1.0,1.0,11.7,886
+eco_02,Explore the blockchain and Web3 startup ecosystem,ecosystem,Blockchain/Web3 ecosystem,"## Ecosystem Overview
+The blockchain and Web3 startup ecosystem primarily covers the domains of cryptocurrency, decentralized finance (DeFi), and open-source technology. This ecosystem is characterize…",5,1.0,1.0,1.0,1.0,1.0,1.0,11.61,756
+eco_03,Map the proptech real estate technology ecosystem,ecosystem,PropTech ecosystem mapping,"## Ecosystem Overview
+The proptech real estate technology ecosystem focuses on innovations and solutions that enhance the real estate industry, including investment, analysis, and marketing tools. Thi…",5,0.5,1.0,1.0,1.0,1.0,1.0,11.59,738
+eco_04,Startup ecosystem for mental health and wellness,ecosystem,Mental health/wellness ecosystem,"## Ecosystem Overview
+The startup ecosystem covered here focuses on the Mental Health and Digital Health sectors, specifically targeting mental wellness solutions through technology. This includes pla…",5,1.0,1.0,1.0,1.0,1.0,1.0,13.21,796
+eco_05,Map the agriculture technology (agtech) startup ecosystem,ecosystem,AgTech ecosystem mapping,"## Ecosystem Overview
+The agriculture technology (agtech) startup ecosystem focuses on innovations that enhance agricultural practices through technology. This includes software solutions for crop man…",5,1.0,1.0,1.0,1.0,1.0,1.0,10.82,724
+auto_01,Tell me about robotics startups,auto,Vague query — auto should pick a reasonable format,"# Robotics Startups Overview
+
+Here’s a list of notable robotics startups based on the provided data:
+
+## 1. Polymath Robotics
+- **Industry:** Robotics
+- **Founded:** 2021
+- **Description:** Polymath l…",5,1.0,1.0,1.0,0.8,1.0,1.0,7.39,402
+auto_02,What's happening in the space tech industry?,auto,Open-ended question — should auto-detect ecosystem or overview,"## Ecosystem Map of the Space Tech Industry
+
+### Overview
+The space tech industry is rapidly evolving, driven by innovations in satellite technology, sustainable transportation, and in-space services.…",5,1.0,1.0,1.0,1.0,1.0,1.0,11.17,716
+auto_03,Analyse the gaming startup landscape in the US,auto,Analysis request — should auto-detect competitor or ecosystem,"# Gaming Startup Landscape Analysis in the US
+
+## Overview
+The gaming industry in the US is vibrant and diverse, with a variety of startups focusing on different aspects of game development, platforms…",5,0.5,1.0,1.0,1.0,1.0,1.0,8.34,622
+auto_04,Find me something interesting in quantum computing,auto,Very vague — tests query expansion + auto format selection,"# Interesting Startups in Quantum Computing
+
+Here’s a list of notable startups in the quantum computing sector, highlighting their unique contributions and innovations:
+
+## 1. Menten AI
+- **Industry:*…",5,1.0,1.0,1.0,1.0,1.0,1.0,7.46,464

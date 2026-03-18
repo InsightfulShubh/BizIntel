@@ -127,12 +127,48 @@ FAISS_DOCSTORE_FILENAME = "docstore.json"
 
 # ── Retrieval config ─────────────────────────────────────────────────────
 
-TOP_K = 5
+TOP_K = 5                        # final number of docs sent to the LLM
 
 
-# ── LLM config ───────────────────────────────────────────────────────────
+# ── Reranker config ──────────────────────────────────────────────────────
 
-LLM_MODEL = "gpt-4o-mini"
+RERANK_ENABLED = True                                          # toggle reranking on/off
+RERANKER_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # 22 MB cross-encoder
+RERANK_TOP_K_INITIAL = 20                                      # over-fetch before reranking
+
+
+# ── Hybrid search config ─────────────────────────────────────────────────
+
+HYBRID_SEARCH_ENABLED = True            # toggle hybrid (semantic + BM25)
+BM25_TOP_K = 20                          # keyword results to fetch
+RRF_K = 60                               # RRF constant (standard default)
+RRF_WEIGHT_SEMANTIC = 1.0                # semantic search weight in RRF
+RRF_WEIGHT_BM25 = 0.4                    # BM25 keyword search weight in RRF
+
+
+# ── LLM provider config ──────────────────────────────────────────────────
+#
+# LLM_PROVIDER controls which API backend to use for all LLM calls
+# (RAG chain, query expansion, eval LLM-as-judge).
+#
+#   "openai"  → requires OPENAI_API_KEY   (paid)
+#   "groq"    → requires GROQ_API_KEY     (free tier: 30 RPM)
+#
+# Swap the provider here; everything else adapts automatically.
+
+LLM_PROVIDER: str = "groq"      # "openai" | "groq"
+
+# ── OpenAI settings ──────────────────────────────────────────────────────
+OPENAI_MODEL = "gpt-4o-mini"
+OPENAI_BASE_URL: str | None = None                  # default OpenAI endpoint
+
+# ── Groq settings (free) ─────────────────────────────────────────────────
+GROQ_MODEL = "llama-3.3-70b-versatile"               # free, 30 RPM
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"     # OpenAI-compatible endpoint
+
+# ── Shared LLM settings ─────────────────────────────────────────────────
+# These resolve automatically based on LLM_PROVIDER:
+LLM_MODEL = GROQ_MODEL if LLM_PROVIDER == "groq" else OPENAI_MODEL
 LLM_TEMPERATURE = 0.3          # low = more focused; high = more creative
 LLM_MAX_TOKENS = 2048
 
@@ -149,3 +185,9 @@ ANALYSIS_TYPES: list[str] = [
 ]
 
 DEFAULT_ANALYSIS_TYPE = "auto"
+
+
+# ── Evaluation config ────────────────────────────────────────────────────
+
+EVAL_DIR = PROJECT_ROOT / "eval"
+EVAL_RESULTS_DIR = EVAL_DIR / "results"

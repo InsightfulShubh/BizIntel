@@ -130,3 +130,35 @@ class ChromaStore(VectorStoreBase):
             metadata={"hnsw:space": "cosine"},
         )
         logger.info("ChromaDB collection '%s' reset — 0 documents", name)
+
+    def get_all_documents(
+        self,
+        batch_size: int = 5000,
+    ) -> tuple[list[str], list[str], list[dict]]:
+        """
+        Fetch ALL documents from ChromaDB in batches.
+
+        Returns (doc_ids, texts, metadatas) — each a list of equal length.
+        """
+        total = self._collection.count()
+        logger.info("Fetching all %d documents from ChromaDB…", total)
+
+        all_ids: list[str] = []
+        all_texts: list[str] = []
+        all_metadatas: list[dict] = []
+
+        for offset in range(0, total, batch_size):
+            batch = self._collection.get(
+                limit=batch_size,
+                offset=offset,
+                include=["documents", "metadatas"],
+            )
+            all_ids.extend(batch["ids"])
+            all_texts.extend(batch["documents"])
+            all_metadatas.extend(batch["metadatas"])
+            logger.info(
+                "  fetched %d / %d documents",
+                len(all_ids), total,
+            )
+
+        return all_ids, all_texts, all_metadatas

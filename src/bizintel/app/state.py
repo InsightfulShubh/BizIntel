@@ -17,6 +17,8 @@ from bizintel.config.settings import (
     DEFAULT_ANALYSIS_TYPE,
     VECTOR_STORE_BACKEND,
     TOP_K,
+    RERANK_ENABLED,
+    HYBRID_SEARCH_ENABLED,
 )
 from bizintel.embeddings.embedder import StartupEmbedder
 from bizintel.vectorstore.base import VectorStoreBase, create_vector_store
@@ -43,13 +45,36 @@ def load_vector_store(backend: str = VECTOR_STORE_BACKEND) -> VectorStoreBase:
     return store
 
 
+@st.cache_resource(show_spinner="Loading reranker model…")
+def load_reranker():
+    """Load the cross-encoder reranker (once per app lifetime)."""
+    if not RERANK_ENABLED:
+        return None
+    from bizintel.rag.reranker import StartupReranker
+    return StartupReranker()
+
+
+@st.cache_resource(show_spinner="Building keyword search index…")
+def load_bm25_index(_store: VectorStoreBase):
+    """Build BM25 index from all documents in the vector store."""
+    if not HYBRID_SEARCH_ENABLED:
+        return None
+    from bizintel.search.bm25_search import BM25Index
+    doc_ids, texts, metadatas = _store.get_all_documents()
+    return BM25Index(doc_ids, texts, metadatas)
+
+
 @st.cache_resource(show_spinner="Initialising BizIntel engine…")
 def load_chain(
     _embedder: StartupEmbedder,
     _store: VectorStoreBase,
 ) -> BizIntelChain:
     """Build the full RAG chain (once per app lifetime)."""
-    retriever = StartupRetriever(_embedder, _store)
+    reranker = load_reranker()
+    bm25_index = load_bm25_index(_store)
+    retriever = StartupRetriever(
+        _embedder, _store, reranker=reranker, bm25_index=bm25_index,
+    )
     return BizIntelChain(retriever)
 
 

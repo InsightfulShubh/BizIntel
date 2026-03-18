@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel v2 — Design Decisions Q&amp;A</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.75;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #1e293b;
+            padding: 12px 0;
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand {
+            font-size: 1.3rem; font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #60a5fa);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 4px; flex-wrap: wrap; }
+        .nav-links a {
+            color: #94a3b8; text-decoration: none; font-size: 0.76rem;
+            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
+        }
+        .nav-links a:hover { background: #1e293b; color: #e2e8f0; }
+
+        /* ── Main ── */
+        .container { max-width: 1100px; margin: 0 auto; padding: 90px 24px 60px; }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center; padding: 50px 20px 40px;
+            border-bottom: 1px solid #1e293b; margin-bottom: 50px;
+        }
+        .hero h1 {
+            font-size: 2.6rem; font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .hero p { color: #94a3b8; font-size: 1.1rem; max-width: 750px; margin: 0 auto; }
+        .hero-stats {
+            display: flex; justify-content: center; gap: 40px; margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .hero-stat { text-align: center; }
+        .hero-stat .val { font-size: 2rem; font-weight: 700; color: #10b981; }
+        .hero-stat .lbl { font-size: 0.82rem; color: #64748b; }
+
+        /* ── Section ── */
+        .section { margin-bottom: 55px; }
+        .section-id { position: relative; top: -80px; }
+        .section-title {
+            font-size: 1.6rem; font-weight: 700; color: #f1f5f9;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .num {
+            font-size: 0.85rem; font-weight: 600;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .section-desc { color: #94a3b8; font-size: 0.9rem; margin-bottom: 22px; }
+
+        /* ── Q&A cards ── */
+        .qa {
+            background: #1e293b; border: 1px solid #334155; border-radius: 14px;
+            margin-bottom: 18px; overflow: hidden; transition: border-color 0.3s;
+        }
+        .qa:hover { border-color: #10b981; }
+        .qa-q {
+            padding: 18px 22px; cursor: pointer; display: flex; align-items: flex-start; gap: 14px;
+            user-select: none;
+        }
+        .qa-q:hover { background: rgba(16, 185, 129, 0.04); }
+        .qa-icon {
+            font-size: 1.1rem; font-weight: 700; color: #10b981;
+            min-width: 24px; padding-top: 1px;
+        }
+        .qa-question { font-size: 1rem; font-weight: 600; color: #f1f5f9; flex: 1; }
+        .qa-toggle {
+            color: #64748b; font-size: 1.1rem; transition: transform 0.3s; padding-top: 2px;
+        }
+        .qa.open .qa-toggle { transform: rotate(180deg); }
+        .qa-a {
+            display: none; padding: 0 22px 20px 60px;
+            color: #cbd5e1; font-size: 0.9rem; line-height: 1.8;
+        }
+        .qa.open .qa-a { display: block; }
+
+        .qa-a strong { color: #f1f5f9; }
+        .qa-a em { color: #a78bfa; font-style: normal; }
+        .qa-a code {
+            background: #0f172a; color: #86efac; padding: 2px 7px; border-radius: 5px;
+            font-size: 0.84rem; font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+        .qa-a pre {
+            background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
+            padding: 14px 18px; margin: 10px 0; overflow-x: auto;
+            font-size: 0.82rem; line-height: 1.7;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            color: #86efac;
+        }
+        .qa-a ul, .qa-a ol { padding-left: 24px; margin: 8px 0; }
+        .qa-a li { margin-bottom: 6px; }
+        .qa-a table {
+            width: 100%; border-collapse: collapse; margin: 12px 0;
+        }
+        .qa-a th {
+            background: #0f172a; padding: 8px 14px; text-align: left;
+            font-size: 0.82rem; color: #a5b4fc; border-bottom: 1px solid #334155;
+        }
+        .qa-a td {
+            padding: 8px 14px; font-size: 0.82rem; border-bottom: 1px solid #1e293b;
+        }
+
+        /* ── Tags ── */
+        .tag {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 600; margin-right: 4px;
+        }
+        .tag-why   { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .tag-how   { background: #3b82f633; color: #93c5fd; border: 1px solid #3b82f655; }
+        .tag-alt   { background: #f59e0b33; color: #fbbf24; border: 1px solid #f59e0b55; }
+        .tag-code  { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .tag-perf  { background: #ef444433; color: #fca5a5; border: 1px solid #ef444455; }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center; padding: 30px; color: #475569;
+            border-top: 1px solid #1e293b; font-size: 0.82rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-brand">BizIntel v2 — Design Decisions</div>
+        <div class="nav-links">
+            <a href="#reranker">Reranker</a>
+            <a href="#hybrid">Hybrid Search</a>
+            <a href="#rrf">Weighted RRF</a>
+            <a href="#bm25">BM25</a>
+            <a href="#eval">Evaluation</a>
+            <a href="#groq">Groq/LLM</a>
+            <a href="#pipeline">Pipeline</a>
+            <a href="#tradeoffs">Trade-offs</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero">
+    <h1>🧠 Design Decisions — v2</h1>
+    <p>Why we built what we built · Alternatives we considered · How we implemented each feature</p>
+    <div class="hero-stats">
+        <div class="hero-stat"><div class="val">65+</div><div class="lbl">Questions</div></div>
+        <div class="hero-stat"><div class="val">8</div><div class="lbl">Sections</div></div>
+        <div class="hero-stat"><div class="val">6</div><div class="lbl">New Modules</div></div>
+        <div class="hero-stat"><div class="val">+0.13</div><div class="lbl">Context Relevancy Gain</div></div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 1: CROSS-ENCODER RERANKER                               -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="reranker"></div>
+    <div class="section-title"><div class="num">1</div> Cross-Encoder Reranker</div>
+    <div class="section-desc">Why reranking, what model, and how it plugs into the pipeline</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did we need a reranker when we already have semantic search?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>Semantic search uses a <strong>bi-encoder</strong> (all-MiniLM-L6-v2) — it encodes the query and each document <em>independently</em> into 384-dim vectors, then compares via cosine similarity. This is fast but approximate.</p>
+            <p>The problem: bi-encoders miss <strong>fine-grained relevance</strong>. Two documents about "payment technology" may have similar embeddings, but one might be about enterprise B2B payments (relevant to a Stripe query) while the other is about mobile wallets in Africa (less relevant).</p>
+            <p>Our v1 evaluation showed <strong>Context Relevancy = 0.70</strong> — the weakest metric. 30% of retrieved docs were off-topic.</p>
+            <p>A reranker reads the (query, document) pair <em>jointly</em> through all transformer layers, catching nuances the bi-encoder misses.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is a cross-encoder and how does it differ from a bi-encoder?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <table>
+                <tr><th>Aspect</th><th>Bi-Encoder (retrieval)</th><th>Cross-Encoder (reranking)</th></tr>
+                <tr><td>Input</td><td>Query and doc encoded <em>separately</em></td><td>Query + doc concatenated → encoded <em>together</em></td></tr>
+                <tr><td>Output</td><td>Two vectors → cosine similarity</td><td>Single relevance score (logit)</td></tr>
+                <tr><td>Speed</td><td>~1 ms per doc (precomputed)</td><td>~7 ms per (query, doc) pair</td></tr>
+                <tr><td>Accuracy</td><td>Good for recall (finding candidates)</td><td>Much better for precision (ranking candidates)</td></tr>
+                <tr><td>Scalability</td><td>Scales to millions (HNSW index)</td><td>Only practical on small candidate sets (10–100)</td></tr>
+            </table>
+            <p>That's why we use them <em>together</em>: bi-encoder for <strong>recall</strong> (fetch 20 candidates), cross-encoder for <strong>precision</strong> (pick the best 5).</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did we choose <code>cross-encoder/ms-marco-MiniLM-L-6-v2</code>?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Model</th><th>Size</th><th>Speed</th><th>Quality</th><th>Why Not?</th></tr>
+                <tr><td><strong>ms-marco-MiniLM-L-6-v2 ✅</strong></td><td>22 MB</td><td>~7 ms/pair</td><td>Good</td><td>— Chosen. Best speed/quality trade-off</td></tr>
+                <tr><td>ms-marco-MiniLM-L-12-v2</td><td>33 MB</td><td>~14 ms/pair</td><td>Better</td><td>2× slower, marginal accuracy gain</td></tr>
+                <tr><td>ms-marco-electra-base</td><td>110 MB</td><td>~30 ms/pair</td><td>Best</td><td>Too heavy for startup-style docs</td></tr>
+                <tr><td>Cohere Rerank API</td><td>Cloud</td><td>~200 ms</td><td>Excellent</td><td>Paid API, adds network latency</td></tr>
+                <tr><td>No reranker (v1)</td><td>—</td><td>0 ms</td><td>Baseline</td><td>Context Relevancy stuck at 0.70</td></tr>
+            </table>
+            <p>We chose the <strong>L-6 variant</strong> because: (1) 22 MB fits in memory easily, (2) ~150 ms total for 20 pairs is invisible to the user, (3) trained on MS MARCO passage ranking — matches our startup doc format.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does <code>CrossEncoder.predict()</code> work internally?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre>pairs = [(query, doc.text) for doc in candidates]  # 20 pairs
+scores = model.predict(pairs)                       # → numpy array of 20 floats
+
+# Internally:
+# 1. Tokenise: "[CLS] query [SEP] document [SEP]"
+# 2. Feed through 6 transformer layers
+# 3. Take [CLS] output → linear layer → single logit
+#
+# score = 5.12  → very relevant
+# score = -3.4  → irrelevant
+
+# Sort descending, keep top 5
+ranked_idx = np.argsort(scores)[::-1][:top_k]</pre>
+            <p>Key insight: unlike bi-encoders, the cross-encoder sees <strong>both texts simultaneously</strong>, so it can do word-level attention across query↔document. That's why it's more accurate but can't be precomputed.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why over-fetch 20 docs instead of directly retrieving 5?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>The bi-encoder's ranking isn't perfect. Doc #7 (by bi-encoder) might actually be the most relevant one (by cross-encoder). If we only fetch 5, we'd never see it.</p>
+            <p>By over-fetching 20, the cross-encoder gets a broader candidate pool and can "promote" docs that the bi-encoder ranked too low.</p>
+            <p><strong>Why 20 specifically?</strong> Empirical sweet spot — 10 is too few (misses good candidates), 50 adds ~350 ms latency for marginal gain. Research shows most of the gain comes from reranking 2–4× the final top-K.</p>
+            <p>Setting: <code>RERANK_TOP_K_INITIAL = 20</code> in <code>settings.py</code></p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What was the impact on Context Relevancy after adding the reranker?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-perf">PERFORMANCE</span>
+            <table>
+                <tr><th>Metric</th><th>v1 (no reranker)</th><th>v1 + reranker</th><th>Delta</th></tr>
+                <tr><td>Context Relevancy</td><td>0.70</td><td><strong>0.83</strong></td><td style="color:#6ee7b7;">+0.13</td></tr>
+                <tr><td>Added Latency</td><td>0 ms</td><td>~150 ms</td><td>Negligible</td></tr>
+            </table>
+            <p>The reranker alone improved context relevancy by <strong>18.6%</strong> — the single biggest improvement in v2.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How is the reranker wired into the pipeline via dependency injection?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># state.py — cached singleton
+@st.cache_resource
+def load_reranker():
+    return StartupReranker(RERANKER_MODEL_NAME)
+
+# Injected into retriever:
+retriever = StartupRetriever(
+    embedder=embedder,
+    store=store,
+    reranker=load_reranker(),     # ← injected
+    bm25_index=load_bm25_index(),
+)
+
+# retriever.py — uses it conditionally:
+if RERANK_ENABLED and self._reranker is not None:
+    results = self._reranker.rerank(query, candidates, top_k=5)
+else:
+    results = candidates[:top_k]  # fallback</pre>
+            <p>Toggle with <code>RERANK_ENABLED = True/False</code> in settings.py. Zero code changes needed.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 2: HYBRID SEARCH                                        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="hybrid"></div>
+    <div class="section-title"><div class="num">2</div> Hybrid Search (Semantic + Keyword)</div>
+    <div class="section-desc">Why semantic-only search wasn't enough and how we combined two signal types</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What's the problem with semantic-only search?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>Semantic search (embeddings + cosine) excels at <strong>meaning</strong> but fails at <strong>exact keywords</strong>:</p>
+            <ul>
+                <li><strong>Company names</strong>: "Stripe" → the embedding captures "payment infrastructure" but might rank "PayPal" higher because it's semantically closer than a startup called "Stripes Inc."</li>
+                <li><strong>Technical terms</strong>: "GraphQL API" → semantic search returns any API company, not specifically GraphQL ones</li>
+                <li><strong>Acronyms</strong>: "NLP", "SaaS", "B2B" — embeddings may not distinguish these well</li>
+            </ul>
+            <p>BM25 keyword search catches these exact matches because it's based on <strong>term frequency</strong>, not meaning.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is hybrid search and why is it better than either approach alone?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <p>Hybrid search combines <strong>two orthogonal retrieval signals</strong>:</p>
+            <table>
+                <tr><th>Signal</th><th>Strengths</th><th>Weaknesses</th></tr>
+                <tr><td>Semantic (embeddings)</td><td>Synonyms, paraphrasing, conceptual similarity</td><td>Misses exact keywords, company names, acronyms</td></tr>
+                <tr><td>Keyword (BM25)</td><td>Exact term matching, rare words, names</td><td>No understanding of meaning or synonyms</td></tr>
+            </table>
+            <p>By fusing both, a doc that's both <em>semantically similar</em> AND <em>contains the exact keywords</em> gets boosted to the top. Research consistently shows hybrid search outperforms either signal alone.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What alternatives to hybrid search did we consider?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Approach</th><th>Pros</th><th>Cons</th><th>Why Not?</th></tr>
+                <tr><td><strong>BM25 + Semantic + RRF ✅</strong></td><td>Simple, effective, no training</td><td>Needs tuning weights</td><td>— Chosen</td></tr>
+                <tr><td>SPLADE (learned sparse)</td><td>Better than BM25</td><td>Needs GPU, complex setup</td><td>Overkill for our dataset</td></tr>
+                <tr><td>ColBERT (late interaction)</td><td>Best quality</td><td>Requires pre-built index, heavy</td><td>Too heavy for 134K docs</td></tr>
+                <tr><td>Dense-only + better embeddings</td><td>Simple</td><td>Still misses keyword matches</td><td>Doesn't solve the core problem</td></tr>
+                <tr><td>Query-time BM25 filter</td><td>Easy to implement</td><td>Hard to tune threshold</td><td>Loses the ranking signal</td></tr>
+            </table>
+            <p>BM25 + RRF is the <strong>industry standard</strong> used by Pinecone, Weaviate, and Elasticsearch. It's the simplest approach that gives the best quality/complexity trade-off.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is the complete retrieval pipeline in v2?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># retriever.py — 4-step pipeline
+
+# Step 1: Semantic search (ChromaDB, HNSW index)
+query_vec = embedder.encode_single(query)
+semantic_results = store.query(query_vec, top_k=20)  # over-fetch
+
+# Step 2: BM25 keyword search (in-memory index)
+bm25_results = bm25_index.search(query, top_k=20)
+
+# Step 3: Weighted RRF fusion (merge + deduplicate)
+candidates = reciprocal_rank_fusion(
+    ranked_lists=[semantic_results, bm25_results],
+    weights=[1.0, 0.4],  # semantic dominates
+    top_k=20,
+)
+
+# Step 4: Cross-encoder reranker (precision filter)
+results = reranker.rerank(query, candidates, top_k=5)</pre>
+            <p>Each step is <strong>toggleable</strong> via settings: <code>HYBRID_SEARCH_ENABLED</code> and <code>RERANK_ENABLED</code>.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: WEIGHTED RRF                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="rrf"></div>
+    <div class="section-title"><div class="num">3</div> Weighted Reciprocal Rank Fusion (RRF)</div>
+    <div class="section-desc">How we merge semantic and keyword results, and why we weight them unequally</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is Reciprocal Rank Fusion (RRF)?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <p>RRF is a <strong>rank aggregation algorithm</strong> from SIGIR 2009 (Cormack, Clarke, Büttcher). It merges multiple ranked lists without needing scores to be comparable:</p>
+<pre>RRF_score(doc) = Σ  1 / (k + rank_in_list_i)
+
+# k = 60 (standard constant that dampens rank influence)
+# rank = 1-based position in each list
+
+# Example:
+# Doc_A is rank 1 in semantic, rank 3 in BM25:
+#   score = 1/(60+1) + 1/(60+3) = 0.0164 + 0.0159 = 0.0323
+#
+# Doc_B is rank 2 in semantic only:
+#   score = 1/(60+2) = 0.0161
+#
+# Doc_A wins because it appears in BOTH lists</pre>
+            <p><strong>Key insight:</strong> Documents found by both systems get boosted — this is the "agreement signal" that makes hybrid search powerful.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did standard (unweighted) RRF cause a quality drop?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-perf">PERFORMANCE</span>
+            <p>When we first added BM25 with <strong>equal weights</strong> (both 1.0), context relevancy <em>dropped</em> from 0.83 → 0.78.</p>
+            <p><strong>Root cause:</strong> BM25 matches keywords literally. A query about "AI healthcare startups" would match docs containing "AI" or "healthcare" even if they're about "AI-powered gaming" or "healthcare furniture". These noisy keyword matches got equal voting power as semantic matches.</p>
+            <p>With equal weights, BM25's noisy docs could push down genuinely relevant semantic results.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How did weighted RRF solve the problem?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+<pre>RRF_score(doc) = Σ  weight_i / (k + rank_i)
+
+# Weights:
+#   Semantic: 1.0  (full influence — trusted signal)
+#   BM25:     0.4  (reduced influence — useful but noisy)
+
+# Now a doc ranked #1 by BM25 alone:
+#   score = 0.4/(60+1) = 0.0066  (weak)
+#
+# A doc ranked #3 by semantic alone:
+#   score = 1.0/(60+3) = 0.0159  (still stronger!)
+#
+# A doc in BOTH lists still gets the biggest boost</pre>
+            <p>This lets semantic search <strong>dominate</strong> the final ranking while BM25 acts as a <strong>signal booster</strong> for docs that also have keyword matches. Best of both worlds.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why weights 1.0 and 0.4 specifically? How were they chosen?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>Chosen empirically based on our eval results:</p>
+            <table>
+                <tr><th>Configuration</th><th>Context Relevancy</th><th>Notes</th></tr>
+                <tr><td>Semantic only (v1)</td><td>0.70</td><td>Baseline</td></tr>
+                <tr><td>Semantic + Reranker</td><td>0.83</td><td>Big improvement</td></tr>
+                <tr><td>Hybrid (1.0 / 1.0) + Reranker</td><td>0.78</td><td>BM25 noise hurt quality</td></tr>
+                <tr><td><strong>Hybrid (1.0 / 0.4) + Reranker</strong></td><td><strong>0.83</strong></td><td>Sweet spot — keyword boost without noise</td></tr>
+            </table>
+            <p>The 0.4 weight means BM25 contributes ~29% of a semantic match's influence. Enough to boost relevant keyword matches, not enough to inject noise.</p>
+            <p>Settings: <code>RRF_WEIGHT_SEMANTIC = 1.0</code>, <code>RRF_WEIGHT_BM25 = 0.4</code></p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why k=60 in the RRF formula?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <p><code>k=60</code> is the <strong>standard value</strong> from the original RRF paper. It controls how much rank position matters:</p>
+            <ul>
+                <li><strong>Small k (e.g. 1):</strong> Rank 1 gets a huge score (0.5), rank 2 gets much less (0.33). Very sensitive to rank position.</li>
+                <li><strong>Large k (e.g. 60):</strong> Rank 1 gets 0.0164, rank 2 gets 0.0161 — small difference. More democratic, emphasises list agreement over exact rank.</li>
+            </ul>
+            <p>k=60 is used by Elasticsearch, Pinecone, and most production systems. We didn't change it because it's well-validated and our candidate lists are small (20 each).</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What alternatives to RRF did we consider for merging results?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Method</th><th>Pros</th><th>Cons</th><th>Why Not?</th></tr>
+                <tr><td><strong>Weighted RRF ✅</strong></td><td>Simple, no score normalisation needed, proven</td><td>Needs weight tuning</td><td>— Chosen</td></tr>
+                <tr><td>Linear combination (score fusion)</td><td>Intuitive</td><td>Scores from different systems aren't comparable (cosine vs BM25)</td><td>Needs normalisation — fragile</td></tr>
+                <tr><td>Max-score fusion</td><td>Takes best score per doc</td><td>Ignores agreement signal</td><td>Misses the key benefit of fusion</td></tr>
+                <tr><td>Condorcet voting</td><td>Theoretically optimal</td><td>Complex, slower</td><td>RRF already outperforms it (shown in paper)</td></tr>
+                <tr><td>Learned fusion (LambdaMART)</td><td>Can adapt to data</td><td>Needs training data</td><td>We don't have relevance labels</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: BM25                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="bm25"></div>
+    <div class="section-title"><div class="num">4</div> BM25 Keyword Search</div>
+    <div class="section-desc">Why BM25Okapi, how the index is built, and alternatives</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is BM25 and how does it differ from TF-IDF?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <p>Both are <strong>bag-of-words</strong> retrieval models, but BM25 adds two improvements:</p>
+            <table>
+                <tr><th>Feature</th><th>TF-IDF</th><th>BM25Okapi</th></tr>
+                <tr><td>Term frequency</td><td>Linear: tf grows forever</td><td><strong>Saturating:</strong> tf / (k₁ + tf) — diminishing returns after ~3 occurrences</td></tr>
+                <tr><td>Document length</td><td>No normalisation</td><td><strong>Length normalisation:</strong> longer docs are penalised (parameter b)</td></tr>
+                <tr><td>IDF</td><td>log(N/df)</td><td>log((N - df + 0.5) / (df + 0.5)) — better for rare terms</td></tr>
+            </table>
+            <p>BM25's saturation prevents a doc that mentions "payment" 50 times from dominating over one that mentions it 3 times — exactly the right behaviour for our startup descriptions.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did we choose <code>rank-bm25</code> library over alternatives?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Library</th><th>Size</th><th>Speed</th><th>Features</th><th>Why Not?</th></tr>
+                <tr><td><strong>rank-bm25 ✅</strong></td><td>8 KB</td><td>~3s build, ~30ms query</td><td>BM25Okapi, pure Python + NumPy</td><td>— Chosen. Tiny, no deps, fast enough</td></tr>
+                <tr><td>Elasticsearch / OpenSearch</td><td>~500 MB</td><td>Very fast</td><td>Full-text, faceting, etc.</td><td>Way too heavy — needs a Java server</td></tr>
+                <tr><td>Whoosh</td><td>~1 MB</td><td>Fast</td><td>Full Python search engine</td><td>Overkill — we only need BM25 scoring</td></tr>
+                <tr><td>PyTerrier</td><td>~50 MB</td><td>Fast</td><td>Research IR toolkit</td><td>Heavy dependency (Java bridge)</td></tr>
+                <tr><td>Custom TF-IDF</td><td>0</td><td>~30ms</td><td>Basic</td><td>No term saturation, no length norm</td></tr>
+            </table>
+            <p><code>rank-bm25</code> is perfect for our use case: 8 KB package, zero external deps, and handles 134K docs in 3 seconds.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How is the BM25 index built and stored?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># bm25_search.py — index construction
+
+# 1. Fetch all docs from ChromaDB
+doc_ids, texts, metadatas = store.get_all_documents(batch_size=5000)
+
+# 2. Tokenise each document
+_TOKEN_RE = re.compile(r"[a-z0-9]{2,}")
+tokenised = [_TOKEN_RE.findall(text.lower()) for text in texts]
+
+# 3. Build BM25Okapi index (precomputes IDF, avg doc length)
+bm25 = BM25Okapi(tokenised)
+# → IDF table: {"payment": 4.2, "startup": 0.3, ...}
+# → avg_doc_len: 47.3 tokens</pre>
+            <p>The index is <strong>in-memory only</strong> — rebuilt on each app start (~3s). This is fine because:</p>
+            <ul>
+                <li>Our corpus doesn't change at runtime</li>
+                <li>3s startup is acceptable for Streamlit</li>
+                <li>No need for disk persistence complexity</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why a simple regex tokeniser instead of NLTK or spaCy?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <p>Our tokeniser: <code>re.compile(r"[a-z0-9]{2,}")</code> — lowercase + keep alphanumeric tokens ≥ 2 chars.</p>
+            <table>
+                <tr><th>Tokeniser</th><th>Speed (134K docs)</th><th>Quality</th><th>Why Not?</th></tr>
+                <tr><td><strong>Regex ✅</strong></td><td>~0.5s</td><td>Good enough</td><td>— Chosen</td></tr>
+                <tr><td>NLTK word_tokenize</td><td>~8s</td><td>Better</td><td>16× slower, adds 30MB dependency</td></tr>
+                <tr><td>spaCy tokeniser</td><td>~12s</td><td>Best</td><td>24× slower, 200MB+ model download</td></tr>
+                <tr><td>str.split()</td><td>~0.3s</td><td>Poor</td><td>Keeps punctuation, case-sensitive</td></tr>
+            </table>
+            <p>For BM25 on short startup descriptions, our regex is good enough. The IDF table handles most of the intelligence.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does <code>get_all_documents()</code> work and why was it needed?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+            <p>BM25 needs access to <strong>all document texts</strong> to build its IDF table. But our vector store interface (<code>VectorStoreBase</code>) only had <code>query()</code> for similarity search. We added:</p>
+<pre># vectorstore/base.py — new abstract method
+@abstractmethod
+def get_all_documents(self, batch_size=5000):
+    """Return (doc_ids, texts, metadatas) for ALL docs."""
+
+# chroma_store.py — batched fetch (ChromaDB limit = 5000/call)
+def get_all_documents(self, batch_size=5000):
+    all_ids, all_texts, all_metas = [], [], []
+    offset = 0
+    while True:
+        batch = self._collection.get(
+            limit=batch_size, offset=offset,
+            include=["documents", "metadatas"],
+        )
+        if not batch["ids"]:
+            break
+        all_ids.extend(batch["ids"])
+        all_texts.extend(batch["documents"])
+        all_metas.extend(batch["metadatas"])
+        offset += batch_size
+    return all_ids, all_texts, all_metas</pre>
+            <p>Fetches all 134,092 docs in ~10s. One-time cost at startup.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 5: EVALUATION PIPELINE                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="eval"></div>
+    <div class="section-title"><div class="num">5</div> RAG Evaluation Pipeline</div>
+    <div class="section-desc">Why we built an eval system, what metrics we chose, and how LLM-as-Judge works</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why build a custom evaluation pipeline instead of using an existing tool?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Tool</th><th>Pros</th><th>Cons</th><th>Why Not?</th></tr>
+                <tr><td><strong>Custom eval ✅</strong></td><td>Full control, tailored metrics, lightweight</td><td>More code to write</td><td>— Chosen</td></tr>
+                <tr><td>RAGAS</td><td>Popular, many metrics</td><td>Heavy dependency, opinionated, breaking API changes</td><td>Too complex for our needs</td></tr>
+                <tr><td>LangSmith</td><td>Good tracing</td><td>Paid, vendor lock-in (LangChain)</td><td>We don't use LangChain</td></tr>
+                <tr><td>MLflow</td><td>Experiment tracking</td><td>Not RAG-specific</td><td>Doesn't have RAG metrics built-in</td></tr>
+                <tr><td>DeepEval</td><td>Good metrics</td><td>Heavy, requires their format</td><td>Adds unnecessary complexity</td></tr>
+            </table>
+            <p>Our evaluator is <strong>243 lines</strong> — small, readable, and exactly tailored to our startup domain. No black-box scoring.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are the 6 evaluation metrics and why were they chosen?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <table>
+                <tr><th>#</th><th>Metric</th><th>Type</th><th>What It Measures</th><th>Why It Matters</th></tr>
+                <tr><td>1</td><td>Context Relevancy</td><td>LLM Judge</td><td>Are retrieved docs relevant?</td><td>Measures retrieval quality — our weakest v1 metric</td></tr>
+                <tr><td>2</td><td>Groundedness</td><td>LLM Judge</td><td>Is the answer backed by sources?</td><td>Detects hallucination</td></tr>
+                <tr><td>3</td><td>Answer Relevancy</td><td>LLM Judge</td><td>Does the answer address the query?</td><td>End-to-end quality check</td></tr>
+                <tr><td>4</td><td>Precision@K</td><td>Deterministic</td><td>% of docs matching expected domains</td><td>Objective retrieval accuracy</td></tr>
+                <tr><td>5</td><td>Structure Score</td><td>Deterministic</td><td>Does the answer have expected sections?</td><td>Format compliance (SWOT needs S/W/O/T)</td></tr>
+                <tr><td>6</td><td>Bad Result Check</td><td>Deterministic</td><td>Are known-bad results absent?</td><td>Catches contamination (wrong domain)</td></tr>
+            </table>
+            <p><strong>3 LLM-as-Judge + 3 deterministic</strong> — the combination gives us both nuanced quality assessment AND reproducible, non-stochastic checks.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is LLM-as-Judge and why use it instead of human evaluation?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p><strong>LLM-as-Judge</strong> = using a language model to score the output of another LLM. The "judge" LLM reads a structured prompt with rubric and outputs a numeric score.</p>
+            <p><strong>Why not human evaluation?</strong></p>
+            <ul>
+                <li>We have <strong>30 queries × 6 metrics = 180 judgements</strong> per eval run</li>
+                <li>Human eval would take hours; LLM-as-Judge takes minutes</li>
+                <li>Repeatable — same prompt always gives similar scores</li>
+                <li>Research shows GPT-4-class models correlate 0.85+ with human judges</li>
+            </ul>
+            <p><strong>Mitigation for judge bias:</strong></p>
+            <ul>
+                <li>Use <code>temperature=0.0</code> for deterministic scoring</li>
+                <li>Structured rubric (0.0 / 0.5 / 1.0 anchors) in every prompt</li>
+                <li>3 deterministic metrics as cross-check against LLM scores</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does the <code>_judge()</code> helper work?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre>def _judge(self, prompt: str) -> float:
+    response = self._client.chat.completions.create(
+        model=self._model,        # groq or openai (via get_llm_client)
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.0,          # deterministic
+        max_tokens=50,            # just need a number
+    )
+    text = response.choices[0].message.content.strip()
+
+    # Extract first decimal number: "0.85" or "Score: 0.85"
+    match = re.search(r"(\d+\.?\d*)", text)
+    if match:
+        return min(max(float(match.group(1)), 0.0), 1.0)  # clamp 0–1
+    return 0.0  # fallback</pre>
+            <p>Simple pattern: <strong>structured prompt → LLM → extract float</strong>. The regex handles various LLM output formats ("0.85", "Score: 0.85", "The relevancy is 0.85").</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How is the evaluation dataset structured?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># eval/eval_dataset.py — 30 test queries
+EVAL_DATASET = [
+    {
+        "query": "Find startups similar to Stripe",
+        "analysis_type": "similar",
+        "expected_domains": ["payment", "fintech", "billing"],
+        "expected_sections": [],                    # 'similar' has no required sections
+        "bad_results": ["food delivery", "healthcare"],
+    },
+    {
+        "query": "Do a SWOT analysis of Airbnb",
+        "analysis_type": "swot",
+        "expected_domains": ["rental", "travel", "hospitality"],
+        "expected_sections": ["strengths", "weaknesses", "opportunities", "threats"],
+        "bad_results": ["cryptocurrency"],
+    },
+    # ... 28 more queries across 6 analysis types
+]</pre>
+            <p>Each query has: (1) expected domain keywords for Precision@K, (2) expected section headings for Structure Score, (3) known-bad results for contamination check.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why 30 queries and not 10 or 100?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <ul>
+                <li><strong>10 queries:</strong> Too few — won't cover all 6 analysis types and edge cases</li>
+                <li><strong>30 queries:</strong> 5 per analysis type + extra coverage — statistically meaningful averages, runs in ~10–15 minutes</li>
+                <li><strong>100 queries:</strong> Diminishing returns — each run costs ~300 LLM judge calls (3 per query) + 100 RAG pipeline calls. With Groq's 30 RPM limit, this would take 30+ minutes</li>
+            </ul>
+            <p>30 is the sweet spot: large enough for statistical confidence, small enough to run frequently during development.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 6: GROQ / LLM PROVIDER                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="groq"></div>
+    <div class="section-title"><div class="num">6</div> Groq / Multi-Provider LLM</div>
+    <div class="section-desc">Why we switched from OpenAI to Groq, the factory pattern, and alternatives</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why switch from OpenAI to Groq?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <table>
+                <tr><th>Factor</th><th>OpenAI (gpt-4o-mini)</th><th>Groq (llama-3.3-70b)</th></tr>
+                <tr><td>Cost</td><td>$0.15 / 1M input tokens</td><td style="color:#6ee7b7;"><strong>$0 (free tier)</strong></td></tr>
+                <tr><td>Rate Limit</td><td>Tier-based (varies)</td><td>30 RPM free</td></tr>
+                <tr><td>Latency</td><td>~2s per call</td><td style="color:#6ee7b7;">~0.5s per call (LPU)</td></tr>
+                <tr><td>Quality</td><td>Excellent</td><td>Very good (70B Llama)</td></tr>
+                <tr><td>API</td><td>OpenAI SDK</td><td style="color:#6ee7b7;">OpenAI-compatible SDK</td></tr>
+            </table>
+            <p>Groq is <strong>free, 3–5× faster,</strong> and good quality. For a learning project, there's no reason to pay.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What other free LLM providers did we consider?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <table>
+                <tr><th>Provider</th><th>Free Tier</th><th>Latency</th><th>Why Not?</th></tr>
+                <tr><td><strong>Groq ✅</strong></td><td>30 RPM, generous</td><td>~0.5s (LPU)</td><td>— Chosen. Fastest, OpenAI-compatible</td></tr>
+                <tr><td>Together AI</td><td>$5 free credit</td><td>~1s</td><td>Credits run out, not truly free</td></tr>
+                <tr><td>Ollama (local)</td><td>Unlimited (local)</td><td>~5–30s</td><td>Needs 8GB+ GPU, too slow on CPU</td></tr>
+                <tr><td>HuggingFace Inference</td><td>Limited</td><td>~2–5s</td><td>Rate limits, queuing delays</td></tr>
+                <tr><td>Google Gemini</td><td>60 RPM free</td><td>~1s</td><td>Different SDK, not OpenAI-compatible</td></tr>
+                <tr><td>Cerebras</td><td>Limited</td><td>~0.3s</td><td>Smaller model selection</td></tr>
+            </table>
+            <p>Groq won because: (1) truly free, (2) fastest inference via LPU hardware, (3) OpenAI-compatible API = zero new dependencies.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does the LLM client factory pattern work?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># config/llm_client.py
+
+_API_KEY_ENV = {
+    "openai": "OPENAI_API_KEY",
+    "groq":   "GROQ_API_KEY",
+}
+_BASE_URLS = {
+    "openai": None,                             # default OpenAI endpoint
+    "groq":   "https://api.groq.com/openai/v1", # OpenAI-compatible
+}
+
+def get_llm_client(provider=None) -> OpenAI:
+    provider = (provider or LLM_PROVIDER).lower()
+    api_key = os.environ[_API_KEY_ENV[provider]]
+    base_url = _BASE_URLS[provider]
+
+    return OpenAI(api_key=api_key, base_url=base_url)</pre>
+            <p>The key insight: <strong>Groq uses the OpenAI SDK</strong> with a different <code>base_url</code>. No new dependency needed. All 3 LLM call sites (query expansion, generation, eval judge) go through this one factory.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why a factory function instead of just changing the API key?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>With a factory, we get:</p>
+            <ul>
+                <li><strong>Single config change:</strong> Flip <code>LLM_PROVIDER = "groq"</code> → <code>"openai"</code> in settings.py. Every call site adapts.</li>
+                <li><strong>Centralised validation:</strong> Missing API key? One error message, one place to fix.</li>
+                <li><strong>Extensibility:</strong> Adding a new provider (e.g. Anthropic) = add 2 entries to the dicts + done.</li>
+                <li><strong>Testability:</strong> Can override provider per-call: <code>get_llm_client("openai")</code></li>
+            </ul>
+            <p>Without the factory, we'd have <code>if provider == "groq"</code> scattered across 3 files — fragile and DRY-violating.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does <code>LLM_MODEL</code> auto-resolve based on the provider?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># config/settings.py
+
+LLM_PROVIDER = "groq"                 # ← flip this one flag
+
+OPENAI_MODEL = "gpt-4o-mini"
+GROQ_MODEL   = "llama-3.3-70b-versatile"
+
+# Auto-resolves at import time:
+LLM_MODEL = GROQ_MODEL if LLM_PROVIDER == "groq" else OPENAI_MODEL
+# → "llama-3.3-70b-versatile"
+
+# Used everywhere:
+#   chain.py:     model=LLM_MODEL  (default param)
+#   evaluator.py: model=LLM_MODEL  (default param)</pre>
+            <p>One setting controls provider + model + API key + endpoint — the rest is automatic.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is Groq's LPU and why is it so fast?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <p><strong>LPU (Language Processing Unit)</strong> is Groq's custom ASIC chip designed specifically for sequential inference:</p>
+            <ul>
+                <li><strong>GPU approach:</strong> Massive parallelism, great for training, but LLM inference is sequential (token by token) — GPUs underutilise their hardware</li>
+                <li><strong>LPU approach:</strong> Optimised for sequential processing, deterministic latency, no batching overhead</li>
+            </ul>
+            <p>Result: Groq generates tokens at <strong>~800 tokens/sec</strong> vs GPU-based APIs at ~50–100 tokens/sec. That's why our responses come back in ~0.5s instead of ~2s.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 7: PIPELINE DESIGN                                      -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="pipeline"></div>
+    <div class="section-title"><div class="num">7</div> Pipeline Design & Architecture</div>
+    <div class="section-desc">Dependency injection, toggle flags, and how everything connects</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why use dependency injection instead of hardcoding components?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+<pre># Without DI (hardcoded) — fragile:
+class Retriever:
+    def __init__(self):
+        self.embedder = StartupEmbedder()       # can't swap
+        self.store = ChromaStore()               # locked to Chroma
+        self.reranker = StartupReranker()        # always loaded
+
+# With DI (v2) — flexible:
+class StartupRetriever:
+    def __init__(self, embedder, store, reranker=None, bm25_index=None):
+        self._embedder = embedder
+        self._store = store
+        self._reranker = reranker               # optional
+        self._bm25 = bm25_index                 # optional</pre>
+            <p>Benefits: (1) Swap ChromaDB ↔ FAISS without touching retriever, (2) disable reranker by passing None, (3) easy to test with mocks, (4) Streamlit caching works cleanly with injected singletons.</p>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do the toggle flags work? Can I disable hybrid search or reranking?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-code">CODE</span>
+<pre># settings.py — toggle flags
+RERANK_ENABLED = True           # ← set False to skip reranking
+HYBRID_SEARCH_ENABLED = True    # ← set False for semantic-only
+
+# retriever.py — conditional logic
+use_reranker = RERANK_ENABLED and self._reranker is not None
+use_hybrid = HYBRID_SEARCH_ENABLED and self._bm25 is not None
+
+# Step 2: BM25 (only if hybrid enabled)
+if use_hybrid:
+    bm25_results = self._bm25.search(query, top_k=20)
+    candidates = reciprocal_rank_fusion(...)
+else:
+    candidates = semantic_results  # fallback to v1
+
+# Step 4: Rerank (only if enabled)
+if use_reranker and len(candidates) > top_k:
+    results = self._reranker.rerank(query, candidates, top_k=5)
+else:
+    results = candidates[:top_k]  # fallback to v1</pre>
+            <p>This means you can run <strong>4 configurations</strong> without code changes:</p>
+            <table>
+                <tr><th>Hybrid</th><th>Reranker</th><th>Result</th></tr>
+                <tr><td>❌</td><td>❌</td><td>v1: pure semantic, top 5</td></tr>
+                <tr><td>❌</td><td>✅</td><td>Semantic(20) → reranker → top 5</td></tr>
+                <tr><td>✅</td><td>❌</td><td>Semantic + BM25 → RRF → top 5</td></tr>
+                <tr><td>✅</td><td>✅</td><td>v2: full pipeline</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why use <code>@st.cache_resource</code> for loading models?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-how">HOW</span>
+            <p>Streamlit re-runs the entire script on every user interaction. Without caching, we'd reload:</p>
+            <ul>
+                <li>Embedding model (~30s) on every chat message</li>
+                <li>Reranker model (~2s) on every chat message</li>
+                <li>BM25 index from 134K docs (~13s) on every chat message</li>
+            </ul>
+            <p><code>@st.cache_resource</code> loads each resource <strong>once</strong>, stores it in memory, and reuses across reruns:</p>
+<pre>@st.cache_resource
+def load_reranker():
+    return StartupReranker(RERANKER_MODEL_NAME)  # loaded once
+
+@st.cache_resource
+def load_bm25_index(_store):
+    ids, texts, metas = _store.get_all_documents()
+    return BM25Index(ids, texts, metas)          # built once</pre>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What is the query expansion step and why is it important?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <p>Users type <em>short, name-based queries</em> like "Find startups similar to Stripe". The embedding model encodes this as-is, but it doesn't know what Stripe does.</p>
+            <p><strong>Query expansion</strong> uses the LLM (temp=0.0) to rewrite the query into a rich description:</p>
+<pre>"Find startups similar to Stripe"
+→ "online payment processing fintech developer API
+   billing infrastructure internet commerce"</pre>
+            <p>This richer text produces a <strong>much better embedding</strong> that matches relevant startup descriptions. Without expansion, we'd match "Stripe" the word — with expansion, we match the <em>concept</em> of payment infrastructure.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECTION 8: TRADE-OFFS & LESSONS                                 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="section">
+    <div class="section-id" id="tradeoffs"></div>
+    <div class="section-title"><div class="num">8</div> Trade-offs, Limitations & Lessons Learned</div>
+    <div class="section-desc">What we'd do differently, known limitations, and key takeaways</div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are the main trade-offs in v2's architecture?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <table>
+                <tr><th>Decision</th><th>Benefit</th><th>Trade-off</th></tr>
+                <tr><td>In-memory BM25 index</td><td>Fast queries (~30ms), no external service</td><td>~3s startup cost, RAM for 134K docs (~200MB)</td></tr>
+                <tr><td>Cross-encoder reranker</td><td>+0.13 context relevancy</td><td>+150ms latency per query</td></tr>
+                <tr><td>Weighted RRF (0.4 BM25)</td><td>Keyword matches without noise</td><td>Needs empirical tuning per dataset</td></tr>
+                <tr><td>Groq free tier</td><td>$0 cost</td><td>30 RPM limit, may not be available forever</td></tr>
+                <tr><td>LLM-as-Judge eval</td><td>Automated, scalable</td><td>Judge quality depends on LLM model</td></tr>
+                <tr><td>Over-fetch 20 → rerank to 5</td><td>Better precision</td><td>4× more data fetched than needed</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are the known limitations of v2?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-perf">PERFORMANCE</span>
+            <ul>
+                <li><strong>Static corpus:</strong> No real-time data ingestion. Adding new startups requires re-embedding + reindexing BM25.</li>
+                <li><strong>BM25 tokeniser is simplistic:</strong> No stemming, no stopword removal. "running" and "run" are different tokens.</li>
+                <li><strong>No chunking:</strong> Each startup is one document. Longer descriptions might benefit from chunking.</li>
+                <li><strong>Groq rate limits:</strong> 30 RPM means the eval run with 30 queries + 90 judge calls takes ~4 minutes.</li>
+                <li><strong>No cross-lingual support:</strong> BM25 and embeddings are English-only.</li>
+                <li><strong>Eval dataset not exhaustive:</strong> 30 queries covers common cases but may miss edge cases.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What would you improve in a v3?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-alt">ALTERNATIVES</span>
+            <ol>
+                <li><strong>Better embeddings:</strong> Upgrade to <code>all-mpnet-base-v2</code> (768-dim) or <code>e5-large-v2</code> for higher recall</li>
+                <li><strong>Learned sparse retrieval (SPLADE):</strong> Replace BM25 with a learned sparse model that understands term importance</li>
+                <li><strong>Streaming responses:</strong> Stream LLM output to Streamlit for better UX</li>
+                <li><strong>Metadata pre-filtering:</strong> Filter by country/year <em>before</em> semantic search for speed</li>
+                <li><strong>A/B testing framework:</strong> Compare v1 vs v2 pipeline side-by-side on same queries</li>
+                <li><strong>Persistent BM25:</strong> Save/load BM25 index to disk to avoid rebuilding on each startup</li>
+                <li><strong>Multi-provider eval:</strong> Run eval with both Groq and OpenAI to compare judge quality</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What were the key lessons learned building v2?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-why">WHY</span>
+            <ol>
+                <li><strong>Measure before optimising:</strong> The eval pipeline identified Context Relevancy as the bottleneck — without metrics, we'd have guessed wrong.</li>
+                <li><strong>Reranker > better embeddings:</strong> A 22MB cross-encoder gave +0.13 improvement — more than any embedding model upgrade would have.</li>
+                <li><strong>Hybrid search needs careful weighting:</strong> Equal weights made things worse. The "fix" was as simple as changing 1.0 to 0.4.</li>
+                <li><strong>OpenAI-compatible APIs are everywhere:</strong> Switching from OpenAI to Groq was a 2-line change (base_url + api_key) — no code rewrite.</li>
+                <li><strong>Toggle flags are essential:</strong> Being able to disable features via settings.py made debugging and A/B comparison trivial.</li>
+                <li><strong>DI pays off fast:</strong> Adding BM25 and reranker to the pipeline required zero changes to the chain, only to the retriever constructor.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Summary: What changed from v1 → v2 and what was the impact?</div>
+            <div class="qa-toggle">▼</div>
+        </div>
+        <div class="qa-a">
+            <span class="tag tag-perf">PERFORMANCE</span>
+            <table>
+                <tr><th>Feature</th><th>v1</th><th>v2</th><th>Impact</th></tr>
+                <tr><td>Retrieval</td><td>Semantic only (top 5)</td><td>Semantic + BM25 + RRF (top 20 → rerank → top 5)</td><td>Better recall + precision</td></tr>
+                <tr><td>Reranking</td><td>None</td><td>Cross-encoder (ms-marco-MiniLM-L-6-v2)</td><td>Context Relevancy +0.13</td></tr>
+                <tr><td>Fusion</td><td>None</td><td>Weighted RRF (semantic=1.0, BM25=0.4)</td><td>Keyword matches without noise</td></tr>
+                <tr><td>LLM Provider</td><td>OpenAI only (paid)</td><td>Groq/OpenAI (factory pattern)</td><td>$0 cost, 3–5× faster</td></tr>
+                <tr><td>Evaluation</td><td>None</td><td>6 metrics, 30 queries, LLM-as-Judge</td><td>Data-driven decisions</td></tr>
+                <tr><td>Latency</td><td>~7–10s</td><td>~2–4s (with Groq)</td><td>2–3× faster</td></tr>
+                <tr><td>New files</td><td>—</td><td>6 new modules</td><td>+600 lines of code</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+</div> <!-- /container -->
+
+<div class="footer">
+    BizIntel v2 — Design Decisions Q&A · Built with 🧠 and ☕
+</div>
+
+<script>
+// Accordion toggle
+document.querySelectorAll('.qa-q').forEach(q => {
+    q.addEventListener('click', () => {
+        q.parentElement.classList.toggle('open');
+    });
+});
+
+// Expand all on page load for easier reading (optional — remove to start collapsed)
+// document.querySelectorAll('.qa').forEach(qa => qa.classList.add('open'));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+id,query,analysis_type,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"Based on the provided startup data, here are the similar startups to Stripe, ranked by relevance:
+
+1. **Dots** (US, 2021) — Similar to Stripe, Dots provides a developer-friendly API for payments, abst…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.65,410
+sim_02,Find startups similar to Airbnb,similar,Proper-noun test — Airbnb → short-term rental marketplace,"Based on the provided startup data, here are the similar startups to Airbnb, ranked by relevance:
+
+1. **Rentalo** (USA, 1998) — Similarity explanation: Rentalo is a worldwide travel accommodation onli…",5,0.8,0.8,1.0,0.8,1.0,1.0,2.4,452
+sim_03,AI healthcare startups in India,similar,Descriptive query — should match without heavy expansion,"Based on the provided startup data, here are the similar startups ranked by relevance:
+
+1. **CureSkin** (IN) — This startup is similar because it is an AI healthcare startup based in India, directly m…",5,0.4,0.8,1.0,1.0,1.0,1.0,2.56,350
+sim_04,Find edtech companies that teach coding to kids,similar,Multi-concept query — edtech + coding + children,"Here are the similar startups that teach coding to kids, ranked by relevance:
+
+1. **Codingal** (IN, 2020.0) — Offers online coding classes for K-12 students with personalized learning paths and 1:1 te…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.43,366
+sim_05,Startups building developer tools and APIs,similar,Technical domain query — developer tooling,"Based on the provided startup data, here are the similar startups ranked by relevance:
+
+1. **LaunchFlow** (Founded: 2023.0) — Similarity explanation: LaunchFlow is a developer tool that provides a VSC…",5,1.0,0.8,1.0,1.0,1.0,1.0,6.65,388
+sim_06,Climate tech and clean energy startups,similar,Emerging sector — climate / cleantech,"Based on the provided startup data, here are the similar startups ranked by relevance:
+
+1. **Energryn** (MEX) — Similarity explanation: Energryn is a cleantech startup focused on developing alternativ…",5,1.0,0.8,1.0,0.8,1.0,1.0,6.11,444
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,Must produce all 4 SWOT quadrants with healthcare context,"## Strengths
+- RedBrick AI has a strong network of investors, including Y Combinator and Sequoia Capital, which can provide access to funding and expertise, as evidenced by their $4.6 million raise.
+-…",5,0.4,0.8,0.5,0.8,1.0,1.0,6.89,704
+swot_02,SWOT analysis of fintech startups in the US,swot,SWOT for fintech — should reference US market specifics,"## Strengths
+- The presence of established fintech companies like eWise, founded in 1999, indicates a strong foundation and experience in the US market, which can be a significant strength for the ind…",5,0.6,0.7,1.0,1.0,1.0,1.0,5.94,570
+swot_03,SWOT of food delivery startups,swot,SWOT for food delivery sector,"## Strengths
+- The food delivery market is fragmented, providing opportunities for new startups to enter and establish themselves, as seen with Tablevibe, Zoomer, and Yemeksepeti.com, each operating i…",5,0.8,0.8,1.0,1.0,1.0,1.0,10.9,948
+swot_04,SWOT analysis for cybersecurity companies,swot,SWOT for cybersecurity domain,"## Strengths
+- The presence of established leaders in the cybersecurity industry, such as Internet Security Systems (founded in 1994), provides a strong foundation for the sector, with a long history …",5,1.0,0.8,1.0,1.0,1.0,1.0,7.68,760
+swot_05,SWOT of e-commerce startups in India,swot,SWOT for Indian e-commerce,"## Strengths
+- Meesho has a strong vision to enable 100 million small businesses to succeed online, which could lead to a large customer base and extensive market reach.
+- ShopClues.com has a core tea…",5,0.8,0.8,0.8,1.0,1.0,1.0,10.66,730
+comp_01,Who are the main competitors in the food delivery space?,competitor,Competitor landscape for food delivery,"## Direct Competitors
+Based on the provided startup data, the direct competitors in the food delivery space are:
+- Tablevibe: Helps restaurants go direct-to-consumer with a free shop and automated rid…",5,0.8,0.0,1.0,1.0,1.0,1.0,9.37,712

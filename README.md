@@ -175,6 +175,11 @@ BizIntel/
 │   └── interview_prep.html        # 50+ Q&A for interview preparation
 ├── tests/
 │   └── spot_check.py              # Verify real companies in results
+├── eval/
+│   ├── eval_dataset.py            # 30 test queries with expected domains
+│   ├── evaluator.py               # LLM-as-Judge + deterministic scorers
+│   ├── run_eval.py                # CLI evaluation runner → JSON + CSV
+│   └── results/                   # Timestamped eval outputs
 ├── .env.example                   # Template for API keys
 ├── .gitignore
 ├── pyproject.toml                 # Hatch build backend, dependencies
@@ -330,6 +335,69 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 |---|---|
 | [Architecture Flowchart](docs/architecture_flowchart.html) | Interactive HTML diagram of the entire code flow with methods |
 | [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
+
+---
+
+## 🧪 RAG Evaluation
+
+BizIntel includes a **full evaluation pipeline** using the LLM-as-Judge pattern with 30 test queries across all 6 analysis types.
+
+### 6 Metrics Scored
+
+| # | Metric | Type | What It Measures |
+|---|---|---|---|
+| 1 | **Context Relevancy** | LLM-as-Judge | Are retrieved docs relevant to the query? |
+| 2 | **Groundedness** | LLM-as-Judge | Is every claim in the answer backed by sources? |
+| 3 | **Answer Relevancy** | LLM-as-Judge | Does the answer address the user's question? |
+| 4 | **Precision@K** | Deterministic | % of retrieved docs matching expected domain keywords |
+| 5 | **Structure Score** | Deterministic | Does the answer contain expected sections (e.g., SWOT headings)? |
+| 6 | **Bad Result Check** | Deterministic | Did any known-bad results appear? (e.g., "StartupBus" for Stripe query) |
+
+### Run Evaluation
+
+```bash
+# Full eval (30 queries — takes ~5-10 min due to LLM calls)
+uv run python eval/run_eval.py
+
+# Quick test (first 5 queries)
+uv run python eval/run_eval.py --limit 5
+
+# Custom output directory
+uv run python eval/run_eval.py --output eval/results
+```
+
+### Output
+
+Results are saved as both **JSON** (detailed) and **CSV** (for visualization):
+
+```
+eval/results/
+├── eval_20260316_143022.json    # Full results + summary + per-type breakdown
+└── eval_20260316_143022.csv     # One row per query — ready for pandas/notebook
+```
+
+### Example Output
+
+```
+══════════════════════════════════════════════════════════════════════
+  BizIntel RAG Evaluation — Summary
+══════════════════════════════════════════════════════════════════════
+  Queries evaluated : 30/30
+  Total time        : 312.4s
+  Avg latency       : 4.21s per query
+
+  ┌────────────────────────┬─────────┐
+  │ Metric                 │  Score  │
+  ├────────────────────────┼─────────┤
+  │ Context Relevancy      │  0.850  │
+  │ Groundedness           │  0.920  │
+  │ Answer Relevancy       │  0.890  │
+  │ Precision@K            │  0.760  │
+  │ Structure Score        │  0.950  │
+  │ Bad Result Check       │  1.000  │
+  └────────────────────────┴─────────┘
+══════════════════════════════════════════════════════════════════════
+```
 
 ---
 

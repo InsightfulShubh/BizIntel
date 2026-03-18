@@ -4,17 +4,15 @@ RAG Chain — orchestrates retrieval + LLM call to produce AI analysis.
 Flow:
   1. User query → Retriever → top-K documents
   2. Documents + query → prompt template → final prompt
-  3. Final prompt → OpenAI LLM → structured response
+  3. Final prompt → LLM (OpenAI / Groq) → structured response
 """
 
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
 
 # Load .env from project root (if it exists)
 _env_path = Path(__file__).resolve().parents[3] / ".env"
@@ -27,6 +25,7 @@ from bizintel.config.settings import (
     DEFAULT_ANALYSIS_TYPE,
     TOP_K,
 )
+from bizintel.config.llm_client import get_llm_client
 from bizintel.rag.retriever import StartupRetriever
 from bizintel.rag.prompt_templates import get_prompt
 from bizintel.vectorstore.base import SearchResult
@@ -53,14 +52,8 @@ class BizIntelChain:
         self._temperature = temperature
         self._max_tokens = max_tokens
 
-        # Initialise OpenAI client (reads OPENAI_API_KEY from env)
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            logger.warning(
-                "OPENAI_API_KEY not set — LLM calls will fail. "
-                "Set it via: $env:OPENAI_API_KEY = 'sk-...'"
-            )
-        self._client = OpenAI(api_key=api_key)
+        # Initialise LLM client (auto-selects OpenAI or Groq based on settings)
+        self._client = get_llm_client()
 
     # ── Query expansion ──────────────────────────────────────────────
 

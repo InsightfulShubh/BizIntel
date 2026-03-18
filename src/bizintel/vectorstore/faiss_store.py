@@ -219,3 +219,13 @@ class FAISSStore(VectorStoreBase):
             self._docstore_path.unlink()
 
         logger.info("FAISS index reset — 0 documents")
+
+    def get_all_documents(
+        self,
+        batch_size: int = 5000,
+    ) -> tuple[list[str], list[str], list[dict]]:
+        """Return all (doc_ids, texts, metadatas) from the FAISS docstore."""
+        doc_ids = list(self._docstore.keys())
+        texts = [self._docstore[did]["text"] for did in doc_ids]
+        metadatas = [self._docstore[did]["metadata"] for did in doc_ids]
+        return doc_ids, texts, metadatas
