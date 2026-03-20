@@ -95,7 +95,7 @@ LLM_PROVIDER=openai   # override the default
 uv run python -m bizintel.preprocessing.main
 
 # Step 2: Embed all startups & store in vector DB (~20 min on CPU)
-uv run python scripts/batch_embed.py --reset
+uv run python -m bizintel.pipeline.batch_embed --reset
 ```
 
 ### 4. Launch the App
@@ -203,12 +203,16 @@ BizIntel/
 │   │   ├── reranker.py            # Cross-encoder reranker (ms-marco-MiniLM)
 │   │   ├── prompt_templates.py    # 6 analysis templates + shared base role
 │   │   └── chain.py               # RAG orchestrator + query expansion
+│   ├── pipeline/                  # Batch data operations
+│   │   └── batch_embed.py         # One-time batch embedding script (CLI)
+│   ├── evaluation/                # RAG evaluation pipeline
+│   │   ├── eval_dataset.py        # 30 test queries with expected domains
+│   │   ├── evaluator.py           # LLM-as-Judge + deterministic scorers
+│   │   └── run_eval.py            # CLI evaluation runner → JSON + CSV
 │   └── app/
 │       ├── state.py               # @st.cache_resource loaders + session state
 │       ├── components.py          # Sidebar, chat, source cards, CSS
 │       └── streamlit_app.py       # Streamlit entry point
-├── scripts/
-│   └── batch_embed.py             # One-time batch embedding script (CLI)
 ├── notebooks/
 │   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
 │   └── eval_visualization.ipynb   # Evaluation results visualization
@@ -221,11 +225,7 @@ BizIntel/
 │   └── design_decisions_v2.html        # 65+ Q&A — reranker, hybrid, RRF, Groq
 ├── tests/
 │   └── spot_check.py              # Verify real companies in results
-├── eval/
-│   ├── eval_dataset.py            # 30 test queries with expected domains
-│   ├── evaluator.py               # LLM-as-Judge + deterministic scorers
-│   ├── run_eval.py                # CLI evaluation runner → JSON + CSV
-│   └── results/                   # Timestamped eval outputs
+├── eval_results/                  # Timestamped eval outputs (JSON + CSV)
 ├── .env.example                   # Template for API keys (GROQ + OpenAI)
 ├── .gitignore
 ├── pyproject.toml                 # Hatch build backend, dependencies
@@ -250,16 +250,16 @@ BizIntel/
 
 ```bash
 # Full index (default: ChromaDB)
-uv run python scripts/batch_embed.py --reset
+uv run python -m bizintel.pipeline.batch_embed --reset
 
 # Quick test with 500 docs
-uv run python scripts/batch_embed.py --limit 500 --reset
+uv run python -m bizintel.pipeline.batch_embed --limit 500 --reset
 
 # Use FAISS backend instead
-uv run python scripts/batch_embed.py --backend faiss --reset
+uv run python -m bizintel.pipeline.batch_embed --backend faiss --reset
 
 # Custom batch size
-uv run python scripts/batch_embed.py --batch-size 1000 --reset
+uv run python -m bizintel.pipeline.batch_embed --batch-size 1000 --reset
 ```
 
 ### Sidebar Controls
@@ -380,16 +380,7 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | Index size (ChromaDB) | ~500 MB on disk |
 | BM25 index (in-memory) | ~200 MB, builds in ~3s |
 
----
 
-## 🗺️ Docs
-
-| Document | Description |
-|---|---|
-| [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
-| [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
-| [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
-| [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 
 ---
 
@@ -412,13 +403,13 @@ BizIntel includes a **full evaluation pipeline** using the LLM-as-Judge pattern 
 
 ```bash
 # Full eval (30 queries — takes ~5-10 min due to LLM calls)
-uv run python eval/run_eval.py
+uv run python -m bizintel.evaluation.run_eval
 
 # Quick test (first 5 queries)
-uv run python eval/run_eval.py --limit 5
+uv run python -m bizintel.evaluation.run_eval --limit 5
 
 # Custom output directory
-uv run python eval/run_eval.py --output eval/results
+uv run python -m bizintel.evaluation.run_eval --output eval_results
 ```
 
 ### Output
@@ -426,7 +417,7 @@ uv run python eval/run_eval.py --output eval/results
 Results are saved as both **JSON** (detailed) and **CSV** (for visualization):
 
 ```
-eval/results/
+eval_results/
 ├── eval_20260316_143022.json    # Full results + summary + per-type breakdown
 └── eval_20260316_143022.csv     # One row per query — ready for pandas/notebook
 ```

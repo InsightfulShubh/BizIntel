@@ -82,7 +82,7 @@ if doc_count == 0:
         "⚠️ **No startups indexed yet.**  \n"
         "Run the batch embedding script first:  \n"
         "```\n"
-        "uv run python scripts/batch_embed.py\n"
+        "uv run python -m bizintel.pipeline.batch_embed --reset\n"
         "```",
         icon="🔧",
     )
