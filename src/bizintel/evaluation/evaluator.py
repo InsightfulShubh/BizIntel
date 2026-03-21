@@ -18,19 +18,16 @@ from __future__ import annotations
 
 import logging
 import re
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-_env_path = Path(__file__).resolve().parents[1] / ".env"
+# .env lives at project root — 4 levels up from src/bizintel/evaluation/evaluator.py
+_env_path = Path(__file__).resolve().parents[3] / ".env"
 load_dotenv(_env_path)
 
-# Ensure the src package is importable when running eval/ as a script
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-
-from bizintel.config.llm_client import get_llm_client   # noqa: E402
-from bizintel.config.settings import LLM_MODEL           # noqa: E402
+from bizintel.config.llm_client import get_llm_client  # noqa: E402
+from bizintel.config.settings import LLM_MODEL          # noqa: E402
 
 logger = logging.getLogger(__name__)
 

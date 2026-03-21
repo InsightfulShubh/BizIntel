@@ -143,8 +143,8 @@ TOP_K = 5                        # final number of docs sent to the LLM
 #   score < HARD     → refuse: "I don't have enough information…"
 
 GUARDRAILS_ENABLED: bool = True          # master toggle for confidence gate
-CONFIDENCE_THRESHOLD_SOFT: float = 0.4   # below this → add disclaimer
-CONFIDENCE_THRESHOLD_HARD: float = 0.15  # below this → refuse to answer
+CONFIDENCE_THRESHOLD_SOFT: float = 0.10  # below this → add disclaimer
+CONFIDENCE_THRESHOLD_HARD: float = 0.02  # below this → refuse to answer
 
 
 # ── Reranker config ──────────────────────────────────────────────────────
