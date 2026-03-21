@@ -6,9 +6,9 @@ scores each with the LLM-as-Judge evaluator, and saves results
 to JSON + CSV.
 
 Usage:
-    uv run python eval/run_eval.py
-    uv run python eval/run_eval.py --limit 5          # quick test
-    uv run python eval/run_eval.py --output eval/results
+    uv run python -m bizintel.evaluation.run_eval
+    uv run python -m bizintel.evaluation.run_eval --limit 5          # quick test
+    uv run python -m bizintel.evaluation.run_eval --output eval_results
 """
 
 from __future__ import annotations
@@ -27,8 +27,8 @@ from bizintel.rag.retriever import StartupRetriever
 from bizintel.rag.chain import BizIntelChain
 from bizintel.config.settings import RERANK_ENABLED, HYBRID_SEARCH_ENABLED
 
-from eval_dataset import EVAL_DATASET
-from evaluator import RAGEvaluator
+from bizintel.evaluation.eval_dataset import EVAL_DATASET
+from bizintel.evaluation.evaluator import RAGEvaluator
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,7 +56,7 @@ def run_evaluation(
     if doc_count == 0:
         logger.error(
             "Vector store is empty. Run batch_embed.py first:\n"
-            "  uv run python scripts/batch_embed.py --reset"
+            "  uv run python -m bizintel.pipeline.batch_embed --reset"
         )
         return
 
@@ -287,8 +287,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=str,
-        default="eval/results",
-        help="Output directory for JSON/CSV results (default: eval/results)",
+        default="eval_results",
+        help="Output directory for JSON/CSV results (default: eval_results)",
     )
     args = parser.parse_args()
 

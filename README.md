@@ -51,6 +51,7 @@ Powered by **Hybrid RAG** — semantic search + BM25 keyword search + cross-enco
 | 🆕 **Cross-Encoder Reranker** | Rescores candidates with `ms-marco-MiniLM-L-6-v2` for +0.13 relevancy gain |
 | 🆕 **Multi-Provider LLM** | Switch between Groq (free) and OpenAI (paid) via one config flag |
 | 🆕 **RAG Evaluation Pipeline** | 30 test queries, 6 metrics (3 LLM-as-Judge + 3 deterministic) |
+| 🆕 **Confidence Guardrails** | Refuses or warns when retrieved context is irrelevant — prevents hallucination |
 
 ---
 
@@ -95,7 +96,7 @@ LLM_PROVIDER=openai   # override the default
 uv run python -m bizintel.preprocessing.main
 
 # Step 2: Embed all startups & store in vector DB (~20 min on CPU)
-uv run python scripts/batch_embed.py --reset
+uv run python -m bizintel.pipeline.batch_embed --reset
 ```
 
 ### 4. Launch the App
@@ -146,6 +147,13 @@ Open **http://localhost:8501** in your browser. 🎉
 │                                      (ms-marco-MiniLM, top 5)       │
 │                                                   │                  │
 │                                                   ▼                  │
+│                                      ┌─ Confidence Guardrail ─┐      │
+│                                      │ score ≥ 0.10 → ✅ LLM  │      │
+│                                      │ 0.02–0.10  → ⚠️ warn  │      │
+│                                      │ score < 0.02 → 🚫 skip │      │
+│                                      └─────────────────────────┘      │
+│                                                   │                  │
+│                                                   ▼                  │
 │                                          Prompt Template             │
 │                                          (6 analysis types)          │
 │                                                   │                  │
@@ -168,6 +176,7 @@ Open **http://localhost:8501** in your browser. 🎉
 | **Hybrid Search** | Semantic + BM25 keyword search | Catches exact-match terms that embeddings miss |
 | **Fusion** | Weighted RRF (sem=1.0, bm25=0.4) | Equal weights regressed relevancy; tuned weights fix it |
 | **Reranker** | `ms-marco-MiniLM-L-6-v2` (22 MB) | +0.13 context relevancy gain; only 22 MB, 150ms/query |
+| **Guardrails** | Cross-encoder score → confidence gate | Refuse (skip LLM) when score < 0.02; warn when < 0.10. Prevents hallucination on garbage context. |
 | **Document Format** | Style C (labeled key-value) | Labels act as semantic anchors for the embedding model |
 | **Query Expansion** | LLM-based rewriting | Solves the "Stripe → fintech" semantic gap problem |
 | **No Chunking** | 1 startup = 1 document | Documents are short (~200 tokens), fit within model limit |
@@ -194,38 +203,39 @@ BizIntel/
 │   │   ├── base.py                # ABC base class + SearchResult + factory
 │   │   ├── chroma_store.py        # ChromaDB backend (cosine, HNSW)
 │   │   └── faiss_store.py         # FAISS backend (IndexFlatIP + JSON sidecar)
-│   ├── search/                    # Keyword search & fusion (NEW)
+│   ├── search/                    # Keyword search & fusion
 │   │   ├── __init__.py
 │   │   ├── bm25_search.py         # BM25Okapi index over 134K docs
 │   │   └── fusion.py              # Weighted Reciprocal Rank Fusion
 │   ├── rag/
-│   │   ├── retriever.py           # 4-stage pipeline: semantic → BM25 → RRF → reranker
-│   │   ├── reranker.py            # Cross-encoder reranker (ms-marco-MiniLM)
+│   │   ├── retriever.py           # 5-stage pipeline: semantic → BM25 → RRF → reranker → confidence
+│   │   ├── reranker.py            # Cross-encoder reranker → RerankedResults(docs, scores)
 │   │   ├── prompt_templates.py    # 6 analysis templates + shared base role
-│   │   └── chain.py               # RAG orchestrator + query expansion
+│   │   └── chain.py               # RAG orchestrator + query expansion + guardrail gate
+│   ├── pipeline/
+│   │   └── batch_embed.py         # One-time batch embedding script (CLI)
+│   ├── evaluation/
+│   │   ├── eval_dataset.py        # 30 test queries with expected domains
+│   │   ├── evaluator.py           # LLM-as-Judge + deterministic scorers
+│   │   └── run_eval.py            # CLI evaluation runner → JSON + CSV
 │   └── app/
 │       ├── state.py               # @st.cache_resource loaders + session state
 │       ├── components.py          # Sidebar, chat, source cards, CSS
 │       └── streamlit_app.py       # Streamlit entry point
-├── scripts/
-│   └── batch_embed.py             # One-time batch embedding script (CLI)
 ├── notebooks/
 │   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
 │   └── eval_visualization.ipynb   # Evaluation results visualization
+├── eval_results/                  # Timestamped eval outputs (JSON + CSV)
 ├── data-source/                   # Raw CSVs (not in git)
 ├── data/                          # Cleaned CSVs + vector DB (not in git)
 ├── docs/
 │   ├── architecture_flowchart.html     # v1 interactive architecture diagram
 │   ├── architecture_flowchart_v2.html  # v2 with hybrid search, reranker, Groq
+│   ├── architecture_flowchart_v3.html  # v3 confidence guardrails + decision gate
 │   ├── interview_prep.html             # 50+ Q&A for interview preparation
 │   └── design_decisions_v2.html        # 65+ Q&A — reranker, hybrid, RRF, Groq
 ├── tests/
 │   └── spot_check.py              # Verify real companies in results
-├── eval/
-│   ├── eval_dataset.py            # 30 test queries with expected domains
-│   ├── evaluator.py               # LLM-as-Judge + deterministic scorers
-│   ├── run_eval.py                # CLI evaluation runner → JSON + CSV
-│   └── results/                   # Timestamped eval outputs
 ├── .env.example                   # Template for API keys (GROQ + OpenAI)
 ├── .gitignore
 ├── pyproject.toml                 # Hatch build backend, dependencies
@@ -250,16 +260,16 @@ BizIntel/
 
 ```bash
 # Full index (default: ChromaDB)
-uv run python scripts/batch_embed.py --reset
+uv run python -m bizintel.pipeline.batch_embed --reset
 
 # Quick test with 500 docs
-uv run python scripts/batch_embed.py --limit 500 --reset
+uv run python -m bizintel.pipeline.batch_embed --limit 500 --reset
 
 # Use FAISS backend instead
-uv run python scripts/batch_embed.py --backend faiss --reset
+uv run python -m bizintel.pipeline.batch_embed --backend faiss --reset
 
 # Custom batch size
-uv run python scripts/batch_embed.py --batch-size 1000 --reset
+uv run python -m bizintel.pipeline.batch_embed --batch-size 1000 --reset
 ```
 
 ### Sidebar Controls
@@ -361,6 +371,7 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | **Template Method** | Prompt templates (shared `_BASE_ROLE`) | Common + variable behavior |
 | **Pipeline** | Offline & online data flow | Clear, testable stages |
 | **LLM Client Factory** | `config/llm_client.py` → `get_llm_client(provider)` | One-flag swap between Groq (free) and OpenAI (paid) |
+| **Circuit Breaker** | Confidence guardrail in `chain.py` | Skip LLM when context is garbage — saves cost, prevents hallucination |
 
 ---
 
@@ -388,6 +399,7 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 |---|---|
 | [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
 | [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
+| [Architecture Flowchart v3](docs/architecture_flowchart_v3.html) | Confidence guardrails — score propagation, 3-path decision gate |
 | [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
 | [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 
@@ -412,13 +424,13 @@ BizIntel includes a **full evaluation pipeline** using the LLM-as-Judge pattern 
 
 ```bash
 # Full eval (30 queries — takes ~5-10 min due to LLM calls)
-uv run python eval/run_eval.py
+uv run python -m bizintel.evaluation.run_eval
 
 # Quick test (first 5 queries)
-uv run python eval/run_eval.py --limit 5
+uv run python -m bizintel.evaluation.run_eval --limit 5
 
 # Custom output directory
-uv run python eval/run_eval.py --output eval/results
+uv run python -m bizintel.evaluation.run_eval --output eval_results
 ```
 
 ### Output
@@ -426,7 +438,7 @@ uv run python eval/run_eval.py --output eval/results
 Results are saved as both **JSON** (detailed) and **CSV** (for visualization):
 
 ```
-eval/results/
+eval_results/
 ├── eval_20260316_143022.json    # Full results + summary + per-type breakdown
 └── eval_20260316_143022.csv     # One row per query — ready for pandas/notebook
 ```

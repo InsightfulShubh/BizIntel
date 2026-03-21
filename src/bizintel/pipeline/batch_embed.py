@@ -6,9 +6,9 @@ This is a one-time (or periodic) batch job.  Run it before launching the
 Streamlit UI so the vector store has data to search.
 
 Usage:
-    uv run python scripts/batch_embed.py                  # defaults (chroma)
-    uv run python scripts/batch_embed.py --backend faiss
-    uv run python scripts/batch_embed.py --limit 1000     # quick test run
+    uv run python -m bizintel.pipeline.batch_embed                  # defaults (chroma)
+    uv run python -m bizintel.pipeline.batch_embed --backend faiss
+    uv run python -m bizintel.pipeline.batch_embed --limit 1000     # quick test run
 
 Takes ~15-20 min on CPU for the full 134 K dataset with all-MiniLM-L6-v2.
 """
@@ -73,7 +73,7 @@ def main() -> None:
     if not csv_path.exists():
         logger.error(
             "Unified CSV not found at %s. Run the preprocessing pipeline first:\n"
-            "  uv run python -m bizintel.processing.main",
+            "  uv run python -m bizintel.preprocessing.main",
             csv_path,
         )
         sys.exit(1)

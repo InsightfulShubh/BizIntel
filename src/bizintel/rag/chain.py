@@ -24,9 +24,12 @@ from bizintel.config.settings import (
     LLM_MAX_TOKENS,
     DEFAULT_ANALYSIS_TYPE,
     TOP_K,
+    GUARDRAILS_ENABLED,
+    CONFIDENCE_THRESHOLD_SOFT,
+    CONFIDENCE_THRESHOLD_HARD,
 )
 from bizintel.config.llm_client import get_llm_client
-from bizintel.rag.retriever import StartupRetriever
+from bizintel.rag.retriever import StartupRetriever, RetrievalResult
 from bizintel.rag.prompt_templates import get_prompt
 from bizintel.vectorstore.base import SearchResult
 
@@ -35,10 +38,27 @@ logger = logging.getLogger(__name__)
 
 class BizIntelChain:
     """
-    End-to-end RAG chain: query → retrieve → prompt → LLM → answer.
+    End-to-end RAG chain: query → retrieve → guardrail → prompt → LLM → answer.
 
     Uses dependency injection — receives a retriever, not raw embedder/store.
     """
+
+    # ── Guardrail messages ───────────────────────────────────────────
+
+    _REFUSAL_MSG = (
+        "🚫 **I don't have enough information to answer this reliably.**\n\n"
+        "The retrieved context doesn't appear relevant to your query. "
+        "This can happen when:\n"
+        "- The topic is outside the startup database's coverage\n"
+        "- The query is too vague or ambiguous\n"
+        "- No matching startups exist in our 134K dataset\n\n"
+        "*Try rephrasing your query or broadening your search terms.*"
+    )
+
+    _LOW_CONFIDENCE_DISCLAIMER = (
+        "⚠️ **Low confidence** — the retrieved context may not fully match "
+        "your query. Results below should be reviewed critically.\n\n---\n\n"
+    )
 
     def __init__(
         self,
@@ -127,6 +147,9 @@ class BizIntelChain:
                 "sources": list[dict],  # retrieved documents used
                 "analysis_type": str,
                 "model": str,
+                "confidence": str,      # "high" | "low" | "none"
+                "best_score": float,    # top reranker score
+                "mean_score": float,    # mean reranker score
             }
         """
         # ── Step 1: Expand + Retrieve ────────────────────────────────
@@ -138,19 +161,53 @@ class BizIntelChain:
         # Expand vague/name-based queries into rich semantic descriptions
         search_query = self._expand_query(query)
 
-        results: list[SearchResult] = self._retriever.retrieve(
+        retrieval: RetrievalResult = self._retriever.retrieve(
             query=search_query, top_k=top_k, where=where,
         )
 
+        results = retrieval.documents
+        confidence = retrieval.confidence
+        best_score = retrieval.best_score
+        mean_score = retrieval.mean_score
+
+        # ── Step 2: Guardrail check (only when GUARDRAILS_ENABLED) ────
         if not results:
             return {
                 "answer": "No relevant startups found for your query. Try broadening your search.",
                 "sources": [],
                 "analysis_type": analysis_type,
                 "model": self._model,
+                "confidence": "none",
+                "best_score": 0.0,
+                "mean_score": 0.0,
             }
 
-        # ── Step 2: Build prompt ─────────────────────────────────────
+        if GUARDRAILS_ENABLED and confidence == "none":
+            logger.warning(
+                "GUARDRAIL: refusing answer — best_score=%.3f < hard=%.3f",
+                best_score, CONFIDENCE_THRESHOLD_HARD,
+            )
+            # Package sources even for refusals so the user can inspect them
+            sources = [
+                {
+                    "doc_id": r.doc_id,
+                    "text": r.text,
+                    "metadata": r.metadata,
+                    "distance": r.distance,
+                }
+                for r in results
+            ]
+            return {
+                "answer": self._REFUSAL_MSG,
+                "sources": sources,
+                "analysis_type": analysis_type,
+                "model": self._model,
+                "confidence": confidence,
+                "best_score": best_score,
+                "mean_score": mean_score,
+            }
+
+        # ── Step 3: Build prompt ─────────────────────────────────────
         documents_text = "\n\n---\n\n".join(r.text for r in results)
         prompt = get_prompt(
             analysis_type=analysis_type,
@@ -158,7 +215,7 @@ class BizIntelChain:
             documents=documents_text,
         )
 
-        # ── Step 3: Call LLM ─────────────────────────────────────────
+        # ── Step 4: Call LLM ─────────────────────────────────────────
         logger.info("Calling %s (temp=%.1f)", self._model, self._temperature)
 
         response = self._client.chat.completions.create(
@@ -172,13 +229,17 @@ class BizIntelChain:
 
         answer = response.choices[0].message.content
 
+        # Prepend low-confidence disclaimer if needed
+        if GUARDRAILS_ENABLED and confidence == "low":
+            answer = self._LOW_CONFIDENCE_DISCLAIMER + answer
+
         logger.info(
             "LLM response: %d chars, %d tokens used",
             len(answer),
             response.usage.total_tokens if response.usage else 0,
         )
 
-        # ── Step 4: Package response ─────────────────────────────────
+        # ── Step 5: Package response ─────────────────────────────────
         sources = [
             {
                 "doc_id": r.doc_id,
@@ -194,4 +255,7 @@ class BizIntelChain:
             "sources": sources,
             "analysis_type": analysis_type,
             "model": self._model,
+            "confidence": confidence,
+            "best_score": best_score,
+            "mean_score": mean_score,
         }

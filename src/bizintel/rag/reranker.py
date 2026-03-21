@@ -15,6 +15,7 @@ Model: ``cross-encoder/ms-marco-MiniLM-L-6-v2`` (~22 MB, very fast)
 from __future__ import annotations
 
 import logging
+from typing import NamedTuple
 
 from sentence_transformers import CrossEncoder
 
@@ -22,6 +23,13 @@ from bizintel.config.settings import RERANKER_MODEL_NAME
 from bizintel.vectorstore.base import SearchResult
 
 logger = logging.getLogger(__name__)
+
+
+class RerankedResults(NamedTuple):
+    """Reranker output — documents paired with their cross-encoder scores."""
+
+    documents: list[SearchResult]
+    scores: list[float]          # parallel to documents, best-first
 
 
 class StartupReranker:
@@ -44,7 +52,7 @@ class StartupReranker:
         query: str,
         retrieved_docs: list[SearchResult],
         top_k: int = 5,
-    ) -> list[SearchResult]:
+    ) -> RerankedResults:
         """
         Score each candidate against the query and return the best *top_k*.
 
@@ -59,18 +67,22 @@ class StartupReranker:
 
         Returns
         -------
-        list[SearchResult]
-            The *top_k* retrieved_docs sorted by cross-encoder score (best first).
+        RerankedResults
+            Named tuple of (documents, scores) — both sorted best-first.
         """
         if not retrieved_docs:
-            return []
+            return RerankedResults(documents=[], scores=[])
 
         if len(retrieved_docs) <= top_k:
             logger.debug(
                 "Candidate count (%d) ≤ top_k (%d) — skipping rerank",
                 len(retrieved_docs), top_k,
             )
-            return retrieved_docs
+            # No cross-encoder scores available — use placeholder 0.0
+            return RerankedResults(
+                documents=retrieved_docs,
+                scores=[0.0] * len(retrieved_docs),
+            )
 
         # Build (query, document_text) pairs for the cross-encoder
         pairs = [(query, c.text) for c in retrieved_docs]
@@ -85,7 +97,9 @@ class StartupReranker:
             reverse=True,           # highest score = most relevant
         )
 
-        reranked = [candidate for candidate, _score in scored[:top_k]]
+        top_scored = scored[:top_k]
+        reranked = [candidate for candidate, _score in top_scored]
+        rerank_scores = [float(s) for _, s in top_scored]
 
         logger.info(
             "Reranked %d → %d  |  best=%.3f  worst-kept=%.3f",
@@ -93,4 +107,4 @@ class StartupReranker:
             float(scored[0][1]), float(scored[top_k - 1][1]),
         )
 
-        return reranked
+        return RerankedResults(documents=reranked, scores=rerank_scores)
