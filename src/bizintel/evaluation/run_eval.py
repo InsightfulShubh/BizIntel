@@ -24,7 +24,8 @@ from pathlib import Path
 from bizintel.embeddings.embedder import StartupEmbedder
 from bizintel.vectorstore.base import create_vector_store
 from bizintel.rag.retriever import StartupRetriever
-from bizintel.rag.chain import BizIntelChain
+from bizintel.config.llm_client import get_llm_client
+from bizintel.graph.builder import build_graph
 from bizintel.config.settings import RERANK_ENABLED, HYBRID_SEARCH_ENABLED
 
 from bizintel.evaluation.eval_dataset import EVAL_DATASET
@@ -80,7 +81,8 @@ def run_evaluation(
     retriever = StartupRetriever(
         embedder, store, reranker=reranker, bm25_index=bm25_index,
     )
-    chain = BizIntelChain(retriever)
+    llm_client = get_llm_client()
+    graph = build_graph(retriever=retriever, llm_client=llm_client)
     evaluator = RAGEvaluator()
 
     # ── Select queries ───────────────────────────────────────────────
@@ -102,10 +104,8 @@ def run_evaluation(
         # Run the RAG pipeline
         t0 = time.perf_counter()
         try:
-            rag_result = chain.analyze(
-                query=query,
-                analysis_type=analysis_type,
-                top_k=5,
+            rag_result = graph.invoke(
+                {"user_query": query},
             )
         except Exception as e:
             logger.error("Query %s failed: %s", query_id, e)
@@ -120,7 +120,7 @@ def run_evaluation(
         latency = time.perf_counter() - t0
 
         answer = rag_result["answer"]
-        sources = rag_result["sources"]
+        sources = rag_result["source_docs"]
         retrieved_docs = [s["text"] for s in sources]
 
         # Count tokens (from the last LLM call — approximate)

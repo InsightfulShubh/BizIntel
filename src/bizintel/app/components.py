@@ -8,19 +8,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from bizintel.config.settings import ANALYSIS_TYPES, TOP_K
+from bizintel.config.settings import TOP_K
 
-
-# ── Analysis type metadata (icons + descriptions for sidebar) ────────────
-
-ANALYSIS_META: dict[str, dict] = {
-    "auto":       {"icon": "🤖", "label": "Auto Detect",      "desc": "Let AI choose the best analysis format"},
-    "similar":    {"icon": "🔍", "label": "Similar Startups",  "desc": "Find startups similar to your description"},
-    "swot":       {"icon": "📊", "label": "SWOT Analysis",     "desc": "Strengths, Weaknesses, Opportunities, Threats"},
-    "competitor": {"icon": "⚔️", "label": "Competitor Analysis","desc": "Map the competitive landscape"},
-    "comparison": {"icon": "⚖️", "label": "Side-by-Side",     "desc": "Compare startups head-to-head"},
-    "ecosystem":  {"icon": "🌐", "label": "Ecosystem Map",     "desc": "Explore an industry ecosystem"},
-}
 
 
 # ── Custom CSS ───────────────────────────────────────────────────────────
@@ -198,31 +187,6 @@ def render_sidebar(doc_count: int) -> None:
         # ── Branding
         st.markdown("## 🧠 BizIntel")
         st.caption("AI-Powered Startup Intelligence Engine")
-        st.divider()
-
-        # ── Analysis Type selector
-        st.markdown("#### 🎯 Analysis Type")
-
-        # Build display labels with icons
-        options = [
-            f"{ANALYSIS_META[t]['icon']}  {ANALYSIS_META[t]['label']}"
-            for t in ANALYSIS_TYPES
-        ]
-
-        selected_idx = st.selectbox(
-            "Choose analysis type",
-            range(len(options)),
-            format_func=lambda i: options[i],
-            index=ANALYSIS_TYPES.index(st.session_state.analysis_type),
-            label_visibility="collapsed",
-            help="Auto Detect lets the AI choose the best format for your query.",
-        )
-        st.session_state.analysis_type = ANALYSIS_TYPES[selected_idx]
-
-        # Show description of selected type
-        sel = ANALYSIS_META[st.session_state.analysis_type]
-        st.caption(f"ℹ️ {sel['desc']}")
-
         st.divider()
 
         # ── Data Source filter

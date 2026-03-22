@@ -22,14 +22,19 @@ from __future__ import annotations
 
 import logging
 import time
+from pathlib import Path
 
 import streamlit as st
+from dotenv import load_dotenv
+
+# Load .env from project root (two levels up from this file)
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
 
 from bizintel.app.state import (
     init_session_state,
     load_embedder,
     load_vector_store,
-    load_chain,
+    load_graph,
 )
 from bizintel.app.components import (
     render_header,
@@ -65,7 +70,7 @@ init_session_state()
 
 embedder = load_embedder()
 store = load_vector_store()
-chain = load_chain(embedder, store)
+graph = load_graph(embedder, store)
 
 doc_count = store.count
 
@@ -106,11 +111,8 @@ def _process_query(query: str) -> None:
             start = time.perf_counter()
 
             try:
-                result = chain.analyze(
-                    query=query,
-                    analysis_type=st.session_state.analysis_type,
-                    top_k=st.session_state.top_k,
-                    where=build_where_filter(),
+                result = graph.invoke(
+                    {"user_query": query},
                 )
                 elapsed = time.perf_counter() - start
 
@@ -118,8 +120,8 @@ def _process_query(query: str) -> None:
                 st.markdown(result["answer"])
 
                 # Display source documents
-                if result["sources"]:
-                    render_sources(result["sources"])
+                if result["source_docs"]:
+                    render_sources(result["source_docs"])
 
                 # Confidence badge
                 confidence = result.get("confidence", "high")
@@ -130,8 +132,7 @@ def _process_query(query: str) -> None:
                 st.markdown(
                     f"⏱️ {elapsed:.1f}s · "
                     f"📋 {result['analysis_type']} · "
-                    f"🤖 {result['model']} · "
-                    f"📚 {len(result['sources'])} sources · "
+                    f"📚 {len(result['source_docs'])} sources · "
                     f"{badge_html}",
                     unsafe_allow_html=True,
                 )
@@ -140,7 +141,7 @@ def _process_query(query: str) -> None:
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": result["answer"],
-                    "sources": result["sources"],
+                    "sources": result["source_docs"],
                     "confidence": confidence,
                     "best_score": best_score,
                 })
@@ -148,7 +149,7 @@ def _process_query(query: str) -> None:
             except Exception as e:
                 error_msg = f"❌ **Error:** {str(e)}"
                 st.error(error_msg)
-                logger.exception("Chain error: %s", e)
+                logger.exception("Graph error: %s", e)
 
                 st.session_state.messages.append({
                     "role": "assistant",

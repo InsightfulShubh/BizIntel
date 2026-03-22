@@ -5,6 +5,7 @@
 ### AI-Powered Startup Intelligence Engine
 
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://python.org)
+[![LangGraph](https://img.shields.io/badge/LangGraph-1.1-blue?logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-F55036?logo=groq&logoColor=white)](https://console.groq.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white)](https://openai.com)
@@ -12,7 +13,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Ask natural-language questions about **134,000+ startups** from Y Combinator & Crunchbase.  
-Powered by **Hybrid RAG** — semantic search + BM25 keyword search + cross-encoder reranking + LLM reasoning.  
+Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM25 keyword search + cross-encoder reranking + LLM reasoning.  
 **Free to run** — uses Groq's free API by default (switchable to OpenAI).
 
 [Features](#-features) · [Demo](#-demo) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Project Structure](#-project-structure) · [Usage](#-usage) · [Tech Stack](#-tech-stack)
@@ -42,7 +43,7 @@ Powered by **Hybrid RAG** — semantic search + BM25 keyword search + cross-enco
 | ⚔️ **Competitor Analysis** | Map the competitive landscape — direct, indirect, differentiators |
 | ⚖️ **Side-by-Side Comparison** | Compare startups head-to-head in a structured table |
 | 🌐 **Ecosystem Mapping** | Explore an entire industry ecosystem — key players, sub-segments, trends |
-| 🤖 **Auto Detect** | Let the AI choose the best analysis format for your query |
+| 🤖 **AI Classifier** | LLM-powered query classification — auto-detects the best analysis type |
 | 📚 **Source Transparency** | Every answer shows the exact source documents used — no hallucination |
 | 🔄 **Query Expansion** | LLM-powered query rewriting for better semantic matching |
 | 🗂️ **Dual Vector Store** | Strategy Pattern — swap between ChromaDB and FAISS via config |
@@ -52,6 +53,9 @@ Powered by **Hybrid RAG** — semantic search + BM25 keyword search + cross-enco
 | 🆕 **Multi-Provider LLM** | Switch between Groq (free) and OpenAI (paid) via one config flag |
 | 🆕 **RAG Evaluation Pipeline** | 30 test queries, 6 metrics (3 LLM-as-Judge + 3 deterministic) |
 | 🆕 **Confidence Guardrails** | Refuses or warns when retrieved context is irrelevant — prevents hallucination |
+| 🆕 **LangGraph Orchestration** | Stateful graph pipeline with Classify → Expand → Retrieve → Confidence Gate → Generate → Validate → Rewrite loop |
+| 🆕 **Post-Gen Validation** | LLM groundedness check after generation — retries with rewritten query on failure |
+| 🆕 **Corrective RAG** | Rewrite → re-expand → re-retrieve cycle when confidence is too low or validation fails |
 
 ---
 
@@ -111,60 +115,61 @@ Open **http://localhost:8501** in your browser. 🎉
 
 ## 🏗️ Architecture
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        OFFLINE PIPELINE (batch)                      │
-│                                                                      │
-│  CSV Files ──→ Data Cleaning ──→ Document Builder ──→ Embedder       │
-│  (YC + CB)     (pandas)          (Pydantic)          (MiniLM-L6)    │
-│                     │                                     │          │
-│                     ▼                                     ▼          │
-│              Unified CSV                          Vector Store       │
-│              (134K rows)                     (ChromaDB / FAISS)      │
-│                                                     │                │
-│                                                     ▼                │
-│                                              BM25 Index (in-memory)  │
-│                                              (rank-bm25 / BM25Okapi) │
-└──────────────────────────────────────────────────────────────────────┘
+### Offline Pipeline (batch)
 
-┌──────────────────────────────────────────────────────────────────────┐
-│                       ONLINE PIPELINE (per query)                    │
-│                                                                      │
-│  User Query ──→ Query Expansion ──→ Encode (MiniLM)                  │
-│                   (LLM rewrite)          │                           │
-│                                          ├──────────────────┐        │
-│                                          ▼                  ▼        │
-│                                   Semantic Search     BM25 Search    │
-│                                    (top 20 docs)      (top 20 docs)  │
-│                                          │                  │        │
-│                                          └────────┬─────────┘        │
-│                                                   ▼                  │
-│                                       Weighted RRF Fusion            │
-│                                     (sem=1.0, bm25=0.4, k=60)       │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                       Cross-Encoder Reranker         │
-│                                      (ms-marco-MiniLM, top 5)       │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                      ┌─ Confidence Guardrail ─┐      │
-│                                      │ score ≥ 0.10 → ✅ LLM  │      │
-│                                      │ 0.02–0.10  → ⚠️ warn  │      │
-│                                      │ score < 0.02 → 🚫 skip │      │
-│                                      └─────────────────────────┘      │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                          Prompt Template             │
-│                                          (6 analysis types)          │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                        LLM (Groq / OpenAI)          │
-│                                                   │                  │
-│                                                   ▼                  │
-│                                          Streamlit Chat UI           │
-│                                          (answer + sources)          │
-└──────────────────────────────────────────────────────────────────────┘
 ```
+ CSV Files ──→ Data Cleaning ──→ Document Builder ──→ Embedder
+ (YC + CB)     (pandas)          (Pydantic)          (MiniLM-L6)
+                   │                                     │
+                   ▼                                     ▼
+            Unified CSV                          Vector Store
+            (134K rows)                     (ChromaDB / FAISS)
+                                                     │
+                                                     ▼
+                                              BM25 Index (in-memory)
+```
+
+### Online Pipeline — LangGraph Orchestration
+
+The query pipeline is orchestrated as a **LangGraph StateGraph** with 12 nodes and 2 conditional edges:
+
+![LangGraph Pipeline](docs/langgraph_v1.png)
+
+**Graph flow:**
+
+```
+START → Classify → Expand Query → Retrieve → Confidence Gate
+                                                    │
+                            ┌───────────────────────┼────────────────┐
+                            ▼                       ▼                ▼
+                     generate_*              rewrite → loop    refuse → END
+                   (5 type-specific)         back to expand
+                            │
+                            ▼
+                        Validate
+                            │
+                   ┌────────┴────────┐
+                   ▼                 ▼
+                  END          rewrite → loop
+              (return answer)  back to expand
+```
+
+**Nodes (12):**
+
+| Node | Type | Purpose |
+|---|---|---|
+| `classify` | LLM | Auto-detect analysis type from query |
+| `expand_query` | LLM | Rewrite query into rich semantic search terms |
+| `retrieve` | Retriever | Hybrid search (semantic + BM25 + RRF + reranker) |
+| `confidence_gate` | Logic | Score-based routing: high/low → generate, none → rewrite/refuse |
+| `generate_similar` | LLM | Similar startups — ranked list with explanations |
+| `generate_swot` | LLM | SWOT analysis — structured 4-quadrant output |
+| `generate_competitor` | LLM | Competitive landscape mapping |
+| `generate_comparison` | LLM | Side-by-side comparison table |
+| `generate_ecosystem` | LLM | Industry ecosystem map & trends |
+| `validate` | LLM | Post-generation groundedness check |
+| `rewrite` | LLM | Rewrite query for retry (corrective RAG) |
+| `refuse` | Logic | Return refusal message when confidence exhausted |
 
 ### Key Design Decisions
 
@@ -180,7 +185,9 @@ Open **http://localhost:8501** in your browser. 🎉
 | **Document Format** | Style C (labeled key-value) | Labels act as semantic anchors for the embedding model |
 | **Query Expansion** | LLM-based rewriting | Solves the "Stripe → fintech" semantic gap problem |
 | **No Chunking** | 1 startup = 1 document | Documents are short (~200 tokens), fit within model limit |
-| **No LangChain** | Custom chain (70 lines) | Full control, minimal dependencies, debuggable |
+| **Orchestration** | LangGraph StateGraph | Stateful graph with conditional edges, corrective retry loop, HITL-ready |
+| **Dependency Injection** | Closure pattern (Option C) | Nodes close over retriever/LLM client; state stays pure serializable data |
+| **State Schema** | 3 Pydantic models | InputState / OutputState / PrivateState — clean separation of public API vs internal fields |
 
 ---
 
@@ -210,8 +217,27 @@ BizIntel/
 │   ├── rag/
 │   │   ├── retriever.py           # 5-stage pipeline: semantic → BM25 → RRF → reranker → confidence
 │   │   ├── reranker.py            # Cross-encoder reranker → RerankedResults(docs, scores)
-│   │   ├── prompt_templates.py    # 6 analysis templates + shared base role
-│   │   └── chain.py               # RAG orchestrator + query expansion + guardrail gate
+│   │   └── prompt_templates.py    # 6 analysis templates + shared base role
+│   ├── graph/                     # 🆕 LangGraph orchestration layer
+│   │   ├── state/
+│   │   │   ├── input.py           # InputState — public input schema (user_query)
+│   │   │   ├── output.py          # OutputState — public output (answer, sources, confidence)
+│   │   │   └── private.py         # PrivateState — internal fields (expanded_query, retry_count)
+│   │   ├── nodes/
+│   │   │   ├── classify.py        # LLM classifier → analysis_type
+│   │   │   ├── expand_query.py    # LLM query rewriter
+│   │   │   ├── retrieve.py        # Hybrid retrieval (semantic + BM25 + reranker)
+│   │   │   ├── confidence.py      # Score-based confidence gate (pure logic)
+│   │   │   ├── generate_similar.py    # Type-specific LLM generation
+│   │   │   ├── generate_swot.py
+│   │   │   ├── generate_competitor.py
+│   │   │   ├── generate_comparison.py
+│   │   │   ├── generate_ecosystem.py
+│   │   │   ├── _generate_base.py  # Shared generation logic (DRY helper)
+│   │   │   ├── validate.py        # Post-gen groundedness check
+│   │   │   └── rewrite.py         # Query rewriter for retry loop
+│   │   ├── edges.py               # Conditional routing functions
+│   │   └── builder.py             # build_graph() — assembles & compiles the pipeline
 │   ├── pipeline/
 │   │   └── batch_embed.py         # One-time batch embedding script (CLI)
 │   ├── evaluation/
@@ -224,11 +250,13 @@ BizIntel/
 │       └── streamlit_app.py       # Streamlit entry point
 ├── notebooks/
 │   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
-│   └── eval_visualization.ipynb   # Evaluation results visualization
+│   ├── eval_visualization.ipynb   # Evaluation results visualization
+│   └── graph_visualization.ipynb  # 🆕 LangGraph Mermaid viz + smoke tests
 ├── eval_results/                  # Timestamped eval outputs (JSON + CSV)
 ├── data-source/                   # Raw CSVs (not in git)
 ├── data/                          # Cleaned CSVs + vector DB (not in git)
 ├── docs/
+│   ├── langgraph_v1.png                # 🆕 LangGraph pipeline visualization
 │   ├── architecture_flowchart.html     # v1 interactive architecture diagram
 │   ├── architecture_flowchart_v2.html  # v2 with hybrid search, reranker, Groq
 │   ├── architecture_flowchart_v3.html  # v3 confidence guardrails + decision gate
@@ -276,7 +304,7 @@ uv run python -m bizintel.pipeline.batch_embed --batch-size 1000 --reset
 
 | Control | Options | Effect |
 |---|---|---|
-| **Analysis Type** | Auto, Similar, SWOT, Competitor, Comparison, Ecosystem | Changes the LLM prompt template |
+| **Analysis Type** | Auto-detected by AI classifier | No manual selection — LLM classifies each query |
 | **Data Source** | All, YC, Crunchbase | Metadata filter on vector store |
 | **Results to Retrieve** | 3–20 (slider) | Number of top-K documents |
 
@@ -296,6 +324,7 @@ uv run python -m bizintel.pipeline.batch_embed --batch-size 1000 --reset
 | **Reranker** | cross-encoder (`ms-marco-MiniLM-L-6-v2`) | Pair-wise relevancy rescoring |
 | **LLM** | Groq (`llama-3.3-70b-versatile`) / OpenAI (`gpt-4o-mini`) | Grounded analysis generation — free or paid |
 | **UI** | Streamlit | Chat interface with sidebar controls |
+| **Orchestration** | [LangGraph](https://langchain-ai.github.io/langgraph/) 1.1 | StateGraph with Pydantic schemas, conditional edges, retry loops |
 | **Secrets** | python-dotenv | `.env` file for API keys |
 
 ---
@@ -365,13 +394,16 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | Pattern | Where | Why |
 |---|---|---|
 | **Strategy** | `VectorStoreBase` ABC + ChromaStore/FAISSStore | Swap backends via config |
+| **Factory + Closure** | `make_*_node(llm_client)` | Inject dependencies into graph nodes; state stays serializable |
 | **Factory** | `create_vector_store(backend)`, `get_llm_client()` | Centralized object creation for stores & LLMs |
-| **Dependency Injection** | Retriever, Chain | Testable, decoupled components |
+| **Dependency Injection** | Retriever, LLM via closures in `build_graph()` | Testable, decoupled — mock LLM client in tests |
 | **Immutable Value Object** | `StartupDocument`, `SearchResult` (frozen Pydantic) | Prevent accidental mutation |
-| **Template Method** | Prompt templates (shared `_BASE_ROLE`) | Common + variable behavior |
+| **State Machine** | LangGraph `StateGraph` + conditional edges | Explicit control flow: classify → expand → retrieve → gate → generate → validate |
+| **Corrective RAG** | Rewrite → re-expand → re-retrieve loop | `MAX_RETRIES=1` — query is rewritten and re-routed through the full pipeline |
+| **Template Method** | Prompt templates (shared `_BASE_ROLE`) + `_generate_base.py` | Common generation logic + type-specific prompt selection |
 | **Pipeline** | Offline & online data flow | Clear, testable stages |
 | **LLM Client Factory** | `config/llm_client.py` → `get_llm_client(provider)` | One-flag swap between Groq (free) and OpenAI (paid) |
-| **Circuit Breaker** | Confidence guardrail in `chain.py` | Skip LLM when context is garbage — saves cost, prevents hallucination |
+| **Circuit Breaker** | Confidence guardrail in `confidence_gate` node | Skip LLM when context is garbage — refuses or retries with rewritten query |
 
 ---
 
@@ -400,6 +432,7 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
 | [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
 | [Architecture Flowchart v3](docs/architecture_flowchart_v3.html) | Confidence guardrails — score propagation, 3-path decision gate |
+| [LangGraph Pipeline](docs/langgraph_v1.png) | 🆕 LangGraph v1 — 12-node pipeline with corrective retry loop |
 | [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
 | [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 
