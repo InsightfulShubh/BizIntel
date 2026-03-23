@@ -1,0 +1,99 @@
+id,query,analysis_type,model_name,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,gpt-4o-mini,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"Based on the provided startup data, here are the startups that are similar to Stripe, ranked by relevance:
+
+1. **Dots 💸** (US, 2021) — Dots is a developer-friendly API focused on payments, similar to …",5,1.0,1.0,1.0,1.0,1.0,1.0,13.68,534
+sim_02,Find startups similar to Airbnb,similar,gpt-4o-mini,Proper-noun test — Airbnb → short-term rental marketplace,"1. **MyVR** (US, 2012) — MyVR is similar to Airbnb as it provides a platform for short-term rental businesses to manage their listings across various marketing channels, including Airbnb itself. It si…",5,1.0,1.0,1.0,1.0,1.0,1.0,19.2,416
+sim_03,AI healthcare startups in India,similar,gpt-4o-mini,Descriptive query — should match without heavy expansion,"## Ecosystem Overview
+The ecosystem primarily covers the Health Tech industry, with a focus on artificial intelligence applications in healthcare diagnostics and patient care.
+
+## Key Players
+1. **Cur…",5,0.5,1.0,0.5,1.0,1.0,1.0,9.52,534
+sim_04,Find edtech companies that teach coding to kids,similar,gpt-4o-mini,Multi-concept query — edtech + coding + children,"## Ecosystem Overview
+The ecosystem primarily covers the edtech industry, specifically focusing on platforms that teach coding to children. This segment is gaining traction as parents increasingly rec…",5,1.0,1.0,1.0,1.0,1.0,1.0,12.3,800
+sim_05,Startups building developer tools and APIs,similar,gpt-4o-mini,Technical domain query — developer tooling,"## Ecosystem Overview
+The ecosystem primarily covers the Developer Tools industry, focusing on startups that provide solutions for building, deploying, and managing applications and APIs. This include…",5,1.0,1.0,1.0,1.0,1.0,1.0,10.74,840
+sim_06,Climate tech and clean energy startups,similar,gpt-4o-mini,Emerging sector — climate / cleantech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,0.0,0.0,1.0,1.0,1.0,4.47,116
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,gpt-4o-mini,Must produce all 4 SWOT quadrants with healthcare context,"## Strengths
+- **Innovative Technology**: Startups like RedBrick AI and InVision Medical Technology leverage cutting-edge AI and machine learning to enhance medical imaging and ultrasound interpretati…",5,0.5,1.0,1.0,1.0,1.0,1.0,26.11,836
+swot_02,SWOT analysis of fintech startups in the US,swot,gpt-4o-mini,SWOT for fintech — should reference US market specifics,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.5,1.0,0.0,1.0,0.0,1.0,4.73,116
+swot_03,SWOT of food delivery startups,swot,gpt-4o-mini,SWOT for food delivery sector,"⚠️ **Low confidence** — the retrieved context may not fully match your query. Results below should be reviewed critically.
+
+---
+
+## Strengths
+- **Innovative Business Models**: Startups like Zoomer and…",5,1.0,0.5,1.0,1.0,1.0,1.0,15.27,912
+swot_04,SWOT analysis for cybersecurity companies,swot,gpt-4o-mini,SWOT for cybersecurity domain,"## Strengths
+- **Established Expertise**: Companies like Above Security and Application Security have been in the industry for over a decade, with Above Security founded in 1999 and Application Securi…",5,1.0,1.0,1.0,1.0,1.0,1.0,26.47,954
+swot_05,SWOT of e-commerce startups in India,swot,gpt-4o-mini,SWOT for Indian e-commerce,"## Strengths
+- **Market Accessibility**: Meesho is specifically designed to democratize e-commerce in India, targeting small businesses and individual entrepreneurs. This approach allows them to tap i…",5,0.5,1.0,1.0,1.0,1.0,1.0,11.06,768
+comp_01,Who are the main competitors in the food delivery space?,competitor,gpt-4o-mini,Competitor landscape for food delivery,"## Direct Competitors
+1. **Zoomer**
+   - Focuses on high volume delivery for restaurants, connecting them with independent delivery drivers.
+
+2. **Tablevibe**
+   - Offers a direct-to-consumer platform…",5,1.0,1.0,1.0,1.0,1.0,1.0,12.06,612
+comp_02,Competitive landscape for cloud infrastructure startups,competitor,gpt-4o-mini,Competitor analysis for cloud infra,"## Direct Competitors
+1. **Virtual-Q**
+   - Focuses on providing cloudtop computing solutions, which deliver desktop capabilities via a secure datacenter.
+   
+2. **CloudByte**
+   - Offers storage virt…",5,1.0,1.0,1.0,1.0,1.0,1.0,11.63,666
+comp_03,Competitors of ride-sharing platforms,competitor,gpt-4o-mini,Ride-sharing competitor map,"## Direct Competitors
+- **Carticipate**: A mobile app focused on ride-sharing, specifically for carpooling and vanpooling.
+- **RIDESHARE 2.0**: A mobile platform that connects users for carpooling and…",5,1.0,1.0,1.0,1.0,1.0,1.0,10.96,570
+comp_04,Who competes in the online education market?,competitor,gpt-4o-mini,Online education competitors,"## Direct Competitors
+- **myeverCLASS**: An e-learning platform focused on providing courses through Facebook, targeting K-12 and training markets.
+- **TechChange**: Offers online certificate courses …",5,1.0,1.0,1.0,1.0,1.0,1.0,11.18,638
+comp_05,Competitive analysis of project management tools,competitor,gpt-4o-mini,Project management tool competitors,"## Direct Competitors
+1. **Comindwork**
+   - Focuses on collaboration tools for knowledge workers, integrating various Web 2.0 tools for project management.
+   
+2. **Projecturf**
+   - Offers project c…",5,1.0,1.0,1.0,1.0,1.0,1.0,25.51,670
+cmp_01,Compare YC-backed edtech startups vs Crunchbase edtech companies,comparison,gpt-4o-mini,Cross-source comparison for edtech,"Based on the provided startup data, here is a structured comparison of the Y Combinator-backed edtech startup Edyst and other edtech companies listed from Crunchbase:
+
+| Aspect       | Edyst          …",5,0.5,1.0,1.0,1.0,1.0,1.0,11.03,544
+cmp_02,Compare fintech startups in India vs the US,comparison,gpt-4o-mini,Geography comparison — India vs US fintech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.5,0.0,0.0,1.0,1.0,1.0,5.6,116
+cmp_03,Compare AI startups founded before 2015 vs after 2020,comparison,gpt-4o-mini,Time-period comparison for AI,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.5,0.0,0.0,1.0,1.0,1.0,5.21,116
+cmp_04,Compare healthcare vs biotech startups,comparison,gpt-4o-mini,Sector comparison — healthcare vs biotech,"Here is a structured comparison of the healthcare and biotech startups provided:
+
+| Aspect        | Health Outcomes Sciences | ConnectBiotech        | Cychreus Technologies | EAG Life Sciences (former…",5,1.0,1.0,0.5,1.0,1.0,1.0,10.3,648
+cmp_05,Side-by-side comparison of SaaS companies in B2B vs B2C,comparison,gpt-4o-mini,Business model comparison — B2B vs B2C SaaS,"Based on the provided startup data, here is a structured comparison of the relevant startups:
+
+| Aspect        | Buissy.com Ltd                       | TargetingMantra              | Suger            …",5,0.5,1.0,1.0,1.0,1.0,1.0,12.66,638
+eco_01,Map the autonomous vehicle startup ecosystem,ecosystem,gpt-4o-mini,AV ecosystem mapping,"## Ecosystem Overview
+The autonomous vehicle startup ecosystem encompasses companies focused on developing technologies and solutions for self-driving vehicles, autonomous delivery systems, and innova…",5,1.0,1.0,1.0,1.0,1.0,1.0,10.13,878
+eco_02,Explore the blockchain and Web3 startup ecosystem,ecosystem,gpt-4o-mini,Blockchain/Web3 ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,0.0,0.0,1.0,0.0,1.0,4.33,116
+eco_03,Map the proptech real estate technology ecosystem,ecosystem,gpt-4o-mini,PropTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.5,0.0,0.0,1.0,0.0,1.0,5.48,116
+eco_04,Startup ecosystem for mental health and wellness,ecosystem,gpt-4o-mini,Mental health/wellness ecosystem,"## Ecosystem Overview
+The startup ecosystem for mental health and wellness primarily covers the Digital Health and Mental Health Tech industries. This ecosystem focuses on providing innovative solutio…",5,1.0,1.0,1.0,1.0,1.0,1.0,12.89,990
+eco_05,Map the agriculture technology (agtech) startup ecosystem,ecosystem,gpt-4o-mini,AgTech ecosystem mapping,"## Ecosystem Overview
+The agriculture technology (agtech) startup ecosystem focuses on innovations that enhance agricultural practices through technology. This includes sustainable farming solutions, …",5,1.0,1.0,1.0,1.0,1.0,1.0,13.61,882
+auto_01,Tell me about robotics startups,auto,gpt-4o-mini,Vague query — auto should pick a reasonable format,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,0.0,0.0,1.0,1.0,1.0,4.89,116
+auto_02,What's happening in the space tech industry?,auto,gpt-4o-mini,Open-ended question — should auto-detect ecosystem or overview,"## Ecosystem Overview
+The space tech industry encompasses various domains related to space exploration, satellite technology, commercial space launch services, and sustainable practices in space opera…",5,1.0,1.0,1.0,1.0,1.0,1.0,13.77,760
+auto_03,Analyse the gaming startup landscape in the US,auto,gpt-4o-mini,Analysis request — should auto-detect competitor or ecosystem,"## Ecosystem Overview
+The gaming startup landscape in the US primarily encompasses the development and distribution of video games, with a focus on social and casual gaming. This ecosystem includes co…",5,1.0,1.0,1.0,1.0,1.0,1.0,11.9,784
+auto_04,Find me something interesting in quantum computing,auto,gpt-4o-mini,Very vague — tests query expansion + auto format selection,"## Ecosystem Overview
+The ecosystem primarily covers the **Quantum Computing** industry, which is at the forefront of technological innovation, focusing on developing systems that leverage quantum mec…",5,1.0,1.0,0.5,1.0,1.0,1.0,13.04,720
