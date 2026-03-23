@@ -26,7 +26,7 @@ from bizintel.vectorstore.base import create_vector_store
 from bizintel.rag.retriever import StartupRetriever
 from bizintel.config.llm_client import get_llm_client
 from bizintel.graph.builder import build_graph
-from bizintel.config.settings import RERANK_ENABLED, HYBRID_SEARCH_ENABLED
+from bizintel.config.settings import RERANK_ENABLED, HYBRID_SEARCH_ENABLED, LLM_MODEL, LLM_PROVIDER
 
 from bizintel.evaluation.eval_dataset import EVAL_DATASET
 from bizintel.evaluation.evaluator import RAGEvaluator
@@ -93,11 +93,17 @@ def run_evaluation(
     # ── Run + Score ──────────────────────────────────────────────────
     results: list[dict] = []
     overall_start = time.perf_counter()
+    from bizintel.config.settings import EVAL_QUERY_DELAY
+    QUERY_DELAY = EVAL_QUERY_DELAY  # 15s for Groq (30 RPM), 0s for OpenAI
 
     for i, entry in enumerate(queries, 1):
         query_id = entry["id"]
         query = entry["query"]
         analysis_type = entry["analysis_type"]
+
+        # Respect API rate limits between queries
+        if i > 1:
+            time.sleep(QUERY_DELAY)
 
         logger.info("[%d/%d] Evaluating: %s — '%s'", i, total, query_id, query[:60])
 
@@ -146,6 +152,7 @@ def run_evaluation(
             "id": query_id,
             "query": query,
             "analysis_type": analysis_type,
+            "model_name": LLM_MODEL,
             "description": entry["description"],
             "answer_preview": answer[:200] + "…" if len(answer) > 200 else answer,
             "num_sources": len(sources),
@@ -176,6 +183,8 @@ def run_evaluation(
 
         summary = {
             "run_date": datetime.now().isoformat(),
+            "model_name": LLM_MODEL,
+            "llm_provider": LLM_PROVIDER,
             "total_queries": total,
             "successful": len(scored),
             "failed": total - len(scored),
@@ -240,6 +249,7 @@ def run_evaluation(
     print("=" * 70)
 
     if "error" not in summary:
+        print(f"  Model             : {summary['llm_provider']} / {summary['model_name']}")
         print(f"  Queries evaluated : {summary['successful']}/{summary['total_queries']}")
         print(f"  Total time        : {summary['total_time_seconds']:.1f}s")
         print(f"  Avg latency       : {summary['avg_latency_seconds']:.2f}s per query")

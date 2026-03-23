@@ -20,6 +20,7 @@ from openai import OpenAI
 
 from bizintel.config.settings import (
     LLM_PROVIDER,
+    LLM_MAX_RETRIES,
     OPENAI_BASE_URL,
     GROQ_BASE_URL,
 )
@@ -79,7 +80,7 @@ def get_llm_client(provider: str | None = None) -> OpenAI:
 
     base_url = _BASE_URLS[provider]
 
-    kwargs: dict = {"api_key": api_key}
+    kwargs: dict = {"api_key": api_key, "max_retries": LLM_MAX_RETRIES}
     if base_url:
         kwargs["base_url"] = base_url
 

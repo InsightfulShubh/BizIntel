@@ -189,6 +189,14 @@ GROQ_BASE_URL = "https://api.groq.com/openai/v1"     # OpenAI-compatible endpoin
 LLM_MODEL = GROQ_MODEL if LLM_PROVIDER == "groq" else OPENAI_MODEL
 LLM_TEMPERATURE = 0.3          # low = more focused; high = more creative
 LLM_MAX_TOKENS = 2048
+LLM_MAX_RETRIES: int = 3       # auto-retry on 429 / 5xx with exponential backoff
+
+# ── Rate-limit guard (Groq free-tier: 30 RPM) ───────────────────────────
+# Delays are only applied when IS_RATE_LIMITED_PROVIDER is True.
+# OpenAI has generous limits, so no artificial delays needed.
+IS_RATE_LIMITED_PROVIDER: bool = LLM_PROVIDER == "groq"
+EVAL_QUERY_DELAY: int = 15 if IS_RATE_LIMITED_PROVIDER else 0   # seconds between eval queries
+EVAL_JUDGE_DELAY: int = 3  if IS_RATE_LIMITED_PROVIDER else 0   # seconds between LLM judge calls
 
 
 # ── Analysis types ───────────────────────────────────────────────────────

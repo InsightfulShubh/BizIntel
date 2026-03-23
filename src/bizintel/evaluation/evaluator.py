@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,7 +28,7 @@ _env_path = Path(__file__).resolve().parents[3] / ".env"
 load_dotenv(_env_path)
 
 from bizintel.config.llm_client import get_llm_client  # noqa: E402
-from bizintel.config.settings import LLM_MODEL          # noqa: E402
+from bizintel.config.settings import EVAL_JUDGE_DELAY, LLM_MODEL  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -220,7 +221,11 @@ class RAGEvaluator:
         Returns a dict with all scores + metadata.
         """
         context_relevancy = self.score_context_relevancy(query, retrieved_docs)
+        if EVAL_JUDGE_DELAY:
+            time.sleep(EVAL_JUDGE_DELAY)
         groundedness = self.score_groundedness(answer, retrieved_docs)
+        if EVAL_JUDGE_DELAY:
+            time.sleep(EVAL_JUDGE_DELAY)
         answer_relevancy = self.score_answer_relevancy(query, answer, analysis_type)
 
         precision_at_k = self.score_precision_at_k(retrieved_docs, expected_domains)

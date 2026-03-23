@@ -133,7 +133,7 @@ Open **http://localhost:8501** in your browser. 🎉
 
 The query pipeline is orchestrated as a **LangGraph StateGraph** with 12 nodes and 2 conditional edges:
 
-![LangGraph Pipeline](docs/langgraph_v1.png)
+![LangGraph Pipeline](docs/screenshots/langgraph_v1.png)
 
 **Graph flow:**
 
