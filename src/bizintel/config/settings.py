@@ -148,6 +148,12 @@ CONFIDENCE_THRESHOLD_HARD: float = 0.02  # below this → refuse to answer
 
 
 
+# ── Web search config ────────────────────────────────────────────────────
+
+WEB_SEARCH_ENABLED: bool = True            # toggle web-search fallback on/off
+WEB_SEARCH_MAX_RESULTS: int = 5            # number of Tavily results to fetch
+
+
 # ── Reranker config ──────────────────────────────────────────────────────
 
 RERANK_ENABLED = True                                          # toggle reranking on/off
@@ -225,6 +231,10 @@ EVAL_RESULTS_DIR = EVAL_DIR / "results"
 # ── LangGraph retry config ───────────────────────────────────────────────
 
 MAX_RETRIES: int = 1                     # max rewrite-retrieve-generate retries
+
+# ── Conversation memory ──────────────────────────────────────────────────
+MEMORY_WINDOW: int = 6                  # max past turns to inject into prompts (3 exchanges)
+CONVERSATIONS_DB_PATH: Path = OUTPUT_DIR / "conversations.db"  # SQLite checkpointer
 # ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # ────────────────────────────────────────────────────────────────────────────────────────────────────────────────

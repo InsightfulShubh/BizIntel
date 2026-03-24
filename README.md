@@ -133,7 +133,7 @@ Open **http://localhost:8501** in your browser. 🎉
 
 The query pipeline is orchestrated as a **LangGraph StateGraph** with 12 nodes and 2 conditional edges:
 
-![LangGraph Pipeline](docs/screenshots/langgraph_v1.png)
+![LangGraph Pipeline](docs/screenshots/langgraph_v2.png)
 
 **Graph flow:**
 
@@ -256,7 +256,7 @@ BizIntel/
 ├── data-source/                   # Raw CSVs (not in git)
 ├── data/                          # Cleaned CSVs + vector DB (not in git)
 ├── docs/
-│   ├── langgraph_v1.png                # 🆕 LangGraph pipeline visualization
+│   ├── langgraph_v2.png                # 🆕 LangGraph pipeline visualization
 │   ├── architecture_flowchart.html     # v1 interactive architecture diagram
 │   ├── architecture_flowchart_v2.html  # v2 with hybrid search, reranker, Groq
 │   ├── architecture_flowchart_v3.html  # v3 confidence guardrails + decision gate
@@ -432,7 +432,7 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
 | [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
 | [Architecture Flowchart v3](docs/architecture_flowchart_v3.html) | Confidence guardrails — score propagation, 3-path decision gate |
-| [LangGraph Pipeline](docs/langgraph_v1.png) | 🆕 LangGraph v1 — 12-node pipeline with corrective retry loop |
+| [LangGraph Pipeline](docs/langgraph_v2.png) | 🆕 LangGraph v1 — 12-node pipeline with corrective retry loop |
 | [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
 | [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 

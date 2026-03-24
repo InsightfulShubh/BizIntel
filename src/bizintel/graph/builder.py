@@ -26,7 +26,10 @@ from bizintel.graph.nodes.generate_comparison import make_generate_comparison_no
 from bizintel.graph.nodes.generate_ecosystem import make_generate_ecosystem_node
 from bizintel.graph.nodes.validate import make_validate_node
 from bizintel.graph.nodes.rewrite import make_rewrite_node
-from bizintel.graph.edges import route_after_confidence, route_after_validate
+from bizintel.graph.nodes.record_turn import record_turn_node
+from bizintel.graph.nodes.web_search import make_web_search_node
+from bizintel.graph.nodes.web_review import web_review_node
+from bizintel.graph.edges import route_after_confidence, route_after_validate, route_after_web_search
 from bizintel.rag.retriever import StartupRetriever
 
 logger = logging.getLogger(__name__)
@@ -55,6 +58,7 @@ def build_graph(
     retriever: StartupRetriever,
     llm_client,
     checkpointer=None,
+    tavily_client=None,
 ):
     """Build and compile the BizIntel LangGraph pipeline.
 
@@ -69,6 +73,8 @@ def build_graph(
         OpenAI-compatible LLM client (Groq or OpenAI).
     checkpointer : optional
         LangGraph checkpointer for persistence/HITL (None for v1).
+    tavily_client : optional
+        Tavily API client for web-search fallback (None disables web search).
 
     Returns
     -------
@@ -87,6 +93,7 @@ def build_graph(
     validate = make_validate_node(llm_client)
     rewrite = make_rewrite_node(llm_client)
     refuse = _make_refuse_node()
+    web_search = make_web_search_node(tavily_client) if tavily_client else None
 
     # ── Build the graph ──────────────────────────────────────────────
     graph = StateGraph(
@@ -108,6 +115,10 @@ def build_graph(
     graph.add_node("validate", validate)
     graph.add_node("rewrite", rewrite)
     graph.add_node("refuse", refuse)
+    if web_search:
+        graph.add_node("web_search", web_search)
+        graph.add_node("web_review", web_review_node)
+    graph.add_node("record_turn", record_turn_node)
 
     # ── Edges: entry → classify → expand_query → retrieve ─────────────
     graph.set_entry_point("classify")
@@ -126,11 +137,29 @@ def build_graph(
             "generate_comparison":  "generate_comparison",
             "generate_ecosystem":   "generate_ecosystem",
             "rewrite":             "rewrite",
+            "web_search":          "web_search" if web_search else "refuse",
             END:                   "refuse",
         },
     )
 
-    graph.add_edge("refuse", END)
+    graph.add_edge("refuse", "record_turn")
+
+    # ── Web search fallback path ──────────────────────────────────────
+    if web_search:
+        graph.add_edge("web_search", "web_review")
+        graph.add_conditional_edges(
+            "web_review",
+            route_after_web_search,
+            {
+                "generate_similar":    "generate_similar",
+                "generate_swot":       "generate_swot",
+                "generate_competitor":  "generate_competitor",
+                "generate_comparison":  "generate_comparison",
+                "generate_ecosystem":   "generate_ecosystem",
+            },
+        )
+
+    graph.add_edge("record_turn", END)
 
     # All type-specific generate nodes converge to validate
     graph.add_edge("generate_similar", "validate")
@@ -144,7 +173,7 @@ def build_graph(
         "validate",
         route_after_validate,
         {
-            END: END,
+            END: "record_turn",
             "rewrite": "rewrite",
         },
     )
@@ -158,6 +187,8 @@ def build_graph(
         compile_kwargs["checkpointer"] = checkpointer
 
     compiled = graph.compile(**compile_kwargs)
-    logger.info("BizIntel LangGraph pipeline compiled (12 nodes, 2 conditional edges)")
+    node_count = 15 if web_search else 13
+    edge_count = 3 if web_search else 2
+    logger.info("BizIntel LangGraph pipeline compiled (%d nodes, %d conditional edges)", node_count, edge_count)
 
     return compiled

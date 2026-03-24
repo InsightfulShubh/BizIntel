@@ -243,6 +243,10 @@ def render_sidebar(doc_count: int) -> None:
         # ── Clear conversation
         if st.button("🗑️  Clear Conversation", use_container_width=True):
             st.session_state.messages = []
+            st.session_state.thread_id = None  # new thread → fresh checkpointer history
+            st.session_state._hitl_pending = False
+            st.session_state._hitl_data = None
+            st.session_state._hitl_resume = None
             st.rerun()
 
 

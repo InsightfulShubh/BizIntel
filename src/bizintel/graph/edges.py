@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 
-from bizintel.config.settings import MAX_RETRIES, ANALYSIS_TYPES
+from bizintel.config.settings import MAX_RETRIES, ANALYSIS_TYPES, WEB_SEARCH_ENABLED
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,8 @@ def route_after_confidence(state) -> str:
 
     - high / low → type-specific generate node (by analysis_type)
     - none + retries left → rewrite (try different query)
-    - none + retries exhausted → end (refuse)
+    - none + retries exhausted + web search enabled → web_search (fallback)
+    - none + retries exhausted + web search disabled → end (refuse)
     """
     confidence = getattr(state, "confidence", "high")
     retry_count = getattr(state, "retry_count", 0)
@@ -39,6 +40,11 @@ def route_after_confidence(state) -> str:
     if retry_count < MAX_RETRIES:
         logger.info("Confidence=none, retry %d/%d → rewrite", retry_count, MAX_RETRIES)
         return "rewrite"
+
+    # Retries exhausted — try web search if enabled, otherwise refuse
+    if WEB_SEARCH_ENABLED:
+        logger.info("Confidence=none, retries exhausted → web_search (fallback)")
+        return "web_search"
 
     logger.info("Confidence=none, retries exhausted → end (refuse)")
     return END
@@ -71,3 +77,15 @@ def route_after_validate(state) -> str:
 
     logger.info("Validation failed, retries exhausted → end (best-effort)")
     return END
+
+
+def route_after_web_search(state) -> str:
+    """Route after the Web Search node → type-specific generate node.
+
+    Same logic as the high-confidence path: read analysis_type and go
+    to the corresponding generate node.
+    """
+    analysis_type = getattr(state, "analysis_type", "similar")
+    target = f"generate_{analysis_type}"
+    logger.info("Web search done → %s", target)
+    return target

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from bizintel.config.settings import LLM_MODEL, ANALYSIS_TYPES
+from bizintel.graph.utils.history import format_history_context
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,9 @@ _CLASSIFY_PROMPT = (
     "- competitor: User wants competitive landscape or competitor mapping\n"
     "- comparison: User wants a side-by-side comparison of specific startups or segments\n"
     "- ecosystem: User wants to explore an industry ecosystem, sub-segments, or trends\n\n"
-    "Respond with ONLY the type name (one word), nothing else.\n\n"
+    "If the query is a follow-up (e.g. 'their competitors', 'now do a SWOT'), use the "
+    "conversation history to understand what the user is referring to.\n\n"
+    "{history}"
     "User query: {query}\n"
     "Type:"
 )
@@ -31,12 +34,13 @@ def make_classify_node(llm_client):
     def classify_node(state) -> dict:
         """Classify the user query into an analysis type."""
         query = state.user_query
+        history = format_history_context(getattr(state, "conversation_history", []))
 
         try:
             response = llm_client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[
-                    {"role": "user", "content": _CLASSIFY_PROMPT.format(query=query)},
+                    {"role": "user", "content": _CLASSIFY_PROMPT.format(query=query, history=history)},
                 ],
                 temperature=0.0,
                 max_tokens=10,

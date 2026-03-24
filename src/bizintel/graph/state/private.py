@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import operator
+from typing import Annotated
+
 from pydantic import Field
 
 from bizintel.graph.state.input import InputState
@@ -37,4 +40,12 @@ class PrivateState(InputState, OutputState):
     retry_count: int = Field(
         default=0,
         description="Number of rewrite-retrieve-generate retries so far",
+    )
+    web_searched: bool = Field(
+        default=False,
+        description="True if web search was used instead of vector DB for this query",
+    )
+    conversation_history: Annotated[list[dict], operator.add] = Field(
+        default_factory=list,
+        description="Accumulated chat turns [{role, content}, ...] — grows via reducer across invocations",
     )
