@@ -13,7 +13,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Ask natural-language questions about **134,000+ startups** from Y Combinator & Crunchbase.  
-Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM25 keyword search + cross-encoder reranking + LLM reasoning.  
+Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM25 keyword search + cross-encoder reranking + LLM reasoning, with **web fallback**, **human review**, and **persistent conversation memory**.  
 **Free to run** — uses Groq's free API by default (switchable to OpenAI).
 
 [Features](#-features) · [Demo](#-demo) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Project Structure](#-project-structure) · [Usage](#-usage) · [Tech Stack](#-tech-stack)
@@ -56,6 +56,23 @@ Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM
 | 🆕 **LangGraph Orchestration** | Stateful graph pipeline with Classify → Expand → Retrieve → Confidence Gate → Generate → Validate → Rewrite loop |
 | 🆕 **Post-Gen Validation** | LLM groundedness check after generation — retries with rewritten query on failure |
 | 🆕 **Corrective RAG** | Rewrite → re-expand → re-retrieve cycle when confidence is too low or validation fails |
+| 🆕 **Web Search Fallback** | If local retrieval exhausts retries, BizIntel can search the open web via Tavily |
+| 🆕 **Human-in-the-Loop Review** | Web results pause the graph for user approval before answer generation |
+| 🆕 **Persistent Conversation Memory** | Multi-turn context is checkpointed by `thread_id` using SQLite-backed LangGraph state |
+| 🆕 **Streaming Graph UX** | Streamlit surfaces node-by-node progress, review states, sources, and confidence badges |
+
+---
+
+## 🆕 What Changed In V2
+
+The current v2 build goes beyond the original LangGraph migration and adds a more robust fallback path for low-confidence queries:
+
+1. **Confidence-first routing** decides whether to answer, retry, refuse, or fall back to web search.
+2. **Corrective retries** rewrite and re-run retrieval before giving up on the local startup database.
+3. **Web search fallback** uses Tavily when the vector DB cannot support a reliable answer.
+4. **Human review checkpoint** pauses the graph so the user can approve which web results are used.
+5. **Persistent memory** stores conversation history per thread so follow-up questions work across Streamlit reruns.
+6. **Recorded turns** append each user/assistant exchange back into graph state for later context injection.
 
 ---
 
@@ -66,6 +83,7 @@ Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM
 - **Python 3.13+**
 - **[uv](https://docs.astral.sh/uv/)** (fast Python package manager)
 - **Groq API Key (free)** ([Get one here](https://console.groq.com/keys)) — *or* OpenAI API Key ([paid](https://platform.openai.com/api-keys))
+- **Optional Tavily API Key** for web-search fallback ([Get one here](https://app.tavily.com/home))
 
 ### 1. Clone & Install
 
@@ -92,6 +110,13 @@ GROQ_API_KEY=gsk_your-groq-key-here
 OPENAI_API_KEY=sk-your-key-here
 LLM_PROVIDER=openai   # override the default
 ```
+
+**Optional web-search fallback:**
+```env
+TAVILY_API_KEY=tvly-your-key-here
+```
+
+If `WEB_SEARCH_ENABLED=True` but `TAVILY_API_KEY` is missing, BizIntel keeps working and simply disables the web fallback path.
 
 ### 3. Run the Data Pipeline
 
@@ -131,7 +156,11 @@ Open **http://localhost:8501** in your browser. 🎉
 
 ### Online Pipeline — LangGraph Orchestration
 
-The query pipeline is orchestrated as a **LangGraph StateGraph** with 12 nodes and 2 conditional edges:
+The query pipeline is orchestrated as a **LangGraph StateGraph** with:
+
+- **13 nodes / 2 conditional edges** in local-only mode
+- **15 nodes / 3 conditional edges** when web fallback is enabled
+- **SQLite-backed checkpointing** in the Streamlit app for multi-turn state and HITL resume
 
 ![LangGraph Pipeline](docs/screenshots/langgraph_v2.png)
 
@@ -139,22 +168,26 @@ The query pipeline is orchestrated as a **LangGraph StateGraph** with 12 nodes a
 
 ```
 START → Classify → Expand Query → Retrieve → Confidence Gate
-                                                    │
-                            ┌───────────────────────┼────────────────┐
-                            ▼                       ▼                ▼
-                     generate_*              rewrite → loop    refuse → END
-                   (5 type-specific)         back to expand
-                            │
-                            ▼
-                        Validate
-                            │
-                   ┌────────┴────────┐
-                   ▼                 ▼
-                  END          rewrite → loop
-              (return answer)  back to expand
+                                                                                           │
+                                      ┌────────────────────────────┼─────────────────────────────┐
+                                      ▼                            ▼                             ▼
+                             generate_*                  rewrite → loop               web_search / refuse
+                        (high/low confidence)         back to expand                 (none after retries)
+                                      │                                                          │
+                                      ▼                                                          ▼
+                               Validate                                                 web_review
+                                      │                                                          │
+                       ┌────────┴────────┐                                                 ▼
+                       ▼                 ▼                                           generate_*
+              record_turn      rewrite → loop                                          │
+                       │          back to expand                                           ▼
+                       ▼                                                               Validate
+                      END                                                                 │
+                                                                                                                                            ▼
+                                                                                                                                 record_turn → END
 ```
 
-**Nodes (12):**
+**Nodes (15 with web fallback enabled):**
 
 | Node | Type | Purpose |
 |---|---|---|
@@ -170,6 +203,9 @@ START → Classify → Expand Query → Retrieve → Confidence Gate
 | `validate` | LLM | Post-generation groundedness check |
 | `rewrite` | LLM | Rewrite query for retry (corrective RAG) |
 | `refuse` | Logic | Return refusal message when confidence exhausted |
+| `web_search` | Tool | Search the open web via Tavily when local retrieval fails |
+| `web_review` | HITL | Pause execution and let the user approve/filter web results |
+| `record_turn` | Memory | Append the user query and assistant answer into conversation history |
 
 ### Key Design Decisions
 
@@ -182,10 +218,13 @@ START → Classify → Expand Query → Retrieve → Confidence Gate
 | **Fusion** | Weighted RRF (sem=1.0, bm25=0.4) | Equal weights regressed relevancy; tuned weights fix it |
 | **Reranker** | `ms-marco-MiniLM-L-6-v2` (22 MB) | +0.13 context relevancy gain; only 22 MB, 150ms/query |
 | **Guardrails** | Cross-encoder score → confidence gate | Refuse (skip LLM) when score < 0.02; warn when < 0.10. Prevents hallucination on garbage context. |
+| **Web Fallback** | Tavily search after retries are exhausted | Expands coverage beyond the local 134K startup dataset |
+| **Human Review** | LangGraph `interrupt()` + `Command(resume=...)` | Keeps external web evidence user-approved before generation |
+| **Conversation Memory** | SQLite checkpointer + `thread_id` | Follow-up questions survive Streamlit reruns and build on prior turns |
 | **Document Format** | Style C (labeled key-value) | Labels act as semantic anchors for the embedding model |
 | **Query Expansion** | LLM-based rewriting | Solves the "Stripe → fintech" semantic gap problem |
 | **No Chunking** | 1 startup = 1 document | Documents are short (~200 tokens), fit within model limit |
-| **Orchestration** | LangGraph StateGraph | Stateful graph with conditional edges, corrective retry loop, HITL-ready |
+| **Orchestration** | LangGraph StateGraph | Stateful graph with conditional edges, corrective retry loop, web fallback, and HITL pauses |
 | **Dependency Injection** | Closure pattern (Option C) | Nodes close over retriever/LLM client; state stays pure serializable data |
 | **State Schema** | 3 Pydantic models | InputState / OutputState / PrivateState — clean separation of public API vs internal fields |
 
@@ -222,7 +261,7 @@ BizIntel/
 │   │   ├── state/
 │   │   │   ├── input.py           # InputState — public input schema (user_query)
 │   │   │   ├── output.py          # OutputState — public output (answer, sources, confidence)
-│   │   │   └── private.py         # PrivateState — internal fields (expanded_query, retry_count)
+│   │   │   └── private.py         # PrivateState — internal fields (expanded_query, retry_count, memory, web flags)
 │   │   ├── nodes/
 │   │   │   ├── classify.py        # LLM classifier → analysis_type
 │   │   │   ├── expand_query.py    # LLM query rewriter
@@ -235,8 +274,13 @@ BizIntel/
 │   │   │   ├── generate_ecosystem.py
 │   │   │   ├── _generate_base.py  # Shared generation logic (DRY helper)
 │   │   │   ├── validate.py        # Post-gen groundedness check
-│   │   │   └── rewrite.py         # Query rewriter for retry loop
+│   │   │   ├── rewrite.py         # Query rewriter for retry loop
+│   │   │   ├── web_search.py      # Tavily web-search fallback node
+│   │   │   ├── web_review.py      # HITL review checkpoint for web results
+│   │   │   └── record_turn.py     # Append user/assistant turns to graph memory
 │   │   ├── edges.py               # Conditional routing functions
+│   │   ├── utils/
+│   │   │   └── history.py         # Formats recent conversation history for prompts
 │   │   └── builder.py             # build_graph() — assembles & compiles the pipeline
 │   ├── pipeline/
 │   │   └── batch_embed.py         # One-time batch embedding script (CLI)
@@ -245,9 +289,9 @@ BizIntel/
 │   │   ├── evaluator.py           # LLM-as-Judge + deterministic scorers
 │   │   └── run_eval.py            # CLI evaluation runner → JSON + CSV
 │   └── app/
-│       ├── state.py               # @st.cache_resource loaders + session state
+│       ├── state.py               # Cached loaders + SQLite checkpointer + Tavily setup
 │       ├── components.py          # Sidebar, chat, source cards, CSS
-│       └── streamlit_app.py       # Streamlit entry point
+│       └── streamlit_app.py       # Streamlit entry point + streaming status + HITL resume flow
 ├── notebooks/
 │   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
 │   ├── eval_visualization.ipynb   # Evaluation results visualization
@@ -283,6 +327,13 @@ BizIntel/
 | *"Who are the main competitors in food delivery?"* | ⚔️ Competitor |
 | *"Compare YC edtech vs Crunchbase edtech companies"* | ⚖️ Comparison |
 | *"Map the autonomous vehicle startup ecosystem"* | 🌐 Ecosystem |
+
+### Multi-Turn And Web-Fallback Behavior
+
+- Follow-up prompts like "Now do a SWOT for them" reuse prior turns from the same conversation thread.
+- If retrieval confidence stays at `none` after retries, the graph can fall back to web search.
+- When web fallback is used, the app pauses and asks the user to approve which search results should be used.
+- Final responses surface source cards plus a confidence badge derived from graph state.
 
 ### CLI Options for Batch Embedding
 
@@ -323,8 +374,10 @@ uv run python -m bizintel.pipeline.batch_embed --batch-size 1000 --reset
 | **Keyword Search** | rank-bm25 (`BM25Okapi`) | TF-IDF keyword matching for hybrid retrieval |
 | **Reranker** | cross-encoder (`ms-marco-MiniLM-L-6-v2`) | Pair-wise relevancy rescoring |
 | **LLM** | Groq (`llama-3.3-70b-versatile`) / OpenAI (`gpt-4o-mini`) | Grounded analysis generation — free or paid |
+| **Web Search** | Tavily | Open-web fallback when the local startup corpus is insufficient |
 | **UI** | Streamlit | Chat interface with sidebar controls |
-| **Orchestration** | [LangGraph](https://langchain-ai.github.io/langgraph/) 1.1 | StateGraph with Pydantic schemas, conditional edges, retry loops |
+| **Orchestration** | [LangGraph](https://langchain-ai.github.io/langgraph/) 1.1 | StateGraph with conditional routing, interrupts, resume commands, and checkpointing |
+| **Checkpointing** | SQLite (`langgraph-checkpoint-sqlite`) | Persistent memory + resume support for HITL flows |
 | **Secrets** | python-dotenv | `.env` file for API keys |
 
 ---
@@ -400,6 +453,8 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | **Immutable Value Object** | `StartupDocument`, `SearchResult` (frozen Pydantic) | Prevent accidental mutation |
 | **State Machine** | LangGraph `StateGraph` + conditional edges | Explicit control flow: classify → expand → retrieve → gate → generate → validate |
 | **Corrective RAG** | Rewrite → re-expand → re-retrieve loop | `MAX_RETRIES=1` — query is rewritten and re-routed through the full pipeline |
+| **Human-in-the-Loop** | `interrupt()` + `Command(resume=...)` in `web_review` | Pause on external evidence, resume only after user approval |
+| **Checkpointed Memory** | SQLite `SqliteSaver` + `thread_id` | Persist graph state and conversation history across Streamlit reruns |
 | **Template Method** | Prompt templates (shared `_BASE_ROLE`) + `_generate_base.py` | Common generation logic + type-specific prompt selection |
 | **Pipeline** | Offline & online data flow | Clear, testable stages |
 | **LLM Client Factory** | `config/llm_client.py` → `get_llm_client(provider)` | One-flag swap between Groq (free) and OpenAI (paid) |
