@@ -47,32 +47,19 @@ Powered by **LangGraph** orchestration + **Hybrid RAG** — semantic search + BM
 | 📚 **Source Transparency** | Every answer shows the exact source documents used — no hallucination |
 | 🔄 **Query Expansion** | LLM-powered query rewriting for better semantic matching |
 | 🗂️ **Dual Vector Store** | Strategy Pattern — swap between ChromaDB and FAISS via config |
-| 🆕 **Hybrid Search** | Combines semantic (embedding) + keyword (BM25) search for better recall |
-| 🆕 **Weighted RRF Fusion** | Merges ranked lists with tunable weights (semantic=1.0, BM25=0.4) |
-| 🆕 **Cross-Encoder Reranker** | Rescores candidates with `ms-marco-MiniLM-L-6-v2` for +0.13 relevancy gain |
-| 🆕 **Multi-Provider LLM** | Switch between Groq (free) and OpenAI (paid) via one config flag |
-| 🆕 **RAG Evaluation Pipeline** | 30 test queries, 6 metrics (3 LLM-as-Judge + 3 deterministic) |
-| 🆕 **Confidence Guardrails** | Refuses or warns when retrieved context is irrelevant — prevents hallucination |
-| 🆕 **LangGraph Orchestration** | Stateful graph pipeline with Classify → Expand → Retrieve → Confidence Gate → Generate → Validate → Rewrite loop |
-| 🆕 **Post-Gen Validation** | LLM groundedness check after generation — retries with rewritten query on failure |
-| 🆕 **Corrective RAG** | Rewrite → re-expand → re-retrieve cycle when confidence is too low or validation fails |
-| 🆕 **Web Search Fallback** | If local retrieval exhausts retries, BizIntel can search the open web via Tavily |
-| 🆕 **Human-in-the-Loop Review** | Web results pause the graph for user approval before answer generation |
-| 🆕 **Persistent Conversation Memory** | Multi-turn context is checkpointed by `thread_id` using SQLite-backed LangGraph state |
-| 🆕 **Streaming Graph UX** | Streamlit surfaces node-by-node progress, review states, sources, and confidence badges |
-
----
-
-## 🆕 What Changed In V2
-
-The current v2 build goes beyond the original LangGraph migration and adds a more robust fallback path for low-confidence queries:
-
-1. **Confidence-first routing** decides whether to answer, retry, refuse, or fall back to web search.
-2. **Corrective retries** rewrite and re-run retrieval before giving up on the local startup database.
-3. **Web search fallback** uses Tavily when the vector DB cannot support a reliable answer.
-4. **Human review checkpoint** pauses the graph so the user can approve which web results are used.
-5. **Persistent memory** stores conversation history per thread so follow-up questions work across Streamlit reruns.
-6. **Recorded turns** append each user/assistant exchange back into graph state for later context injection.
+| 🔀 **Hybrid Search** | Combines semantic (embedding) + keyword (BM25) search for better recall |
+| ⚖️ **Weighted RRF Fusion** | Merges ranked lists with tunable weights (semantic=1.0, BM25=0.4) |
+| 🎯 **Cross-Encoder Reranker** | Rescores candidates with `ms-marco-MiniLM-L-6-v2` for +0.13 relevancy gain |
+| 🔌 **Multi-Provider LLM** | Switch between Groq (free) and OpenAI (paid) via one config flag |
+| 📊 **RAG Evaluation Pipeline** | 30 test queries, 6 metrics (3 LLM-as-Judge + 3 deterministic) |
+| 🛡️ **Confidence Guardrails** | Refuses or warns when retrieved context is irrelevant — prevents hallucination |
+| 🔗 **LangGraph Orchestration** | Stateful graph pipeline with Classify → Expand → Retrieve → Confidence Gate → Generate → Validate → Rewrite loop |
+| ✅ **Post-Gen Validation** | LLM groundedness check after generation — retries with rewritten query on failure |
+| 🔁 **Corrective RAG** | Rewrite → re-expand → re-retrieve cycle when confidence is too low or validation fails |
+| 🌐 **Web Search Fallback** | If local retrieval exhausts retries, BizIntel can search the open web via Tavily |
+| 👁️ **Human-in-the-Loop Review** | Web results pause the graph for user approval before answer generation |
+| 💾 **Persistent Conversation Memory** | Multi-turn context is checkpointed by `thread_id` using SQLite-backed LangGraph state |
+| ⚡ **Streaming Graph UX** | Streamlit surfaces node-by-node progress, review states, sources, and confidence badges |
 
 ---
 
@@ -257,7 +244,7 @@ BizIntel/
 │   │   ├── retriever.py           # 5-stage pipeline: semantic → BM25 → RRF → reranker → confidence
 │   │   ├── reranker.py            # Cross-encoder reranker → RerankedResults(docs, scores)
 │   │   └── prompt_templates.py    # 6 analysis templates + shared base role
-│   ├── graph/                     # 🆕 LangGraph orchestration layer
+│   ├── graph/                     # LangGraph orchestration layer
 │   │   ├── state/
 │   │   │   ├── input.py           # InputState — public input schema (user_query)
 │   │   │   ├── output.py          # OutputState — public output (answer, sources, confidence)
@@ -295,7 +282,7 @@ BizIntel/
 ├── notebooks/
 │   ├── data_analysis.ipynb        # EDA — 9 visualizations + JSON/Excel export
 │   ├── eval_visualization.ipynb   # Evaluation results visualization
-│   └── graph_visualization.ipynb  # 🆕 LangGraph Mermaid viz + smoke tests
+│   └── graph_visualization.ipynb  # LangGraph Mermaid viz + smoke tests
 ├── eval_results/                  # Timestamped eval outputs (JSON + CSV)
 ├── data-source/                   # Raw CSVs (not in git)
 ├── data/                          # Cleaned CSVs + vector DB (not in git)
@@ -477,19 +464,6 @@ YC CSVs (2 snapshots)           Crunchbase CSV
 | Embedding dimensions | 384 |
 | Index size (ChromaDB) | ~500 MB on disk |
 | BM25 index (in-memory) | ~200 MB, builds in ~3s |
-
----
-
-## 🗺️ Docs
-
-| Document | Description |
-|---|---|
-| [Architecture Flowchart v1](docs/architecture_flowchart.html) | Interactive HTML diagram of the base RAG pipeline |
-| [Architecture Flowchart v2](docs/architecture_flowchart_v2.html) | Updated diagram — hybrid search, reranker, Groq, eval pipeline |
-| [Architecture Flowchart v3](docs/architecture_flowchart_v3.html) | Confidence guardrails — score propagation, 3-path decision gate |
-| [LangGraph Pipeline](docs/langgraph_v2.png) | 🆕 LangGraph v1 — 12-node pipeline with corrective retry loop |
-| [Interview Prep Guide](docs/interview_prep.html) | 50+ Q&A covering every design decision for interviews |
-| [Design Decisions v2](docs/design_decisions_v2.html) | 65+ Q&A — reranker, hybrid search, RRF, BM25, Groq, evaluation |
 
 ---
 
