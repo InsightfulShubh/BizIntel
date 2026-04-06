@@ -13,17 +13,18 @@ import logging
 import streamlit as st
 
 from bizintel.config.settings import (
-    ANALYSIS_TYPES,
-    DEFAULT_ANALYSIS_TYPE,
     VECTOR_STORE_BACKEND,
     TOP_K,
     RERANK_ENABLED,
     HYBRID_SEARCH_ENABLED,
+    CONVERSATIONS_DB_PATH,
+    WEB_SEARCH_ENABLED,
 )
 from bizintel.embeddings.embedder import StartupEmbedder
 from bizintel.vectorstore.base import VectorStoreBase, create_vector_store
 from bizintel.rag.retriever import StartupRetriever
-from bizintel.rag.chain import BizIntelChain
+from bizintel.config.llm_client import get_llm_client
+from bizintel.graph.builder import build_graph
 
 logger = logging.getLogger(__name__)
 
@@ -65,17 +66,40 @@ def load_bm25_index(_store: VectorStoreBase):
 
 
 @st.cache_resource(show_spinner="Initialising BizIntel engine…")
-def load_chain(
+def load_graph(
     _embedder: StartupEmbedder,
     _store: VectorStoreBase,
-) -> BizIntelChain:
-    """Build the full RAG chain (once per app lifetime)."""
+):
+    """Build the LangGraph pipeline with SQLite checkpointer."""
+    import sqlite3
+    from langgraph.checkpoint.sqlite import SqliteSaver
+
     reranker = load_reranker()
     bm25_index = load_bm25_index(_store)
     retriever = StartupRetriever(
         _embedder, _store, reranker=reranker, bm25_index=bm25_index,
     )
-    return BizIntelChain(retriever)
+    llm_client = get_llm_client()
+    conn = sqlite3.connect(str(CONVERSATIONS_DB_PATH), check_same_thread=False)
+    checkpointer = SqliteSaver(conn=conn)
+
+    tavily_client = None
+    if WEB_SEARCH_ENABLED:
+        import os
+        from tavily import TavilyClient
+        api_key = os.environ.get("TAVILY_API_KEY")
+        if api_key:
+            tavily_client = TavilyClient(api_key=api_key)
+            logger.info("Tavily web-search client initialised")
+        else:
+            logger.warning("WEB_SEARCH_ENABLED=True but TAVILY_API_KEY not set — disabling web search")
+
+    return build_graph(
+        retriever=retriever,
+        llm_client=llm_client,
+        checkpointer=checkpointer,
+        tavily_client=tavily_client,
+    )
 
 
 # ── Session state initialisation ─────────────────────────────────────────
@@ -85,10 +109,13 @@ def init_session_state() -> None:
     """Ensure all required session_state keys exist with defaults."""
     defaults = {
         "messages": [],                          # chat history
-        "analysis_type": DEFAULT_ANALYSIS_TYPE,  # sidebar dropdown
         "source_filter": "All",                  # sidebar filter
         "top_k": TOP_K,                          # sidebar slider
         "processing": False,                     # loading guard
+        "thread_id": None,                       # conversation thread for checkpointer
+        "_hitl_pending": False,                  # HITL: waiting for user approval
+        "_hitl_data": None,                      # HITL: interrupt payload (web results)
+        "_hitl_resume": None,                    # HITL: resume value after approval
     }
     for key, value in defaults.items():
         if key not in st.session_state:

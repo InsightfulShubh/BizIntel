@@ -8,19 +8,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from bizintel.config.settings import ANALYSIS_TYPES, TOP_K
+from bizintel.config.settings import TOP_K
 
-
-# ── Analysis type metadata (icons + descriptions for sidebar) ────────────
-
-ANALYSIS_META: dict[str, dict] = {
-    "auto":       {"icon": "🤖", "label": "Auto Detect",      "desc": "Let AI choose the best analysis format"},
-    "similar":    {"icon": "🔍", "label": "Similar Startups",  "desc": "Find startups similar to your description"},
-    "swot":       {"icon": "📊", "label": "SWOT Analysis",     "desc": "Strengths, Weaknesses, Opportunities, Threats"},
-    "competitor": {"icon": "⚔️", "label": "Competitor Analysis","desc": "Map the competitive landscape"},
-    "comparison": {"icon": "⚖️", "label": "Side-by-Side",     "desc": "Compare startups head-to-head"},
-    "ecosystem":  {"icon": "🌐", "label": "Ecosystem Map",     "desc": "Explore an industry ecosystem"},
-}
 
 
 # ── Custom CSS ───────────────────────────────────────────────────────────
@@ -96,6 +85,37 @@ CUSTOM_CSS = """
         border-top: 1px solid #e0e0e0;
     }
 
+    /* Confidence badges */
+    .confidence-high {
+        display: inline-block;
+        background: #28a745;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .confidence-low {
+        display: inline-block;
+        background: #ffc107;
+        color: #212529;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .confidence-none {
+        display: inline-block;
+        background: #dc3545;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
     /* Welcome message */
     .welcome-box {
         text-align: center;
@@ -134,6 +154,26 @@ def render_header() -> None:
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
+# ── Confidence badge ─────────────────────────────────────────────────────
+
+_CONFIDENCE_LABELS = {
+    "high": ("✅ High confidence", "confidence-high"),
+    "low": ("⚠️ Low confidence", "confidence-low"),
+    "none": ("🚫 Refused — no relevant context", "confidence-none"),
+}
+
+
+def format_confidence_badge(confidence: str, best_score: float) -> str:
+    """Return an HTML badge string for the confidence level."""
+    label, css_class = _CONFIDENCE_LABELS.get(
+        confidence, ("❓ Unknown", "confidence-low"),
+    )
+    return (
+        f'<span class="{css_class}">{label} '
+        f"(score: {best_score:.2f})</span>"
+    )
+
+
 # ── Sidebar ──────────────────────────────────────────────────────────────
 
 
@@ -147,31 +187,6 @@ def render_sidebar(doc_count: int) -> None:
         # ── Branding
         st.markdown("## 🧠 BizIntel")
         st.caption("AI-Powered Startup Intelligence Engine")
-        st.divider()
-
-        # ── Analysis Type selector
-        st.markdown("#### 🎯 Analysis Type")
-
-        # Build display labels with icons
-        options = [
-            f"{ANALYSIS_META[t]['icon']}  {ANALYSIS_META[t]['label']}"
-            for t in ANALYSIS_TYPES
-        ]
-
-        selected_idx = st.selectbox(
-            "Choose analysis type",
-            range(len(options)),
-            format_func=lambda i: options[i],
-            index=ANALYSIS_TYPES.index(st.session_state.analysis_type),
-            label_visibility="collapsed",
-            help="Auto Detect lets the AI choose the best format for your query.",
-        )
-        st.session_state.analysis_type = ANALYSIS_TYPES[selected_idx]
-
-        # Show description of selected type
-        sel = ANALYSIS_META[st.session_state.analysis_type]
-        st.caption(f"ℹ️ {sel['desc']}")
-
         st.divider()
 
         # ── Data Source filter
@@ -228,6 +243,10 @@ def render_sidebar(doc_count: int) -> None:
         # ── Clear conversation
         if st.button("🗑️  Clear Conversation", use_container_width=True):
             st.session_state.messages = []
+            st.session_state.thread_id = None  # new thread → fresh checkpointer history
+            st.session_state._hitl_pending = False
+            st.session_state._hitl_data = None
+            st.session_state._hitl_resume = None
             st.rerun()
 
 
@@ -276,6 +295,13 @@ def render_chat_history() -> None:
             # Render source cards if present (assistant messages)
             if msg.get("sources"):
                 render_sources(msg["sources"])
+
+            # Render confidence badge if present
+            if msg.get("confidence"):
+                badge = format_confidence_badge(
+                    msg["confidence"], msg.get("best_score", 0.0),
+                )
+                st.markdown(badge, unsafe_allow_html=True)
 
 
 def render_sources(sources: list[dict]) -> None:

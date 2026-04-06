@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel LG v1 — LangGraph Architecture Flowchart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .version-row {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .ver-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0 4px;
+        }
+        .ver-old { background: linear-gradient(135deg, #6b7280, #4b5563); color: #d1d5db; }
+        .ver-v3  { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .ver-lg  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+
+        /* ── Legend ─────────────────────────────────── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+        /* ── Stage sections ────────────────────────── */
+        .stage {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .stage.lg-stage  { border-color: rgba(139,92,246,0.45); background: rgba(139,92,246,0.04); }
+        .stage.new-stage { border-color: rgba(139,92,246,0.45); background: rgba(139,92,246,0.04); }
+        .stage.kept-stage { border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.02); }
+        .stage-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stage-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1rem; flex-shrink: 0;
+        }
+        .stage-num.sn-lg  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .stage-num.sn-kept { background: linear-gradient(135deg, #10b981, #059669); }
+        .stage-title { font-size: 1.25rem; font-weight: 700; color: #c4b5fd; }
+        .stage-file {
+            margin-left: auto;
+            background: rgba(99,102,241,0.15); color: #a5b4fc;
+            padding: 4px 14px; border-radius: 20px; font-size: 0.76rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+        .stag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-left: 8px; }
+        .stag-lg   { background: #8b5cf633; color: #c4b5fd; border: 1px solid #8b5cf655; }
+        .stag-kept { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .stag-del  { background: #ef444433; color: #fca5a5; border: 1px solid #ef444455; }
+        .stag-same { background: #6b728033; color: #9ca3af; border: 1px solid #6b728055; }
+
+        /* ── Flow rows ─────────────────────────────── */
+        .flow-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        /* ── Cards ─────────────────────────────────── */
+        .card {
+            flex: 1; min-width: 220px; max-width: 400px;
+            border-radius: 12px; padding: 16px 18px;
+            transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-input   { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 1px solid #2563eb; }
+        .card-custom  { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .card-builtin { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 1px solid #10b981; }
+        .card-output  { background: linear-gradient(135deg,#4a2c17,#2d1a0e); border: 1px solid #f59e0b; }
+        .card-model   { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 1px solid #ec4899; }
+        .card-lg      { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 2px solid #8b5cf6; }
+        .card-node    { background: linear-gradient(135deg,#1a2744,#0f1a2e); border: 1px solid #6366f1; }
+        .card-edge    { background: linear-gradient(135deg,#2e220a,#1a1505); border: 1px solid #f59e0b; }
+        .card-state   { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 1px solid #10b981; }
+        .card-danger  { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; }
+        .card-warn    { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #fbbf24; }
+        .card-safe    { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; }
+
+        .card-label  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
+        .card-title  { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        .card-method { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.78rem; color: #c4b5fd; margin-bottom: 6px; }
+        .card-desc   { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+        .card-example {
+            margin-top: 8px; background: rgba(0,0,0,0.3); border-radius: 8px;
+            padding: 8px 12px; font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.72rem; color: #86efac; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        .arrow-down   { text-align: center; font-size: 1.4rem; color: #6366f1; margin: 4px 0 8px; animation: pulse 2s infinite; }
+        .arrow-right  { display: flex; align-items: center; font-size: 1.3rem; color: #6366f1; flex-shrink: 0; }
+        .arrow-branch { text-align: center; font-size: 1.1rem; color: #8b5cf6; margin: 8px 0; letter-spacing: 2px; }
+
+        @keyframes pulse { 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-right: 4px; margin-top: 6px; }
+        .badge-pattern { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .badge-lib     { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .badge-api     { background: #ec489933; color: #f9a8d4; border: 1px solid #ec489955; }
+        .badge-lg      { background: #8b5cf655; color: #ddd6fe; border: 1px solid #8b5cf688; }
+        .badge-node    { background: #6366f155; color: #c7d2fe; border: 1px solid #6366f188; }
+        .badge-del     { background: #ef444455; color: #fca5a5; border: 1px solid #ef444488; }
+
+        /* ── Comparison columns ───────────────────── */
+        .cmp  { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+        .cmp-col { flex: 1; min-width: 280px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 18px; }
+        .cmp-col h3 { font-size: 0.9rem; margin-bottom: 12px; }
+        .pstep { padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-family: 'Cascadia Code','Fira Code',monospace; margin-bottom: 6px; }
+        .ps-old { background: rgba(107,114,128,0.2); border: 1px solid rgba(107,114,128,0.3); }
+        .ps-v3  { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); }
+        .ps-lg  { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); }
+        .ps-arrow { text-align: center; color: #6366f1; font-size: 0.9rem; margin: 2px 0; }
+        .ps-branch { text-align: center; color: #8b5cf6; font-size: 0.8rem; margin: 4px 0; }
+
+        /* ── Node grid ────────────────────────────── */
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .node-card {
+            border-radius: 10px;
+            padding: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+        }
+        .node-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .nc-classify   { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 1px solid #ec4899; }
+        .nc-expand     { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .nc-retrieve   { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 1px solid #10b981; }
+        .nc-confidence { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 1px solid #fbbf24; }
+        .nc-generate   { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 1px solid #3b82f6; }
+        .nc-validate   { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 1px solid #10b981; }
+        .nc-rewrite    { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 1px solid #f59e0b; }
+        .nc-refuse     { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 1px solid #ef4444; }
+        .nc-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+        .nc-file  { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.68rem; color: #a5b4fc; margin-bottom: 4px; }
+        .nc-desc  { font-size: 0.72rem; color: #9ca3af; line-height: 1.4; }
+        .nc-type  { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6; margin-bottom: 6px; }
+
+        /* ── Graph flow (main pipeline visual) ─────── */
+        .graph-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 20px 0;
+        }
+        .gf-node {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-align: center;
+            min-width: 220px;
+            position: relative;
+        }
+        .gf-node.n-entry    { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 2px solid #3b82f6; color: #93c5fd; }
+        .gf-node.n-classify { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 2px solid #ec4899; color: #f9a8d4; }
+        .gf-node.n-expand   { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 2px solid #7c3aed; color: #c4b5fd; }
+        .gf-node.n-retrieve { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 2px solid #10b981; color: #6ee7b7; }
+        .gf-node.n-conf     { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #fbbf24; color: #fde68a; }
+        .gf-node.n-gen      { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 2px solid #3b82f6; color: #93c5fd; }
+        .gf-node.n-validate { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; color: #6ee7b7; }
+        .gf-node.n-rewrite  { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #f59e0b; color: #fde68a; }
+        .gf-node.n-refuse   { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; color: #fca5a5; }
+        .gf-node.n-end      { background: linear-gradient(135deg,#1a1a2e,#0f0f1a); border: 2px solid #6b7280; color: #9ca3af; }
+
+        .gf-arrow { color: #6366f1; font-size: 1.3rem; animation: pulse 2s infinite; }
+        .gf-cond-arrow { color: #8b5cf6; font-size: 0.85rem; font-weight: 600; }
+        .gf-label { font-size: 0.72rem; color: #9ca3af; font-style: italic; }
+
+        .gf-branch-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .gf-branch-node {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        /* ── Rewrite loop visual ─────────────────── */
+        .rewrite-loop {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(245,158,11,0.06);
+            border: 1px dashed rgba(245,158,11,0.3);
+        }
+        .loop-arrow {
+            font-size: 2rem;
+            color: #f59e0b;
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ── Tables ────────────────────────────────── */
+        .stbl { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .stbl th { background: rgba(99,102,241,0.15); padding: 10px 14px; text-align: left; font-size: 0.8rem; color: #a5b4fc; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .stbl td { padding: 8px 14px; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+        .stbl tr:hover { background: rgba(255,255,255,0.03); }
+        .mono { font-family: 'Cascadia Code','Fira Code',monospace; color: #c4b5fd; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 BizIntel LG v1 — LangGraph Architecture</h1>
+<p class="subtitle">AI-Powered Startup Intelligence Engine · LangGraph Orchestration · Corrective RAG with Retry Loop</p>
+<div class="version-row">
+    <span class="ver-badge ver-old">v3 — Vanilla chain.py</span>
+    <span class="ver-badge ver-lg">LG v1 — LangGraph StateGraph · 12 Nodes · 2 Conditional Edges</span>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899;"></div>LLM Node (factory)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Pure Logic Node</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Retriever / Generate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fbbf24;"></div>Conditional Edge</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Refuse / Error</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Rewrite Loop</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6; border:2px solid #ddd6fe;"></div>NEW in LG v1</div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- WHY LANGGRAPH — THE PROBLEM LG SOLVES                                -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">💡</div>
+        <div class="stage-title">Why LangGraph? — The Problem LG v1 Solves</div>
+        <span class="stag stag-lg">NEW in LG v1</span>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-danger" style="max-width:500px;">
+            <div class="card-label">❌ v3 — Linear chain.py</div>
+            <div class="card-title">Monolithic analyze() method</div>
+            <div class="card-desc" style="color:#fca5a5;">All logic crammed into a single 80-line function. No retries — if confidence is low, you get one shot. Branching via if/elif. Hard to test, hard to extend.</div>
+            <div class="card-example" style="color:#fca5a5;">def analyze(query, analysis_type):
+    expanded = expand(query)       # step 1
+    docs = retrieve(expanded)      # step 2
+    if confidence == "none":       # step 3
+        return REFUSAL
+    elif confidence == "low":
+        answer = llm(prompt)
+        return DISCLAIMER + answer
+    else:
+        answer = llm(prompt)       # step 4
+        return answer
+    # ← no retry, no validation
+    # ← no corrective RAG loop</div>
+        </div>
+        <div class="arrow-right" style="font-size:2rem; color:#8b5cf6;">→</div>
+        <div class="card card-lg" style="max-width:500px;">
+            <div class="card-label">✅ LG v1 — StateGraph</div>
+            <div class="card-title">12 Nodes · 2 Conditional Edges · Corrective RAG</div>
+            <div class="card-desc" style="color:#c4b5fd;">Each step is an isolated node with a single responsibility. Conditional edges handle routing. Rewrite loop enables corrective RAG — retry with rewritten query.</div>
+            <div class="card-example" style="color:#86efac;">graph = StateGraph(PrivateState)
+
+graph.add_node("classify", classify)
+graph.add_node("expand_query", expand)
+graph.add_node("retrieve", retrieve)
+graph.add_node("confidence_gate", gate)
+graph.add_node("generate_similar", gen_sim)
+# ... 5 type-specific generate nodes
+graph.add_node("validate", validate)
+graph.add_node("rewrite", rewrite)  # ← RETRY!
+graph.add_node("refuse", refuse)
+
+# Conditional routing + retry loop
+graph.add_edge("rewrite", "expand_query")</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PIPELINE EVOLUTION — v3 vs LG v1                                     -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚡</div>
+        <div class="stage-title">Pipeline Evolution — v3 (chain) → LG v1 (graph)</div>
+    </div>
+    <div class="cmp">
+        <div class="cmp-col">
+            <h3 style="color:#9ca3af;">❌ v3 — chain.py (Deleted)</h3>
+            <div class="pstep ps-old">User Query + analysis_type</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">expand_query() → LLM</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">retriever.retrieve() → 5 docs</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">if confidence → branch</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-old">get_prompt() → LLM → answer</div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#fca5a5;">
+                ⚠️ <strong>Single function</strong> — no retry, no validation.<br>
+                ⚠️ <strong>User picks analysis_type</strong> via dropdown.<br>
+                ⚠️ No way to extend or test individual steps.
+            </div>
+        </div>
+        <div class="cmp-col">
+            <h3 style="color:#c4b5fd;">✅ LG v1 — StateGraph (12 Nodes)</h3>
+            <div class="pstep ps-lg">📥 InputState: { user_query }</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-lg">🏷️ Classify → LLM picks type</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-lg">🔍 Expand Query → LLM</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-lg">📚 Retrieve → Hybrid + Reranker</div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-lg">🛡️ Confidence Gate → threshold check</div>
+            <div class="ps-branch">⬇ conditional ⬇</div>
+            <div style="display:flex; gap:4px;">
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); font-size:0.72rem;">generate_*<br>(5 types)</div>
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); font-size:0.72rem;">🔄 rewrite<br>(retry)</div>
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); font-size:0.72rem;">🚫 refuse<br>(skip LLM)</div>
+            </div>
+            <div class="ps-arrow">⬇</div>
+            <div class="pstep ps-lg">✅ Validate → LLM groundedness</div>
+            <div class="ps-branch">⬇ conditional ⬇</div>
+            <div style="display:flex; gap:4px;">
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); font-size:0.72rem;">✅ pass → END</div>
+                <div class="pstep" style="flex:1; text-align:center; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); font-size:0.72rem;">🔄 rewrite</div>
+            </div>
+            <div style="margin-top:12px; font-size:0.78rem; color:#c4b5fd;">
+                ✅ <strong>LLM classifies type</strong> — no dropdown needed.<br>
+                ✅ <strong>Corrective RAG loop</strong> — rewrite → expand → retrieve → generate.<br>
+                ✅ <strong>Each node testable</strong> in isolation.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CORE CONCEPT: PYDANTIC 3-SCHEMA STATE                                -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">📦</div>
+        <div class="stage-title">Pydantic 3-Schema State — Input / Output / Private</div>
+        <span class="stag stag-lg">NEW in LG v1</span>
+        <div class="stage-file">graph/state/</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-state" style="max-width:280px;">
+            <div class="card-label">📥 Input Schema</div>
+            <div class="card-title">InputState(BaseModel)</div>
+            <div class="card-method">state/input.py</div>
+            <div class="card-desc">What the user provides. This is the only thing <code>graph.invoke()</code> accepts.</div>
+            <div class="card-example" style="color:#6ee7b7;">class InputState(BaseModel):
+    user_query: str</div>
+            <span class="badge badge-lg">graph input</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-lg" style="max-width:380px;">
+            <div class="card-label">🔒 Internal Schema</div>
+            <div class="card-title">PrivateState(InputState, OutputState)</div>
+            <div class="card-method">state/private.py</div>
+            <div class="card-desc">Full state used inside the graph. Inherits both Input + Output, adds private fields. <strong>Never exposed to the caller.</strong></div>
+            <div class="card-example" style="color:#c4b5fd;">class PrivateState(InputState, OutputState):
+    expanded_query: str = ""
+    reranker_scores: list[float] = []
+    mean_score: float = 0.0
+    validation_check: bool = False
+    retry_count: int = 0
+    # Total: 11 fields</div>
+            <span class="badge badge-lg">graph internal</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-state" style="max-width:300px;">
+            <div class="card-label">📤 Output Schema</div>
+            <div class="card-title">OutputState(BaseModel)</div>
+            <div class="card-method">state/output.py</div>
+            <div class="card-desc">What <code>graph.invoke()</code> returns. Only these fields are visible to the caller.</div>
+            <div class="card-example" style="color:#6ee7b7;">class OutputState(BaseModel):
+    answer: str = ""
+    analysis_type: str = ""
+    source_docs: list[dict] = []
+    confidence: str = ""
+    best_score: float = 0.0</div>
+            <span class="badge badge-lg">graph output</span>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px; background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); border-radius:10px; font-size:0.8rem;">
+        <strong style="color:#c4b5fd;">Design pattern:</strong> Multiple inheritance —
+        <code>PrivateState(InputState, OutputState)</code>. This gives LangGraph schema filtering:
+        the caller sends <code>InputState</code>, graph works with <code>PrivateState</code>, result is filtered to <code>OutputState</code>.
+        Internal fields like <code>expanded_query</code>, <code>retry_count</code> never leak out.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- MAIN GRAPH FLOW DIAGRAM                                              -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">🔀</div>
+        <div class="stage-title">Graph Flow — Complete Pipeline Topology</div>
+        <span class="stag stag-lg">12 Nodes · 2 Conditional Edges</span>
+        <div class="stage-file">graph/builder.py</div>
+    </div>
+
+    <div class="graph-flow">
+        <!-- Entry -->
+        <div class="gf-label">graph.invoke({"user_query": "..."})</div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Classify -->
+        <div class="gf-node n-classify">
+            🏷️ <strong>classify</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">LLM picks: similar | swot | competitor | comparison | ecosystem</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Expand Query -->
+        <div class="gf-node n-expand">
+            🔍 <strong>expand_query</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">LLM rewrites query → rich semantic search terms</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Retrieve -->
+        <div class="gf-node n-retrieve">
+            📚 <strong>retrieve</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">Semantic + BM25 → RRF → Reranker → top 5 docs + scores</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Confidence Gate -->
+        <div class="gf-node n-conf">
+            🛡️ <strong>confidence_gate</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">best_score vs SOFT / HARD thresholds → high | low | none</div>
+        </div>
+
+        <!-- Conditional Edge 1 -->
+        <div class="gf-cond-arrow" style="margin:12px 0 4px;">⬇ route_after_confidence(state) ⬇</div>
+        <div class="gf-label">CONDITIONAL EDGE #1</div>
+
+        <!-- Branch row -->
+        <div class="gf-branch-row">
+            <div class="gf-branch-node n-gen">
+                📝 <strong>generate_similar</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                📊 <strong>generate_swot</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                ⚔️ <strong>generate_competitor</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                🔄 <strong>generate_comparison</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                🌍 <strong>generate_ecosystem</strong>
+            </div>
+        </div>
+        <div class="gf-branch-row" style="gap:40px;">
+            <div class="gf-branch-node n-rewrite" style="min-width:120px;">
+                ✏️ <strong>rewrite</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">confidence=none<br>+ retries left</div>
+            </div>
+            <div class="gf-branch-node n-refuse" style="min-width:120px;">
+                🚫 <strong>refuse</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">confidence=none<br>+ retries exhausted</div>
+            </div>
+        </div>
+
+        <!-- Arrow: confidence=high/low goes to generate, then validate -->
+        <div class="gf-cond-arrow" style="margin-top:12px;">⬇ all generate_* converge ⬇</div>
+
+        <!-- Validate -->
+        <div class="gf-node n-validate">
+            ✅ <strong>validate</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">3 checks: docs exist? score > 0? LLM groundedness?</div>
+        </div>
+
+        <!-- Conditional Edge 2 -->
+        <div class="gf-cond-arrow" style="margin:12px 0 4px;">⬇ route_after_validate(state) ⬇</div>
+        <div class="gf-label">CONDITIONAL EDGE #2</div>
+
+        <div class="gf-branch-row" style="gap:40px;">
+            <div class="gf-branch-node n-end" style="min-width:160px;">
+                ✅ <strong>__end__</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">pass → return answer<br>fail + low → best-effort<br>fail + exhausted → best-effort</div>
+            </div>
+            <div class="gf-branch-node n-rewrite" style="min-width:160px;">
+                ✏️ <strong>rewrite</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">fail + high + retries left</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rewrite loop callout -->
+    <div class="rewrite-loop">
+        <div class="loop-arrow">🔄</div>
+        <div>
+            <div style="font-weight:700; color:#fde68a; margin-bottom:4px;">Corrective RAG Loop</div>
+            <div style="font-size:0.78rem; color:#9ca3af;">
+                <code style="color:#fde68a;">rewrite</code> → <code style="color:#c4b5fd;">expand_query</code> → <code style="color:#6ee7b7;">retrieve</code> → <code style="color:#fde68a;">confidence_gate</code> → <code style="color:#93c5fd;">generate_*</code> → <code style="color:#6ee7b7;">validate</code><br>
+                Max retries: <strong>MAX_RETRIES = 1</strong> — state tracks <code>retry_count</code> to prevent infinite loops.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- ALL 12 NODES — REFERENCE                                             -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">🧩</div>
+        <div class="stage-title">All 12 Nodes — Reference</div>
+        <div class="stage-file">graph/nodes/</div>
+    </div>
+
+    <div class="node-grid">
+        <!-- classify -->
+        <div class="node-card nc-classify">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">🏷️ classify</div>
+            <div class="nc-file">classify.py</div>
+            <div class="nc-desc">LLM classifies user query → one of 5 types. Falls back to "similar".</div>
+        </div>
+
+        <!-- expand_query -->
+        <div class="node-card nc-expand">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">🔍 expand_query</div>
+            <div class="nc-file">expand_query.py</div>
+            <div class="nc-desc">LLM rewrites query into rich semantic search terms for better retrieval.</div>
+        </div>
+
+        <!-- retrieve -->
+        <div class="node-card nc-retrieve">
+            <div class="nc-type">retriever · factory</div>
+            <div class="nc-title">📚 retrieve</div>
+            <div class="nc-file">retrieve.py</div>
+            <div class="nc-desc">Single node. Semantic + BM25 → RRF → Reranker → top-K docs + scores.</div>
+        </div>
+
+        <!-- confidence_gate -->
+        <div class="node-card nc-confidence">
+            <div class="nc-type">pure logic · no factory</div>
+            <div class="nc-title">🛡️ confidence_gate</div>
+            <div class="nc-file">confidence.py</div>
+            <div class="nc-desc">Checks best_score vs SOFT/HARD thresholds. Returns "high" / "low" / "none".</div>
+        </div>
+
+        <!-- generate_similar -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">📝 generate_similar</div>
+            <div class="nc-file">generate_similar.py</div>
+            <div class="nc-desc">Calls run_generation() with "similar" prompt template.</div>
+        </div>
+
+        <!-- generate_swot -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">📊 generate_swot</div>
+            <div class="nc-file">generate_swot.py</div>
+            <div class="nc-desc">Calls run_generation() with "swot" prompt template.</div>
+        </div>
+
+        <!-- generate_competitor -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">⚔️ generate_competitor</div>
+            <div class="nc-file">generate_competitor.py</div>
+            <div class="nc-desc">Calls run_generation() with "competitor" prompt template.</div>
+        </div>
+
+        <!-- generate_comparison -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">🔄 generate_comparison</div>
+            <div class="nc-file">generate_comparison.py</div>
+            <div class="nc-desc">Calls run_generation() with "comparison" prompt template.</div>
+        </div>
+
+        <!-- generate_ecosystem -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">🌍 generate_ecosystem</div>
+            <div class="nc-file">generate_ecosystem.py</div>
+            <div class="nc-desc">Calls run_generation() with "ecosystem" prompt template.</div>
+        </div>
+
+        <!-- validate -->
+        <div class="node-card nc-validate">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">✅ validate</div>
+            <div class="nc-file">validate.py</div>
+            <div class="nc-desc">3 checks: docs exist? score &gt; 0? LLM judge says answer is grounded?</div>
+        </div>
+
+        <!-- rewrite -->
+        <div class="node-card nc-rewrite">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">✏️ rewrite</div>
+            <div class="nc-file">rewrite.py</div>
+            <div class="nc-desc">LLM rewrites expanded_query for a second retrieval attempt. Increments retry_count.</div>
+        </div>
+
+        <!-- refuse -->
+        <div class="node-card nc-refuse">
+            <div class="nc-type">pure logic · inline</div>
+            <div class="nc-title">🚫 refuse</div>
+            <div class="nc-file">builder.py (inline)</div>
+            <div class="nc-desc">Sets the refusal message. No LLM call — pure assignment. Saves cost + prevents hallucination.</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONDITIONAL EDGES — ROUTING LOGIC                                    -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">🔀</div>
+        <div class="stage-title">Conditional Edges — Routing Logic</div>
+        <div class="stage-file">graph/edges.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-edge" style="max-width:500px;">
+            <div class="card-label">CONDITIONAL EDGE #1</div>
+            <div class="card-title">route_after_confidence(state)</div>
+            <div class="card-method">After: confidence_gate</div>
+            <div class="card-desc">Routes to the correct generate node based on analysis_type, or to rewrite/refuse based on confidence.</div>
+            <div class="card-example" style="color:#fde68a;">if confidence in ("high", "low"):
+    → generate_{analysis_type}
+    # e.g. "generate_swot"
+
+elif confidence == "none":
+    if retry_count < MAX_RETRIES:
+        → "rewrite"
+    else:
+        → "refuse" → __end__</div>
+        </div>
+        <div class="card card-edge" style="max-width:500px;">
+            <div class="card-label">CONDITIONAL EDGE #2</div>
+            <div class="card-title">route_after_validate(state)</div>
+            <div class="card-method">After: validate</div>
+            <div class="card-desc">Decides whether the answer is good enough, or needs a corrective rewrite.</div>
+            <div class="card-example" style="color:#fde68a;">if validation_check == True:
+    → __end__           # pass!
+
+elif confidence == "low":
+    → __end__           # best-effort
+
+elif retry_count < MAX_RETRIES:
+    → "rewrite"         # try again
+
+else:
+    → __end__           # exhausted</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DESIGN PATTERNS                                                      -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">🎨</div>
+        <div class="stage-title">Design Patterns — Closure DI · Factory · DRY Helper</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-lg" style="max-width:340px;">
+            <div class="card-label">Pattern 1</div>
+            <div class="card-title">Closure-Based Dependency Injection</div>
+            <div class="card-desc">build_graph() creates closures that capture <code>retriever</code> and <code>llm_client</code>. State stays pure Pydantic — no ORM, no singletons.</div>
+            <div class="card-example" style="color:#c4b5fd;">def build_graph(retriever, llm_client):
+    classify = make_classify_node(llm_client)
+    retrieve = make_retrieve_node(retriever)
+    graph.add_node("classify", classify)
+    # llm_client captured in closure
+    # retriever captured in closure</div>
+            <span class="badge badge-pattern">Closure DI</span>
+        </div>
+        <div class="card card-lg" style="max-width:340px;">
+            <div class="card-label">Pattern 2</div>
+            <div class="card-title">Factory Functions (make_*_node)</div>
+            <div class="card-desc">Each LLM/retriever node has a <code>make_*_node(dep)</code> factory that returns a closure. Pure logic nodes (confidence_gate) are plain functions — no factory needed.</div>
+            <div class="card-example" style="color:#c4b5fd;">def make_classify_node(llm_client):
+    def classify_node(state) -> dict:
+        # uses llm_client from closure
+        return {"analysis_type": "swot"}
+    return classify_node
+
+# vs. pure logic (no factory):
+def confidence_gate_node(state) -> dict:
+    return {"confidence": "high"}</div>
+            <span class="badge badge-pattern">Factory</span>
+        </div>
+        <div class="card card-lg" style="max-width:340px;">
+            <div class="card-label">Pattern 3</div>
+            <div class="card-title">DRY Helper (_generate_base.py)</div>
+            <div class="card-desc">All 5 generate nodes call <code>run_generation()</code> with a different <code>analysis_type</code>. Shared prompt building, LLM call, and disclaimer logic.</div>
+            <div class="card-example" style="color:#c4b5fd;"># _generate_base.py (not a node!)
+def run_generation(llm, state, *,
+                   analysis_type):
+    prompt = get_prompt(analysis_type, ...)
+    answer = llm.chat(prompt)
+    if confidence == "low":
+        answer = DISCLAIMER + answer
+    return {"answer": answer}
+
+# generate_swot.py:
+def make_generate_swot_node(llm):
+    def node(state):
+        return run_generation(
+            llm, state, analysis_type="swot"
+        )
+    return node</div>
+            <span class="badge badge-pattern">DRY Helper</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- WHAT WAS UNTOUCHED                                                   -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage kept-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-kept">✅</div>
+        <div class="stage-title">Untouched Components — Zero Changes</div>
+        <span class="stag stag-kept">KEPT from v3</span>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Component</th><th>Module</th><th>Why Untouched</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Embedding Model</td>
+                <td class="mono">embeddings/embedder.py</td>
+                <td>all-MiniLM-L6-v2 — same model, same vectors, same ChromaDB</td>
+            </tr>
+            <tr>
+                <td>Vector Store</td>
+                <td class="mono">vectorstore/chroma_store.py</td>
+                <td>134K startups already indexed — no re-embedding needed</td>
+            </tr>
+            <tr>
+                <td>BM25 Index</td>
+                <td class="mono">search/bm25_search.py</td>
+                <td>Keyword search layer — built at runtime from ChromaDB docs</td>
+            </tr>
+            <tr>
+                <td>RRF Fusion</td>
+                <td class="mono">search/fusion.py</td>
+                <td>Reciprocal Rank Fusion merging — unchanged algorithm</td>
+            </tr>
+            <tr>
+                <td>Hybrid Retriever</td>
+                <td class="mono">rag/retriever.py</td>
+                <td>StartupRetriever — semantic + BM25 + reranker pipeline</td>
+            </tr>
+            <tr>
+                <td>Cross-Encoder Reranker</td>
+                <td class="mono">rag/reranker.py</td>
+                <td>ms-marco-MiniLM-L-6-v2 — same reranking logic from v3</td>
+            </tr>
+            <tr>
+                <td>Prompt Templates</td>
+                <td class="mono">rag/prompt_templates.py</td>
+                <td>6 templates (similar, swot, etc.) — used by _generate_base.py</td>
+            </tr>
+            <tr>
+                <td>LLM Client Factory</td>
+                <td class="mono">config/llm_client.py</td>
+                <td>Groq/OpenAI factory — now with max_retries=3 for rate limiting</td>
+            </tr>
+            <tr>
+                <td>Eval Pipeline</td>
+                <td class="mono">evaluation/*</td>
+                <td>eval_dataset.py + evaluator.py — scoring logic unchanged</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- WHAT WAS DELETED                                                     -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num" style="background:linear-gradient(135deg,#ef4444,#dc2626);">🗑️</div>
+        <div class="stage-title">Deleted Files</div>
+        <span class="stag stag-del">REMOVED</span>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>File</th><th>Why Deleted</th><th>Replaced By</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(239,68,68,0.05);">
+                <td class="mono" style="color:#fca5a5;">rag/chain.py</td>
+                <td>Monolithic chain — all logic in one function</td>
+                <td class="mono">graph/builder.py + 12 nodes</td>
+            </tr>
+            <tr style="background:rgba(239,68,68,0.05);">
+                <td class="mono" style="color:#fca5a5;">utils/*</td>
+                <td>Helper utilities absorbed into graph nodes</td>
+                <td class="mono">graph/nodes/*</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- NEW FILES — COMPLETE REFERENCE                                       -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">📋</div>
+        <div class="stage-title">New Files — Complete Reference</div>
+        <span class="stag stag-lg">LG v1</span>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>File</th><th>Type</th><th>Pattern</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/state/input.py</td>
+                <td>Schema</td>
+                <td>Pydantic BaseModel</td>
+                <td>InputState — graph entry schema (user_query only)</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/state/output.py</td>
+                <td>Schema</td>
+                <td>Pydantic BaseModel</td>
+                <td>OutputState — graph return schema (answer, sources, confidence, ...)</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/state/private.py</td>
+                <td>Schema</td>
+                <td>Pydantic MI</td>
+                <td>PrivateState — full internal state (11 fields)</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/classify.py</td>
+                <td>Node</td>
+                <td>Factory + LLM</td>
+                <td>LLM classifies query → similar/swot/competitor/comparison/ecosystem</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/expand_query.py</td>
+                <td>Node</td>
+                <td>Factory + LLM</td>
+                <td>LLM rewrites user query into rich search terms</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/retrieve.py</td>
+                <td>Node</td>
+                <td>Factory + Retriever</td>
+                <td>Single retrieve node — hybrid + reranker → docs + scores</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/confidence.py</td>
+                <td>Node</td>
+                <td>Plain function</td>
+                <td>Pure logic — threshold check → high/low/none</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/_generate_base.py</td>
+                <td>Helper</td>
+                <td>DRY helper (not a node)</td>
+                <td>Shared run_generation() — prompt + LLM + disclaimer</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/generate_similar.py</td>
+                <td>Node</td>
+                <td>Factory + Helper</td>
+                <td>Type-specific generate — calls run_generation("similar")</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/generate_swot.py</td>
+                <td>Node</td>
+                <td>Factory + Helper</td>
+                <td>Type-specific generate — calls run_generation("swot")</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/generate_competitor.py</td>
+                <td>Node</td>
+                <td>Factory + Helper</td>
+                <td>Type-specific generate — calls run_generation("competitor")</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/generate_comparison.py</td>
+                <td>Node</td>
+                <td>Factory + Helper</td>
+                <td>Type-specific generate — calls run_generation("comparison")</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/generate_ecosystem.py</td>
+                <td>Node</td>
+                <td>Factory + Helper</td>
+                <td>Type-specific generate — calls run_generation("ecosystem")</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/validate.py</td>
+                <td>Node</td>
+                <td>Factory + LLM</td>
+                <td>3-check validation: docs present? score &gt; 0? LLM groundedness?</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/nodes/rewrite.py</td>
+                <td>Node</td>
+                <td>Factory + LLM</td>
+                <td>LLM rewrites expanded_query for retry. Increments retry_count.</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/edges.py</td>
+                <td>Routing</td>
+                <td>Conditional edges</td>
+                <td>2 functions: route_after_confidence, route_after_validate</td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">graph/builder.py</td>
+                <td>Orchestrator</td>
+                <td>Closure DI</td>
+                <td>build_graph() — wires 12 nodes + 2 conditional edges → compile</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONFIGURATION REFERENCE                                              -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚙️</div>
+        <div class="stage-title">LG v1 Configuration Reference</div>
+        <div class="stage-file">config/settings.py</div>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Setting</th><th>Value</th><th>Purpose</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">MAX_RETRIES</td>
+                <td class="mono">1</td>
+                <td>Max corrective RAG loops (rewrite → retrieve → generate → validate)</td>
+                <td><span class="stag stag-lg" style="margin:0;">LG</span></td>
+            </tr>
+            <tr style="background:rgba(139,92,246,0.05);">
+                <td class="mono">LLM_MAX_RETRIES</td>
+                <td class="mono">3</td>
+                <td>Auto-retry on 429/5xx with exponential backoff (OpenAI SDK)</td>
+                <td><span class="stag stag-lg" style="margin:0;">LG</span></td>
+            </tr>
+            <tr>
+                <td class="mono">CONFIDENCE_THRESHOLD_SOFT</td>
+                <td class="mono">0.10</td>
+                <td>Below this → prepend low-confidence disclaimer</td>
+                <td><span class="stag stag-same" style="margin:0;">v3</span></td>
+            </tr>
+            <tr>
+                <td class="mono">CONFIDENCE_THRESHOLD_HARD</td>
+                <td class="mono">0.02</td>
+                <td>Below this → refuse to answer, skip LLM</td>
+                <td><span class="stag stag-same" style="margin:0;">v3</span></td>
+            </tr>
+            <tr>
+                <td class="mono">TOP_K</td>
+                <td class="mono">5</td>
+                <td>Documents to retrieve after reranking</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">LLM_PROVIDER</td>
+                <td class="mono">"groq"</td>
+                <td>Active LLM backend (Groq free tier: 30 RPM)</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">GROQ_MODEL</td>
+                <td class="mono">llama-3.3-70b-versatile</td>
+                <td>Free Groq model for all LLM calls</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">RERANK_ENABLED</td>
+                <td class="mono">True</td>
+                <td>Toggle cross-encoder reranking</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">HYBRID_SEARCH_ENABLED</td>
+                <td class="mono">True</td>
+                <td>Toggle semantic + BM25 hybrid retrieval</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DIRECTORY STRUCTURE                                                   -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg">📁</div>
+        <div class="stage-title">graph/ Directory Structure</div>
+    </div>
+
+    <div class="card card-lg" style="max-width:600px; margin:0 auto;">
+        <div class="card-example" style="color:#c4b5fd; font-size:0.75rem;">
+src/bizintel/graph/
+├── __init__.py
+├── builder.py              ← build_graph() — wires everything
+├── edges.py                ← 2 conditional routing functions
+└── state/
+│   ├── __init__.py         ← re-exports all 3 schemas
+│   ├── input.py            ← InputState(BaseModel)
+│   ├── output.py           ← OutputState(BaseModel)
+│   └── private.py          ← PrivateState(Input, Output)
+└── nodes/
+    ├── __init__.py          ← re-exports all factories
+    ├── classify.py          ← make_classify_node(llm)
+    ├── expand_query.py      ← make_expand_query_node(llm)
+    ├── retrieve.py          ← make_retrieve_node(retriever)
+    ├── confidence.py        ← confidence_gate_node (plain fn)
+    ├── _generate_base.py    ← run_generation() DRY helper
+    ├── generate_similar.py
+    ├── generate_swot.py
+    ├── generate_competitor.py
+    ├── generate_comparison.py
+    ├── generate_ecosystem.py
+    ├── validate.py          ← make_validate_node(llm)
+    └── rewrite.py           ← make_rewrite_node(llm)</div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- TECH STACK                                                           -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">🔧</div>
+        <div class="stage-title">Tech Stack</div>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Orchestrator</td><td class="mono">LangGraph (StateGraph)</td><td class="mono">1.1.3</td></tr>
+            <tr><td>State Management</td><td class="mono">Pydantic (BaseModel)</td><td class="mono">v2</td></tr>
+            <tr><td>LLM Framework</td><td class="mono">langchain-core</td><td class="mono">1.2.20</td></tr>
+            <tr><td>LLM Provider</td><td class="mono">Groq (llama-3.3-70b-versatile)</td><td class="mono">free tier</td></tr>
+            <tr><td>Embeddings</td><td class="mono">all-MiniLM-L6-v2</td><td class="mono">384d</td></tr>
+            <tr><td>Vector Store</td><td class="mono">ChromaDB</td><td class="mono">0.6.3</td></tr>
+            <tr><td>Keyword Search</td><td class="mono">rank-bm25 (Okapi BM25)</td><td class="mono">0.2.2</td></tr>
+            <tr><td>Fusion</td><td class="mono">Reciprocal Rank Fusion (RRF)</td><td class="mono">custom</td></tr>
+            <tr><td>Reranker</td><td class="mono">cross-encoder/ms-marco-MiniLM-L-6-v2</td><td class="mono">22 MB</td></tr>
+            <tr><td>UI</td><td class="mono">Streamlit</td><td class="mono">1.42</td></tr>
+            <tr><td>Runtime</td><td class="mono">Python</td><td class="mono">3.13</td></tr>
+            <tr><td>Package Manager</td><td class="mono">uv + hatch</td><td class="mono">latest</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div style="text-align:center; padding:30px 0; color:#6b7280; font-size:0.8rem;">
+    BizIntel LG v1 · Branch: <code>lg_v1</code> · March 2026 ·
+    <a href="architecture_flowchart_v3.html" style="color:#a5b4fc;">← v3 Architecture</a>
+</div>
+
+</body>
+</html>

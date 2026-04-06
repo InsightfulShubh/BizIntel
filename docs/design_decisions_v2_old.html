@@ -162,9 +162,6 @@
             <a href="#eval">Evaluation</a>
             <a href="#groq">Groq/LLM</a>
             <a href="#pipeline">Pipeline</a>
-            <a href="#websearch">Web Search</a>
-            <a href="#hitl">HITL</a>
-            <a href="#memory">Memory</a>
             <a href="#tradeoffs">Trade-offs</a>
         </div>
     </div>
@@ -177,9 +174,9 @@
     <h1>🧠 Design Decisions — v2</h1>
     <p>Why we built what we built · Alternatives we considered · How we implemented each feature</p>
     <div class="hero-stats">
-        <div class="hero-stat"><div class="val">95+</div><div class="lbl">Questions</div></div>
-        <div class="hero-stat"><div class="val">11</div><div class="lbl">Sections</div></div>
-        <div class="hero-stat"><div class="val">15</div><div class="lbl">Graph Nodes</div></div>
+        <div class="hero-stat"><div class="val">65+</div><div class="lbl">Questions</div></div>
+        <div class="hero-stat"><div class="val">8</div><div class="lbl">Sections</div></div>
+        <div class="hero-stat"><div class="val">6</div><div class="lbl">New Modules</div></div>
         <div class="hero-stat"><div class="val">+0.13</div><div class="lbl">Context Relevancy Gain</div></div>
     </div>
 </div>
@@ -1131,9 +1128,6 @@ def load_bm25_index(_store):
                 <tr><td>Groq free tier</td><td>$0 cost</td><td>30 RPM limit, may not be available forever</td></tr>
                 <tr><td>LLM-as-Judge eval</td><td>Automated, scalable</td><td>Judge quality depends on LLM model</td></tr>
                 <tr><td>Over-fetch 20 → rerank to 5</td><td>Better precision</td><td>4× more data fetched than needed</td></tr>
-                <tr><td>Web search fallback (Tavily)</td><td>Handles out-of-corpus queries</td><td>Unverified external data, requires HITL review</td></tr>
-                <tr><td>HITL interrupt + resume</td><td>User controls external evidence quality</td><td>Adds a manual approval step — not fully automated</td></tr>
-                <tr><td>SQLite checkpointer</td><td>Zero setup, persistent memory across reruns</td><td>Single-file, not suitable for multi-user deployment</td></tr>
             </table>
         </div>
     </div>
@@ -1153,8 +1147,6 @@ def load_bm25_index(_store):
                 <li><strong>Groq rate limits:</strong> 30 RPM means the eval run with 30 queries + 90 judge calls takes ~4 minutes.</li>
                 <li><strong>No cross-lingual support:</strong> BM25 and embeddings are English-only.</li>
                 <li><strong>Eval dataset not exhaustive:</strong> 30 queries covers common cases but may miss edge cases.</li>
-                <li><strong>Web search routing:</strong> Low-confidence local results currently skip web search — a borderline case may need score-threshold tuning.</li>
-                <li><strong>HITL is blocking:</strong> The user must interact before the answer is generated — not suitable for fully automated batch pipelines.</li>
             </ul>
         </div>
     </div>
@@ -1172,11 +1164,9 @@ def load_bm25_index(_store):
                 <li><strong>Learned sparse retrieval (SPLADE):</strong> Replace BM25 with a learned sparse model that understands term importance</li>
                 <li><strong>Streaming responses:</strong> Stream LLM output to Streamlit for better UX</li>
                 <li><strong>Metadata pre-filtering:</strong> Filter by country/year <em>before</em> semantic search for speed</li>
-                <li><strong>A/B testing framework:</strong> Compare pipeline configurations side-by-side on same queries</li>
+                <li><strong>A/B testing framework:</strong> Compare v1 vs v2 pipeline side-by-side on same queries</li>
                 <li><strong>Persistent BM25:</strong> Save/load BM25 index to disk to avoid rebuilding on each startup</li>
                 <li><strong>Multi-provider eval:</strong> Run eval with both Groq and OpenAI to compare judge quality</li>
-                <li><strong>Score-threshold web routing:</strong> Add <code>WEB_SEARCH_SCORE_THRESHOLD</code> to trigger web search on low-confidence (not just none-confidence) retrievals</li>
-                <li><strong>Async HITL:</strong> Allow web search to run without blocking — queue results for async approval via email or webhook</li>
             </ol>
         </div>
     </div>
@@ -1223,349 +1213,6 @@ def load_bm25_index(_store):
 </div>
 
 </div> <!-- /container -->
-
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECTION 9: WEB SEARCH FALLBACK                                  -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
-    <div class="section-id" id="websearch"></div>
-    <div class="section-title"><div class="num">9</div> Web Search Fallback</div>
-    <div class="section-desc">Why Tavily, when to fall back, and how the web path is wired</div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why does BizIntel need a web search fallback at all?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>The local corpus is 134K startups — but users will ask questions about topics outside it: sports teams, celebrities, current events, general industry analysis. Without a fallback, the system can only <strong>refuse</strong> or <strong>hallucinate</strong>.</p>
-            <p>The corrective RAG loop (rewrite → re-retrieve) helps with edge cases inside the corpus, but if the domain is genuinely absent, no number of rewrites will help.</p>
-            <p>Web search is the <strong>last resort</strong> — not the first. The graph only reaches it when <code>confidence=none</code> and <code>retry_count &gt;= MAX_RETRIES</code>. This preserves the local corpus as the primary source for startup queries.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why Tavily instead of Google or Bing search?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-alt">ALTERNATIVES</span>
-            <table>
-                <tr><th>Option</th><th>Pros</th><th>Cons</th><th>Decision</th></tr>
-                <tr><td><strong>Tavily ✅</strong></td><td>Built for LLM agents — returns clean text snippets, not raw HTML. Free tier. Easy Python SDK. LangChain-native.</td><td>Less comprehensive than Google</td><td>Chosen</td></tr>
-                <tr><td>Google Custom Search API</td><td>Best coverage</td><td>Complex setup, quota limits, returns URLs not content</td><td>Too complex</td></tr>
-                <tr><td>SerpApi / Bing API</td><td>Good coverage</td><td>Paid, returns raw HTML requiring parsing</td><td>Adds cost and complexity</td></tr>
-                <tr><td>DuckDuckGo (free)</td><td>Free, no API key</td><td>No official API, unstable, HTML scraping</td><td>Not production-grade</td></tr>
-            </table>
-            <p>Tavily's key advantage: it returns <strong>pre-extracted content</strong> (title + URL + clean text) that can be fed directly into an LLM without HTML parsing. It's the de-facto standard for LangGraph web search.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">How is the web_search node implemented?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-code">CODE</span>
-<pre># graph/nodes/web_search.py
-def make_web_search_node(tavily_client):
-    def web_search_node(state) -&gt; dict:
-        results = tavily_client.search(
-            query=state.user_query,
-            max_results=WEB_SEARCH_MAX_RESULTS,  # default: 5
-        )
-        source_docs = [
-            {
-                "name": r.get("title", "Web Result"),
-                "description": r.get("content", ""),
-                "source": "web",
-                "url": r.get("url", ""),
-            }
-            for r in results.get("results", [])
-        ]
-        return {
-            "source_docs": source_docs,
-            "web_searched": True,
-            "confidence": "low",   # ← bypasses retry loop
-        }
-    return web_search_node</pre>
-            <p>By setting <code>confidence="low"</code>, downstream routing treats web results identically to local low-confidence results — they proceed straight to generation without another retry loop.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why can web search be disabled with a flag?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>Toggle flags are a design principle — all optional features can be disabled without code changes:</p>
-            <ul>
-                <li><code>WEB_SEARCH_ENABLED=False</code> → graph built without <code>web_search</code> / <code>web_review</code> nodes (13 vs 15 nodes)</li>
-                <li>Exhausted-retry queries fall through to <code>refuse</code> as before</li>
-                <li>Useful for pure-corpus evaluation, cost control, or air-gapped environments</li>
-            </ul>
-            <p>The <code>build_graph()</code> function checks this flag and conditionally wires the extra nodes and conditional edge.</p>
-        </div>
-    </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECTION 10: HUMAN-IN-THE-LOOP REVIEW                            -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
-    <div class="section-id" id="hitl"></div>
-    <div class="section-title"><div class="num">10</div> Human-in-the-Loop Review</div>
-    <div class="section-desc">Why pause for human approval, how interrupt() works, and the HITL UX</div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why pause for human approval instead of auto-generating from web results?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>Web search results are <strong>unverified external data</strong>. Auto-generating from them without oversight risks:</p>
-            <ul>
-                <li><strong>Misleading content:</strong> Tavily may return SEO spam, outdated articles, or promotional content</li>
-                <li><strong>Domain mismatch:</strong> A search for "AI startups" might return news articles, not startup profiles</li>
-                <li><strong>Reputational risk:</strong> Unverified claims in auto-generated answers</li>
-            </ul>
-            <p>The HITL review is a <strong>trust gate</strong>: the system says "I found these results — you decide which to trust." This keeps humans accountable for the quality of external evidence before it reaches the LLM.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">How does LangGraph's <code>interrupt()</code> mechanism work?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-how">HOW</span>
-<pre># graph/nodes/web_review.py
-from langgraph.types import interrupt
-
-def make_web_review_node():
-    def web_review_node(state):
-        results_for_review = [
-            {"index": i, "title": doc["name"],
-             "url": doc.get("url",""),
-             "snippet": doc["description"][:200]}
-            for i, doc in enumerate(state.source_docs)
-        ]
-        # ← Graph PAUSES here — state checkpointed to SQLite
-        approved_indices = interrupt({
-            "type": "web_review",
-            "message": "Select which results to use:",
-            "results": results_for_review,
-        })
-        # ← Resumes here with approved_indices = [0, 2] etc.
-        approved = [
-            doc for i, doc in enumerate(state.source_docs)
-            if i in approved_indices
-        ]
-        return {"source_docs": approved}
-    return web_review_node</pre>
-            <p><code>interrupt()</code> raises an <code>InterruptException</code> internally. LangGraph catches it, checkpoints the full state to SQLite, and returns an <code>__interrupt__</code> event to the caller. The state is frozen until <code>Command(resume=value)</code> is sent.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why does HITL require a checkpointer? What happens without one?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>When <code>interrupt()</code> is called, LangGraph must <strong>persist the current state</strong> so it can be restored when <code>Command(resume=...)</code> arrives (which may happen milliseconds or minutes later).</p>
-            <p>Without a checkpointer:</p>
-            <ul>
-                <li>The in-memory state is lost between pause and resume</li>
-                <li>LangGraph raises <code>RuntimeError: No checkpointer configured</code></li>
-                <li><code>interrupt()</code> cannot be used at all</li>
-            </ul>
-            <p>In production: <code>SqliteSaver(conn=sqlite3.connect("data/conversations.db"))</code><br>
-            In tests/notebooks: <code>MemorySaver()</code> (in-process, non-persistent)</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">How does the Streamlit UI handle the 3-phase HITL flow?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-code">CODE</span>
-<pre># Phase 1: _stream_graph() — detect interrupt
-for event in graph.stream(input, config):
-    if "__interrupt__" in event:
-        st.session_state._hitl_pending = True
-        st.session_state._hitl_data = event["__interrupt__"][0].value
-        st.rerun()   # triggers UI re-render
-
-# Phase 2: _render_hitl_review() — collect user selections
-def _render_hitl_review():
-    data = st.session_state._hitl_data
-    selected = []
-    for result in data["results"]:
-        if st.checkbox(result["title"], value=True):
-            selected.append(result["index"])
-    if st.button("✅ Use Selected Results"):
-        st.session_state._hitl_resume = selected
-
-# Phase 3: _resume_graph() — send Command and stream rest
-def _resume_graph():
-    selected = st.session_state._hitl_resume
-    for event in graph.stream(
-        Command(resume=selected),
-        config=config,
-        stream_mode="values"
-    ):
-        # process remaining nodes (generate → validate → record_turn)</pre>
-        </div>
-    </div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECTION 11: CONVERSATION MEMORY                                 -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<div class="section">
-    <div class="section-id" id="memory"></div>
-    <div class="section-title"><div class="num">11</div> Persistent Conversation Memory</div>
-    <div class="section-desc">Multi-turn context, SQLite checkpointing, and the operator.add reducer pattern</div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">What problem does conversation memory solve?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>Without memory, every query is independent. Follow-up questions like <em>"Now do a SWOT for them"</em> have no context — the LLM doesn't know what "them" refers to.</p>
-            <p>Conversation memory solves three problems:</p>
-            <ul>
-                <li><strong>Coreference resolution:</strong> "them", "that company", "those startups" resolved via prior turn context</li>
-                <li><strong>Topic continuity:</strong> Drilling deeper into a topic across multiple queries</li>
-                <li><strong>Session persistence:</strong> Context survives Streamlit reruns (page refreshes, sidebar changes)</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why SQLite instead of in-memory storage or Redis?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-alt">ALTERNATIVES</span>
-            <table>
-                <tr><th>Option</th><th>Pros</th><th>Cons</th><th>Decision</th></tr>
-                <tr><td><strong>SQLite SqliteSaver ✅</strong></td><td>Zero setup, file-based, survives restarts, LangGraph native</td><td>Single-file, not distributed</td><td>Chosen — best fit for single-user Streamlit app</td></tr>
-                <tr><td>MemorySaver</td><td>Zero setup, fast</td><td>Lost on restart — doesn't survive reruns</td><td>Notebooks only</td></tr>
-                <tr><td>Redis</td><td>Production-grade, distributed</td><td>Requires running service, overkill for local app</td><td>Future scaling option</td></tr>
-                <tr><td>PostgreSQL</td><td>ACID transactions, multi-user</td><td>Requires DB server setup</td><td>For production multi-user deployment</td></tr>
-            </table>
-            <p>SQLite is the right choice because: (1) zero infrastructure, (2) file lives in <code>data/conversations.db</code>, (3) survives Streamlit reruns, (4) is LangGraph's recommended default for single-user apps.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">What is the <code>operator.add</code> reducer and why is it needed?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-code">CODE</span>
-            <p>By default, LangGraph <strong>replaces</strong> state fields with new values on each invocation. This would wipe conversation history on every query.</p>
-            <p>The <code>Annotated[list[dict], operator.add]</code> type hint tells LangGraph to <strong>append</strong> instead of replace:</p>
-<pre># state/private.py
-from typing import Annotated
-import operator
-
-class PrivateState(InputState, OutputState):
-    # DEFAULT behavior — replaced each turn:
-    retry_count: int = 0
-
-    # REDUCER behavior — appended each turn:
-    conversation_history: Annotated[
-        list[dict], operator.add    # ← reducer
-    ] = []
-
-# When record_turn_node returns:
-# {"conversation_history": [{"role":"user","content":"..."},
-#                            {"role":"assistant","content":"..."}]}
-#
-# LangGraph calls: operator.add(existing_list, returned_list)
-# = existing_list + returned_list   (list concatenation)
-# Result: history grows with each invocation on this thread_id</pre>
-            <p>This is a core LangGraph pattern — any field that should <em>accumulate</em> (vs. be replaced) needs an explicit reducer annotation.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">Why inject only the last MEMORY_WINDOW=6 turns into prompts?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-why">WHY</span>
-            <p>Injecting all history would:</p>
-            <ul>
-                <li>Consume most of the LLM's context window — each answer can be 500+ tokens</li>
-                <li>Add irrelevant older turns that confuse rather than help</li>
-                <li>Increase latency and cost proportionally to conversation length</li>
-            </ul>
-            <p><code>MEMORY_WINDOW=6</code> = last 3 complete exchanges (3 user + 3 assistant turns). Enough for coreference resolution without overloading the prompt.</p>
-            <p>The full history is still stored in SQLite — <code>MEMORY_WINDOW</code> only controls how much is <em>injected into the LLM prompt</em>, not what's persisted.</p>
-        </div>
-    </div>
-
-    <div class="qa">
-        <div class="qa-q">
-            <div class="qa-icon">Q</div>
-            <div class="qa-question">How does <code>thread_id</code> isolate different conversations?</div>
-            <div class="qa-toggle">▼</div>
-        </div>
-        <div class="qa-a">
-            <span class="tag tag-code">CODE</span>
-<pre># app/state.py — each Streamlit session gets a unique UUID
-if "_thread_id" not in st.session_state:
-    st.session_state._thread_id = str(uuid.uuid4())
-
-# Passed to every graph invocation as the SQLite partition key:
-config = {
-    "configurable": {
-        "thread_id": st.session_state._thread_id
-    }
-}
-
-# LangGraph uses thread_id to scope all state reads/writes.
-# Different browser tabs → different UUIDs → independent histories.
-# Same tab after page refresh → same UUID → history preserved.</pre>
-            <p>Generating a new UUID at session start gives each browser tab its own isolated conversation history, while surviving within-session refreshes.</p>
-        </div>
-    </div>
-</div>
-
 
 <div class="footer">
     BizIntel v2 — Design Decisions Q&A · Built with 🧠 and ☕

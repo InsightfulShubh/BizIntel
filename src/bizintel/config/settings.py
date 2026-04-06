@@ -130,6 +130,30 @@ FAISS_DOCSTORE_FILENAME = "docstore.json"
 TOP_K = 5                        # final number of docs sent to the LLM
 
 
+# ── Confidence / guardrail config ────────────────────────────────────────
+#
+# GUARDRAILS_ENABLED = True activates the confidence gate.
+# When False, the system behaves like v2 — always answers, no refusals.
+#
+# After reranking, the best cross-encoder score is checked against these
+# thresholds to decide whether to answer, warn, or refuse.
+#
+#   score >= SOFT    → normal answer (high confidence)
+#   HARD <= score < SOFT → answer with "⚠️ low confidence" disclaimer
+#   score < HARD     → refuse: "I don't have enough information…"
+
+GUARDRAILS_ENABLED: bool = True          # master toggle for confidence gate
+CONFIDENCE_THRESHOLD_SOFT: float = 0.10  # below this → add disclaimer
+CONFIDENCE_THRESHOLD_HARD: float = 0.02  # below this → refuse to answer
+
+
+
+# ── Web search config ────────────────────────────────────────────────────
+
+WEB_SEARCH_ENABLED: bool = True            # toggle web-search fallback on/off
+WEB_SEARCH_MAX_RESULTS: int = 5            # number of Tavily results to fetch
+
+
 # ── Reranker config ──────────────────────────────────────────────────────
 
 RERANK_ENABLED = True                                          # toggle reranking on/off
@@ -171,6 +195,14 @@ GROQ_BASE_URL = "https://api.groq.com/openai/v1"     # OpenAI-compatible endpoin
 LLM_MODEL = GROQ_MODEL if LLM_PROVIDER == "groq" else OPENAI_MODEL
 LLM_TEMPERATURE = 0.3          # low = more focused; high = more creative
 LLM_MAX_TOKENS = 2048
+LLM_MAX_RETRIES: int = 3       # auto-retry on 429 / 5xx with exponential backoff
+
+# ── Rate-limit guard (Groq free-tier: 30 RPM) ───────────────────────────
+# Delays are only applied when IS_RATE_LIMITED_PROVIDER is True.
+# OpenAI has generous limits, so no artificial delays needed.
+IS_RATE_LIMITED_PROVIDER: bool = LLM_PROVIDER == "groq"
+EVAL_QUERY_DELAY: int = 15 if IS_RATE_LIMITED_PROVIDER else 0   # seconds between eval queries
+EVAL_JUDGE_DELAY: int = 3  if IS_RATE_LIMITED_PROVIDER else 0   # seconds between LLM judge calls
 
 
 # ── Analysis types ───────────────────────────────────────────────────────
@@ -191,3 +223,18 @@ DEFAULT_ANALYSIS_TYPE = "auto"
 
 EVAL_DIR = PROJECT_ROOT / "eval"
 EVAL_RESULTS_DIR = EVAL_DIR / "results"
+
+
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ── LangGraph retry config ───────────────────────────────────────────────
+
+MAX_RETRIES: int = 1                     # max rewrite-retrieve-generate retries
+
+# ── Conversation memory ──────────────────────────────────────────────────
+MEMORY_WINDOW: int = 6                  # max past turns to inject into prompts (3 exchanges)
+CONVERSATIONS_DB_PATH: Path = OUTPUT_DIR / "conversations.db"  # SQLite checkpointer
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────

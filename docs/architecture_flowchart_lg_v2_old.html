@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel LG v2 — LangGraph Architecture Flowchart</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .version-row {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .ver-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0 4px;
+        }
+        .ver-old { background: linear-gradient(135deg, #6b7280, #4b5563); color: #d1d5db; }
+        .ver-lg1 { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+        .ver-lg2 { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
+
+        /* ── Legend ─────────────────────────────────── */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+        /* ── Stage sections ────────────────────────── */
+        .stage {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .stage.lg-stage  { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.04); }
+        .stage.new-stage { border-color: rgba(6,182,212,0.45); background: rgba(6,182,212,0.04); }
+        .stage.kept-stage { border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.02); }
+        .stage-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stage-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1rem; flex-shrink: 0;
+        }
+        .stage-num.sn-lg2 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .stage-num.sn-lg  { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .stage-num.sn-kept { background: linear-gradient(135deg, #10b981, #059669); }
+        .stage-title { font-size: 1.25rem; font-weight: 700; color: #67e8f9; }
+        .stage-file {
+            margin-left: auto;
+            background: rgba(6,182,212,0.15); color: #a5f3fc;
+            padding: 4px 14px; border-radius: 20px; font-size: 0.76rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+        }
+        .stag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-left: 8px; }
+        .stag-lg2  { background: #06b6d433; color: #67e8f9; border: 1px solid #06b6d455; }
+        .stag-lg   { background: #8b5cf633; color: #c4b5fd; border: 1px solid #8b5cf655; }
+        .stag-kept { background: #10b98133; color: #6ee7b7; border: 1px solid #10b98155; }
+        .stag-same { background: #6b728033; color: #9ca3af; border: 1px solid #6b728055; }
+
+        /* ── Flow rows ─────────────────────────────── */
+        .flow-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+
+        /* ── Cards ─────────────────────────────────── */
+        .card {
+            flex: 1; min-width: 220px; max-width: 400px;
+            border-radius: 12px; padding: 16px 18px;
+            transition: transform 0.2s, box-shadow 0.2s; cursor: default;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-lg2     { background: linear-gradient(135deg,#0e3744,#0a282e); border: 2px solid #06b6d4; }
+        .card-lg      { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .card-state   { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 1px solid #10b981; }
+        .card-danger  { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; }
+        .card-edge    { background: linear-gradient(135deg,#2e220a,#1a1505); border: 1px solid #f59e0b; }
+        .card-node    { background: linear-gradient(135deg,#1a2744,#0f1a2e); border: 1px solid #6366f1; }
+
+        .card-label  { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 4px; }
+        .card-title  { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+        .card-method { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.78rem; color: #67e8f9; margin-bottom: 6px; }
+        .card-desc   { font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+        .card-example {
+            margin-top: 8px; background: rgba(0,0,0,0.3); border-radius: 8px;
+            padding: 8px 12px; font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.72rem; color: #86efac; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-all;
+        }
+
+        .arrow-down   { text-align: center; font-size: 1.4rem; color: #06b6d4; margin: 4px 0 8px; animation: pulse 2s infinite; }
+        .arrow-right  { display: flex; align-items: center; font-size: 1.3rem; color: #06b6d4; flex-shrink: 0; }
+
+        @keyframes pulse { 0%,100%{ opacity:0.5; } 50%{ opacity:1; } }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 600; margin-right: 4px; margin-top: 6px; }
+        .badge-pattern { background: #7c3aed33; color: #c4b5fd; border: 1px solid #7c3aed55; }
+        .badge-lg2     { background: #06b6d455; color: #a5f3fc; border: 1px solid #06b6d488; }
+        .badge-node    { background: #6366f155; color: #c7d2fe; border: 1px solid #6366f188; }
+
+        /* ── Comparison columns ───────────────────── */
+        .cmp  { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; }
+        .cmp-col { flex: 1; min-width: 280px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 18px; }
+        .cmp-col h3 { font-size: 0.9rem; margin-bottom: 12px; }
+        .pstep { padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-family: 'Cascadia Code','Fira Code',monospace; margin-bottom: 6px; }
+        .ps-lg  { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); }
+        .ps-lg2 { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.3); }
+        .ps-arrow { text-align: center; color: #06b6d4; font-size: 0.9rem; margin: 2px 0; }
+        .ps-branch { text-align: center; color: #06b6d4; font-size: 0.8rem; margin: 4px 0; }
+
+        /* ── Node grid ────────────────────────────── */
+        .node-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .node-card {
+            border-radius: 10px;
+            padding: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+        }
+        .node-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .nc-classify   { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 1px solid #ec4899; }
+        .nc-expand     { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 1px solid #7c3aed; }
+        .nc-retrieve   { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 1px solid #10b981; }
+        .nc-confidence { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 1px solid #fbbf24; }
+        .nc-generate   { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 1px solid #3b82f6; }
+        .nc-validate   { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 1px solid #10b981; }
+        .nc-rewrite    { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 1px solid #f59e0b; }
+        .nc-refuse     { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 1px solid #ef4444; }
+        .nc-web        { background: linear-gradient(135deg,#0e3744,#0a282e); border: 2px solid #06b6d4; }
+        .nc-hitl       { background: linear-gradient(135deg,#44340e,#2e220a); border: 2px solid #f59e0b; }
+        .nc-memory     { background: linear-gradient(135deg,#1a2744,#0f1a2e); border: 1px solid #818cf8; }
+        .nc-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+        .nc-file  { font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.68rem; color: #a5f3fc; margin-bottom: 4px; }
+        .nc-desc  { font-size: 0.72rem; color: #9ca3af; line-height: 1.4; }
+        .nc-type  { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.6; margin-bottom: 6px; }
+
+        /* ── Graph flow (main pipeline visual) ─────── */
+        .graph-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 20px 0;
+        }
+        .gf-node {
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-align: center;
+            min-width: 220px;
+            position: relative;
+        }
+        .gf-node.n-entry    { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 2px solid #3b82f6; color: #93c5fd; }
+        .gf-node.n-classify { background: linear-gradient(135deg,#3b1a3b,#2a0f2a); border: 2px solid #ec4899; color: #f9a8d4; }
+        .gf-node.n-expand   { background: linear-gradient(135deg,#2d1b4e,#1a1033); border: 2px solid #7c3aed; color: #c4b5fd; }
+        .gf-node.n-retrieve { background: linear-gradient(135deg,#1a3c34,#0f2922); border: 2px solid #10b981; color: #6ee7b7; }
+        .gf-node.n-conf     { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #fbbf24; color: #fde68a; }
+        .gf-node.n-gen      { background: linear-gradient(135deg,#1e3a5f,#1a2744); border: 2px solid #3b82f6; color: #93c5fd; }
+        .gf-node.n-validate { background: linear-gradient(135deg,#0f3d2e,#0a2e22); border: 2px solid #10b981; color: #6ee7b7; }
+        .gf-node.n-rewrite  { background: linear-gradient(135deg,#3d2e0f,#2e220a); border: 2px solid #f59e0b; color: #fde68a; }
+        .gf-node.n-refuse   { background: linear-gradient(135deg,#3d0f0f,#2e0a0a); border: 2px solid #ef4444; color: #fca5a5; }
+        .gf-node.n-end      { background: linear-gradient(135deg,#1a1a2e,#0f0f1a); border: 2px solid #6b7280; color: #9ca3af; }
+        .gf-node.n-web      { background: linear-gradient(135deg,#0e3744,#0a282e); border: 2px solid #06b6d4; color: #67e8f9; }
+        .gf-node.n-hitl     { background: linear-gradient(135deg,#44340e,#2e220a); border: 2px solid #f59e0b; color: #fde68a; }
+        .gf-node.n-memory   { background: linear-gradient(135deg,#1a2744,#0f1a2e); border: 2px solid #818cf8; color: #c7d2fe; }
+
+        .gf-arrow { color: #06b6d4; font-size: 1.3rem; animation: pulse 2s infinite; }
+        .gf-cond-arrow { color: #06b6d4; font-size: 0.85rem; font-weight: 600; }
+        .gf-label { font-size: 0.72rem; color: #9ca3af; font-style: italic; }
+
+        .gf-branch-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .gf-branch-node {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        /* ── Loop visuals ─────────────────────────── */
+        .rewrite-loop {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(245,158,11,0.06);
+            border: 1px dashed rgba(245,158,11,0.3);
+        }
+        .loop-arrow {
+            font-size: 2rem;
+            color: #f59e0b;
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .web-loop {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(6,182,212,0.06);
+            border: 1px dashed rgba(6,182,212,0.3);
+        }
+
+        /* ── Tables ────────────────────────────────── */
+        .stbl { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .stbl th { background: rgba(6,182,212,0.15); padding: 10px 14px; text-align: left; font-size: 0.8rem; color: #a5f3fc; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .stbl td { padding: 8px 14px; font-size: 0.78rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+        .stbl tr:hover { background: rgba(255,255,255,0.03); }
+        .mono { font-family: 'Cascadia Code','Fira Code',monospace; color: #a5f3fc; }
+    </style>
+</head>
+<body>
+
+<h1>🧠 BizIntel — LangGraph Architecture</h1>
+<p class="subtitle">AI-Powered Startup Intelligence Engine · 15 Nodes · Web Fallback · Human-in-the-Loop Review · Persistent Conversation Memory</p>
+<div class="version-row">
+    <span class="ver-badge ver-lg2">LG v2 — 15 Nodes · 3 Conditional Edges · Web Search · HITL · Memory</span>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899;"></div>LLM Node (factory)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Pure Logic / Retriever</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>Generate Nodes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fbbf24;"></div>Conditional Edge</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Refuse / Error</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>Rewrite / HITL</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;"></div>Web Search / Memory</div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- PYDANTIC STATE — ARCHITECTURE                                        -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">📦</div>
+        <div class="stage-title">Pydantic 3-Schema State — Updated for LG v2</div>
+        <span class="stag stag-lg2">UPDATED</span>
+        <div class="stage-file">graph/state/</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-state" style="max-width:280px;">
+            <div class="card-label">📥 Input Schema</div>
+            <div class="card-title">InputState(BaseModel)</div>
+            <div class="card-method">state/input.py</div>
+            <div class="card-desc">Unchanged. Single field.</div>
+            <div class="card-example" style="color:#6ee7b7;">class InputState(BaseModel):
+    user_query: str</div>
+            <span class="badge badge-node">graph input</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-lg2" style="max-width:420px;">
+            <div class="card-label">🔒 Internal Schema</div>
+            <div class="card-title">PrivateState(InputState, OutputState)</div>
+            <div class="card-method">state/private.py</div>
+            <div class="card-desc">Now includes <code>web_searched</code> flag and <code>conversation_history</code> with <strong>append-only reducer</strong> for multi-turn memory.</div>
+            <div class="card-example" style="color:#67e8f9;">class PrivateState(InputState, OutputState):
+    expanded_query: str = ""
+    reranker_scores: list[float] = []
+    mean_score: float = 0.0
+    validation_check: bool = False
+    retry_count: int = 0
+    web_searched: bool = False       # ← NEW
+    conversation_history:           # ← NEW
+        Annotated[list[dict],
+                  operator.add] = []
+    # Total: 13 fields</div>
+            <span class="badge badge-lg2">web_searched</span>
+            <span class="badge badge-lg2">conversation_history</span>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="card card-state" style="max-width:300px;">
+            <div class="card-label">📤 Output Schema</div>
+            <div class="card-title">OutputState(BaseModel)</div>
+            <div class="card-method">state/output.py</div>
+            <div class="card-desc">Same 5 public output fields.</div>
+            <div class="card-example" style="color:#6ee7b7;">class OutputState(BaseModel):
+    answer: str = ""
+    analysis_type: str = ""
+    source_docs: list[dict] = []
+    confidence: str = ""
+    best_score: float = 0.0</div>
+            <span class="badge badge-node">graph output</span>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); border-radius:10px; font-size:0.8rem;">
+        <strong style="color:#67e8f9;">Key change:</strong>
+        <code>conversation_history</code> uses <code>Annotated[list[dict], operator.add]</code> — a <strong>reducer</strong> that appends new turns
+        instead of overwriting. Combined with the <strong>SQLite checkpointer</strong>, history accumulates across invocations on the same <code>thread_id</code>.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- MAIN GRAPH FLOW DIAGRAM                                              -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">🔀</div>
+        <div class="stage-title">Graph Flow — Complete LG v2 Pipeline Topology</div>
+        <span class="stag stag-lg2">15 Nodes · 3 Conditional Edges</span>
+        <div class="stage-file">graph/builder.py</div>
+    </div>
+
+    <div class="graph-flow">
+        <!-- Entry -->
+        <div class="gf-label">graph.invoke({"user_query": "..."}, config={"configurable": {"thread_id": "..."}})</div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Classify -->
+        <div class="gf-node n-classify">
+            🏷️ <strong>classify</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">LLM picks type + injects conversation_history for context</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Expand Query -->
+        <div class="gf-node n-expand">
+            🔍 <strong>expand_query</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">LLM rewrites query → rich semantic search terms</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Retrieve -->
+        <div class="gf-node n-retrieve">
+            📚 <strong>retrieve</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">Semantic + BM25 → RRF → Reranker → top 5 docs + scores</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Confidence Gate -->
+        <div class="gf-node n-conf">
+            🛡️ <strong>confidence_gate</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">best_score vs SOFT / HARD thresholds → high | low | none</div>
+        </div>
+
+        <!-- Conditional Edge 1 -->
+        <div class="gf-cond-arrow" style="margin:12px 0 4px;">⬇ route_after_confidence(state) ⬇</div>
+        <div class="gf-label">CONDITIONAL EDGE #1 — 4-way routing</div>
+
+        <!-- Branch row: generate, rewrite, web_search, refuse -->
+        <div class="gf-branch-row">
+            <div class="gf-branch-node n-gen">
+                📝 <strong>generate_similar</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                📊 <strong>generate_swot</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                ⚔️ <strong>generate_competitor</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                🔄 <strong>generate_comparison</strong>
+            </div>
+            <div class="gf-branch-node n-gen">
+                🌍 <strong>generate_ecosystem</strong>
+            </div>
+        </div>
+        <div class="gf-branch-row" style="gap:30px;">
+            <div class="gf-branch-node n-rewrite" style="min-width:120px;">
+                ✏️ <strong>rewrite</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">confidence=none<br>+ retries left</div>
+            </div>
+            <div class="gf-branch-node n-web" style="min-width:150px;">
+                🌐 <strong>web_search</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">confidence=none<br>+ retries exhausted<br>+ web enabled</div>
+            </div>
+            <div class="gf-branch-node n-refuse" style="min-width:120px;">
+                🚫 <strong>refuse</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">confidence=none<br>+ no web</div>
+            </div>
+        </div>
+
+        <!-- Web search → web review → generate -->
+        <div class="gf-cond-arrow" style="margin-top:16px;">⬇ web_search path ⬇</div>
+        <div class="gf-node n-web">
+            🌐 <strong>web_search</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">Tavily API → up to 5 web results → source_docs, web_searched=True</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+        <div class="gf-node n-hitl">
+            🧑 <strong>web_review</strong> (HITL)
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">interrupt() pauses graph → user approves/filters results → Command(resume=[0,2,4])</div>
+        </div>
+
+        <!-- Conditional Edge 3 -->
+        <div class="gf-cond-arrow" style="margin:12px 0 4px;">⬇ route_after_web_search(state) ⬇</div>
+        <div class="gf-label">CONDITIONAL EDGE #3 — routes to type-specific generate</div>
+
+        <div class="gf-branch-row">
+            <div class="gf-branch-node n-gen" style="min-width:100px; font-size:0.72rem;">generate_{analysis_type}</div>
+        </div>
+
+        <!-- All generate → validate -->
+        <div class="gf-cond-arrow" style="margin-top:16px;">⬇ all generate_* converge ⬇</div>
+
+        <!-- Validate -->
+        <div class="gf-node n-validate">
+            ✅ <strong>validate</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">LLM groundedness check: docs exist? score > 0? answer grounded?</div>
+        </div>
+
+        <!-- Conditional Edge 2 -->
+        <div class="gf-cond-arrow" style="margin:12px 0 4px;">⬇ route_after_validate(state) ⬇</div>
+        <div class="gf-label">CONDITIONAL EDGE #2</div>
+
+        <div class="gf-branch-row" style="gap:40px;">
+            <div class="gf-branch-node n-memory" style="min-width:160px;">
+                💾 <strong>record_turn</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">pass → save turn → END</div>
+            </div>
+            <div class="gf-branch-node n-rewrite" style="min-width:160px;">
+                ✏️ <strong>rewrite</strong>
+                <div style="font-size:0.65rem; opacity:0.7;">fail + retries left</div>
+            </div>
+        </div>
+
+        <div class="gf-arrow">⬇</div>
+
+        <!-- Record Turn -->
+        <div class="gf-node n-memory">
+            💾 <strong>record_turn</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">Appends {user, assistant} to conversation_history via operator.add reducer</div>
+        </div>
+        <div class="gf-arrow">⬇</div>
+
+        <!-- END -->
+        <div class="gf-node n-end">
+            ⏹️ <strong>__end__</strong>
+            <div style="font-size:0.7rem; opacity:0.7; margin-top:2px;">OutputState returned: answer, sources, confidence, best_score</div>
+        </div>
+    </div>
+
+    <!-- Rewrite loop callout -->
+    <div class="rewrite-loop">
+        <div class="loop-arrow">🔄</div>
+        <div>
+            <div style="font-weight:700; color:#fde68a; margin-bottom:4px;">Corrective RAG Loop (from LG v1)</div>
+            <div style="font-size:0.78rem; color:#9ca3af;">
+                <code style="color:#fde68a;">rewrite</code> → <code style="color:#c4b5fd;">expand_query</code> → <code style="color:#6ee7b7;">retrieve</code> → <code style="color:#fde68a;">confidence_gate</code> → <code style="color:#93c5fd;">generate_*</code> → <code style="color:#6ee7b7;">validate</code><br>
+                Max retries: <strong>MAX_RETRIES = 1</strong> — state tracks <code>retry_count</code> to prevent infinite loops.
+            </div>
+        </div>
+    </div>
+
+    <!-- Web fallback callout -->
+    <div class="web-loop" style="margin-top:12px;">
+        <div style="font-size:2rem; color:#06b6d4;">🌐</div>
+        <div>
+            <div style="font-weight:700; color:#67e8f9; margin-bottom:4px;">Web Fallback Path (NEW in LG v2)</div>
+            <div style="font-size:0.78rem; color:#9ca3af;">
+                When <code>confidence=none</code> and <code>retry_count >= MAX_RETRIES</code> and <code>WEB_SEARCH_ENABLED=True</code>:<br>
+                <code style="color:#67e8f9;">web_search</code> (Tavily) → <code style="color:#fde68a;">web_review</code> (HITL interrupt) → <code style="color:#93c5fd;">generate_*</code> → <code style="color:#6ee7b7;">validate</code> → <code style="color:#c7d2fe;">record_turn</code> → END<br>
+                The graph <strong>pauses at web_review</strong> until the user sends <code>Command(resume=[approved_indices])</code>.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- ALL 15 NODES — REFERENCE                                             -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">🧩</div>
+        <div class="stage-title">All 15 Nodes — Reference</div>
+        <div class="stage-file">graph/nodes/</div>
+    </div>
+
+    <div class="node-grid">
+        <!-- classify -->
+        <div class="node-card nc-classify">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">🏷️ classify</div>
+            <div class="nc-file">classify.py</div>
+            <div class="nc-desc">LLM classifies user query → one of 5 types. Now injects conversation_history for coreference resolution.</div>
+        </div>
+
+        <!-- expand_query -->
+        <div class="node-card nc-expand">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">🔍 expand_query</div>
+            <div class="nc-file">expand_query.py</div>
+            <div class="nc-desc">LLM rewrites query into rich semantic search terms for better retrieval.</div>
+        </div>
+
+        <!-- retrieve -->
+        <div class="node-card nc-retrieve">
+            <div class="nc-type">retriever · factory</div>
+            <div class="nc-title">📚 retrieve</div>
+            <div class="nc-file">retrieve.py</div>
+            <div class="nc-desc">Semantic + BM25 → RRF → Reranker → top-K docs + scores.</div>
+        </div>
+
+        <!-- confidence_gate -->
+        <div class="node-card nc-confidence">
+            <div class="nc-type">pure logic · no factory</div>
+            <div class="nc-title">🛡️ confidence_gate</div>
+            <div class="nc-file">confidence.py</div>
+            <div class="nc-desc">Checks best_score vs SOFT/HARD thresholds. Returns "high" / "low" / "none".</div>
+        </div>
+
+        <!-- generate_similar -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">📝 generate_similar</div>
+            <div class="nc-file">generate_similar.py</div>
+            <div class="nc-desc">Calls run_generation() with "similar" prompt template.</div>
+        </div>
+
+        <!-- generate_swot -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">📊 generate_swot</div>
+            <div class="nc-file">generate_swot.py</div>
+            <div class="nc-desc">Calls run_generation() with "swot" prompt template.</div>
+        </div>
+
+        <!-- generate_competitor -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">⚔️ generate_competitor</div>
+            <div class="nc-file">generate_competitor.py</div>
+            <div class="nc-desc">Calls run_generation() with "competitor" prompt template.</div>
+        </div>
+
+        <!-- generate_comparison -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">🔄 generate_comparison</div>
+            <div class="nc-file">generate_comparison.py</div>
+            <div class="nc-desc">Calls run_generation() with "comparison" prompt template.</div>
+        </div>
+
+        <!-- generate_ecosystem -->
+        <div class="node-card nc-generate">
+            <div class="nc-type">LLM · factory + helper</div>
+            <div class="nc-title">🌍 generate_ecosystem</div>
+            <div class="nc-file">generate_ecosystem.py</div>
+            <div class="nc-desc">Calls run_generation() with "ecosystem" prompt template.</div>
+        </div>
+
+        <!-- validate -->
+        <div class="node-card nc-validate">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">✅ validate</div>
+            <div class="nc-file">validate.py</div>
+            <div class="nc-desc">3 checks: docs exist? score &gt; 0? LLM judge says answer is grounded?</div>
+        </div>
+
+        <!-- rewrite -->
+        <div class="node-card nc-rewrite">
+            <div class="nc-type">LLM · factory</div>
+            <div class="nc-title">✏️ rewrite</div>
+            <div class="nc-file">rewrite.py</div>
+            <div class="nc-desc">LLM rewrites expanded_query for retry. Increments retry_count.</div>
+        </div>
+
+        <!-- refuse -->
+        <div class="node-card nc-refuse">
+            <div class="nc-type">pure logic · inline</div>
+            <div class="nc-title">🚫 refuse</div>
+            <div class="nc-file">builder.py (inline)</div>
+            <div class="nc-desc">Sets the refusal message. No LLM call — saves cost + prevents hallucination.</div>
+        </div>
+
+        <!-- web_search — NEW -->
+        <div class="node-card nc-web">
+            <div class="nc-type">tool · factory · NEW in LG v2</div>
+            <div class="nc-title">🌐 web_search</div>
+            <div class="nc-file">web_search.py</div>
+            <div class="nc-desc">Tavily API search. Returns up to 5 web results as source_docs. Sets <code>web_searched=True</code>, <code>confidence="low"</code>.</div>
+        </div>
+
+        <!-- web_review — NEW -->
+        <div class="node-card nc-hitl">
+            <div class="nc-type">HITL · interrupt() · NEW in LG v2</div>
+            <div class="nc-title">🧑 web_review</div>
+            <div class="nc-file">web_review.py</div>
+            <div class="nc-desc">Calls <code>interrupt()</code> to pause graph. Sends results to UI. Resumes via <code>Command(resume=[indices])</code>. Filters to approved results.</div>
+        </div>
+
+        <!-- record_turn — NEW -->
+        <div class="node-card nc-memory">
+            <div class="nc-type">memory · plain fn · NEW in LG v2</div>
+            <div class="nc-title">💾 record_turn</div>
+            <div class="nc-file">record_turn.py</div>
+            <div class="nc-desc">Appends {user_query, answer} to <code>conversation_history</code>. Uses <code>operator.add</code> reducer — accumulates across invocations with SQLite checkpointer.</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONDITIONAL EDGES — ROUTING LOGIC                                    -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">🔀</div>
+        <div class="stage-title">Conditional Edges — Routing Logic (3 edges)</div>
+        <div class="stage-file">graph/edges.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-edge" style="max-width:360px;">
+            <div class="card-label">CONDITIONAL EDGE #1</div>
+            <div class="card-title">route_after_confidence(state)</div>
+            <div class="card-method">After: confidence_gate</div>
+            <div class="card-desc">Now has a 4th path: <code>web_search</code> when retries are exhausted and web is enabled.</div>
+            <div class="card-example" style="color:#fde68a;">if confidence in ("high", "low"):
+    → generate_{analysis_type}
+
+elif confidence == "none":
+    if retry_count < MAX_RETRIES:
+        → "rewrite"
+    elif WEB_SEARCH_ENABLED:
+        → "web_search"    # ← NEW
+    else:
+        → "refuse" → END</div>
+        </div>
+        <div class="card card-edge" style="max-width:360px;">
+            <div class="card-label">CONDITIONAL EDGE #2</div>
+            <div class="card-title">route_after_validate(state)</div>
+            <div class="card-method">After: validate</div>
+            <div class="card-desc">Same as LG v1. Now routes to <code>record_turn</code> instead of directly to END.</div>
+            <div class="card-example" style="color:#fde68a;">if validation_check == True:
+    → "record_turn" → END
+
+elif confidence == "low":
+    → "record_turn" → END
+
+elif retry_count < MAX_RETRIES:
+    → "rewrite"
+
+else:
+    → "record_turn" → END</div>
+        </div>
+        <div class="card card-edge" style="max-width:360px;">
+            <div class="card-label">CONDITIONAL EDGE #3 — NEW</div>
+            <div class="card-title">route_after_web_search(state)</div>
+            <div class="card-method">After: web_review</div>
+            <div class="card-desc">Routes web results to the correct type-specific generate node.</div>
+            <div class="card-example" style="color:#67e8f9;">def route_after_web_search(state):
+    analysis_type = state.analysis_type
+    return f"generate_{analysis_type}"
+
+# e.g. "swot" → generate_swot
+# Web results used as source_docs</div>
+            <span class="badge badge-lg2">NEW in LG v2</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- HITL DEEP DIVE — interrupt() + Command(resume=)                      -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">🧑</div>
+        <div class="stage-title">Human-in-the-Loop — interrupt() + Command(resume=...)</div>
+        <span class="stag stag-lg2">HITL Pattern</span>
+        <div class="stage-file">graph/nodes/web_review.py</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-lg2" style="max-width:500px;">
+            <div class="card-label">How HITL Works</div>
+            <div class="card-title">Pause → Review → Resume</div>
+            <div class="card-desc">The web_review node calls <code>interrupt(payload)</code> which pauses the graph. The payload is sent to the Streamlit UI. The user reviews web results and selects which to keep. Streamlit sends <code>Command(resume=[0, 2, 4])</code> to resume the graph. The node filters source_docs to the approved subset.</div>
+            <div class="card-example" style="color:#67e8f9;"># In web_review_node:
+approved_indices = interrupt({
+    "type": "web_review",
+    "message": "Select which results to use:",
+    "results": [
+        {"index": 0, "title": "...", "url": "..."},
+        {"index": 1, "title": "...", "url": "..."},
+    ]
+})
+
+# Graph pauses here ↑
+# User reviews in Streamlit UI
+# User clicks "Approve Selected"
+
+# Graph resumes here ↓
+# approved_indices = [0, 2]
+approved_docs = [doc for i, doc in
+    enumerate(source_docs)
+    if i in approved_indices]
+return {"source_docs": approved_docs}</div>
+        </div>
+        <div class="card card-lg2" style="max-width:500px;">
+            <div class="card-label">Streamlit Side</div>
+            <div class="card-title">_render_hitl_review() + _resume_graph()</div>
+            <div class="card-desc">When <code>_stream_graph()</code> detects a pending interrupt, it saves the interrupt data to <code>st.session_state</code> and reruns. The HITL UI renders checkboxes for each web result. On "Approve", it calls <code>graph.stream(Command(resume=selected))</code>.</div>
+            <div class="card-example" style="color:#86efac;"># In streamlit_app.py:
+
+# 1. Detect interrupt
+graph_state = graph.get_state(config)
+if pending_interrupts:
+    st.session_state._hitl_pending = True
+    st.session_state._hitl_data = data
+    st.rerun()
+
+# 2. Render review UI (checkboxes)
+def _render_hitl_review():
+    for result in data["results"]:
+        checked = st.checkbox(title)
+    if st.button("✅ Approve"):
+        st.session_state._hitl_resume = indices
+
+# 3. Resume graph
+def _resume_graph():
+    result = graph.stream(
+        Command(resume=resume_value),
+        config=config,
+    )</div>
+        </div>
+    </div>
+
+    <div style="margin-top:16px; padding:14px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); border-radius:10px; font-size:0.8rem;">
+        <strong style="color:#67e8f9;">Requires checkpointer:</strong>
+        The HITL pattern only works with a <strong>checkpointer</strong> (SQLite in production, MemorySaver in notebook).
+        The checkpointer serializes the graph state at the interrupt point, and restores it when <code>Command(resume=...)</code> is sent.
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONVERSATION MEMORY — SQLite + thread_id                             -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">💾</div>
+        <div class="stage-title">Persistent Conversation Memory</div>
+        <span class="stag stag-lg2">SQLite · thread_id</span>
+            <div class="card-title">SQLite SqliteSaver</div>
+            <div class="card-desc">Each Streamlit session gets a unique <code>thread_id</code>. The SQLite checkpointer persists full graph state (including conversation_history) across reruns.</div>
+            <div class="card-example" style="color:#67e8f9;">import sqlite3
+from langgraph.checkpoint.sqlite \
+    import SqliteSaver
+
+conn = sqlite3.connect(
+    "data/conversations.db",
+    check_same_thread=False)
+checkpointer = SqliteSaver(conn=conn)
+
+graph = build_graph(
+    ...,
+    checkpointer=checkpointer
+)</div>
+            <span class="badge badge-lg2">SqliteSaver</span>
+        </div>
+        <div class="card card-lg2" style="max-width:340px;">
+            <div class="card-label">Record Turn</div>
+            <div class="card-title">record_turn_node</div>
+            <div class="card-desc">Appends the current user query + assistant answer to <code>conversation_history</code>. Uses <code>operator.add</code> — appends, never overwrites.</div>
+            <div class="card-example" style="color:#67e8f9;">def record_turn_node(state) -> dict:
+    return {
+        "conversation_history": [
+            {"role": "user",
+             "content": state.user_query},
+            {"role": "assistant",
+             "content": state.answer},
+        ]
+    }
+# operator.add reducer appends
+# these to the existing list</div>
+            <span class="badge badge-lg2">record_turn.py</span>
+        </div>
+        <div class="card card-lg2" style="max-width:340px;">
+            <div class="card-label">Context Injection</div>
+            <div class="card-title">format_history_context()</div>
+            <div class="card-desc">The classify node formats recent turns (up to MEMORY_WINDOW=6) and injects them into the LLM prompt. This resolves coreferences like "Now do a SWOT for them".</div>
+            <div class="card-example" style="color:#67e8f9;"># graph/utils/history.py
+def format_history_context(history):
+    recent = history[-MEMORY_WINDOW:]
+    lines = []
+    for turn in recent:
+        role = turn["role"]
+        content = turn["content"][:200]
+        lines.append(f"{role}: {content}")
+    return "\n".join(lines)
+
+# Used in classify_node:
+history = format_history_context(
+    state.conversation_history
+)</div>
+            <span class="badge badge-lg2">history.py</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DESIGN PATTERNS — NEW IN v2                                          -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">🎨</div>
+        <div class="stage-title">New Design Patterns in LG v2</div>
+    </div>
+
+    <div class="flow-row">
+        <div class="card card-lg2" style="max-width:340px;">
+            <div class="card-label">Pattern</div>
+            <div class="card-title">Human-in-the-Loop (HITL)</div>
+            <div class="card-desc">Uses LangGraph <code>interrupt()</code> to pause execution at a specific node. The UI collects user input, then <code>Command(resume=value)</code> resumes from exactly where it paused.</div>
+            <span class="badge badge-pattern">HITL</span>
+            <span class="badge badge-lg2">interrupt + Command</span>
+        </div>
+        <div class="card card-lg2" style="max-width:340px;">
+            <div class="card-label">Pattern</div>
+            <div class="card-title">Append-Only Reducer</div>
+            <div class="card-desc"><code>Annotated[list[dict], operator.add]</code> — LangGraph merges state by <strong>appending</strong> new elements rather than replacing. Critical for conversation history that accumulates across graph invocations.</div>
+            <span class="badge badge-pattern">State Reducer</span>
+            <span class="badge badge-lg2">operator.add</span>
+        </div>
+        <div class="card card-lg2" style="max-width:340px;">
+            <div class="card-label">Pattern</div>
+            <div class="card-title">Checkpointed State Machine</div>
+            <div class="card-desc">SQLite checkpointer + <code>thread_id</code> = full state persistence. Conversations survive Streamlit reruns, page refreshes, and even server restarts. Same pattern enables HITL resume.</div>
+            <span class="badge badge-pattern">Persistence</span>
+            <span class="badge badge-lg2">SqliteSaver</span>
+        </div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- WHAT WAS KEPT FROM LG v1                                             -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage kept-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-kept">✅</div>
+        <div class="stage-title">Untouched Components — Zero Changes from LG v1</div>
+        <span class="stag stag-kept">KEPT</span>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Component</th><th>Module</th><th>Why Untouched</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Embedding Model</td><td class="mono">embeddings/embedder.py</td><td>all-MiniLM-L6-v2 — same model, same vectors</td></tr>
+            <tr><td>Vector Store</td><td class="mono">vectorstore/chroma_store.py</td><td>134K startups already indexed</td></tr>
+            <tr><td>BM25 Index</td><td class="mono">search/bm25_search.py</td><td>Keyword search layer unchanged</td></tr>
+            <tr><td>RRF Fusion</td><td class="mono">search/fusion.py</td><td>Same weighted merging algorithm</td></tr>
+            <tr><td>Hybrid Retriever</td><td class="mono">rag/retriever.py</td><td>Semantic + BM25 + reranker pipeline</td></tr>
+            <tr><td>Cross-Encoder Reranker</td><td class="mono">rag/reranker.py</td><td>ms-marco-MiniLM-L-6-v2 (22 MB)</td></tr>
+            <tr><td>Prompt Templates</td><td class="mono">rag/prompt_templates.py</td><td>6 templates: similar, swot, competitor, comparison, ecosystem</td></tr>
+            <tr><td>LLM Client Factory</td><td class="mono">config/llm_client.py</td><td>Groq/OpenAI factory with max_retries=3</td></tr>
+            <tr><td>Eval Pipeline</td><td class="mono">evaluation/*</td><td>30-query eval with 6 metrics</td></tr>
+            <tr><td>12 original nodes</td><td class="mono">graph/nodes/</td><td>All LG v1 nodes unchanged</td></tr>
+            <tr><td>2 original edges</td><td class="mono">graph/edges.py</td><td>route_after_confidence + route_after_validate logic preserved</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- NEW FILES — v2 ADDITIONS                                             -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">📋</div>
+        <div class="stage-title">New / Modified Files in LG v2</div>
+        <span class="stag stag-lg2">LG v2</span>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>File</th><th>Type</th><th>Status</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/nodes/web_search.py</td>
+                <td>Node</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+                <td>Tavily web search — returns up to 5 results as source_docs</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/nodes/web_review.py</td>
+                <td>Node</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+                <td>HITL interrupt — pauses for user approval of web results</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/nodes/record_turn.py</td>
+                <td>Node</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+                <td>Appends user/assistant turns to conversation_history</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/utils/history.py</td>
+                <td>Utility</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+                <td>Formats recent conversation history for prompt injection</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/state/private.py</td>
+                <td>Schema</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>Added web_searched + conversation_history fields</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/edges.py</td>
+                <td>Routing</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>Added route_after_web_search + web_search path in route_after_confidence</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">graph/builder.py</td>
+                <td>Orchestrator</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>Wires 3 new nodes + conditional edge #3 + checkpointer + tavily_client</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">config/settings.py</td>
+                <td>Config</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>Added WEB_SEARCH_ENABLED, WEB_SEARCH_MAX_RESULTS, MEMORY_WINDOW, CONVERSATIONS_DB_PATH</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">app/state.py</td>
+                <td>App State</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>SQLite checkpointer + Tavily client init + HITL session keys</td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">app/streamlit_app.py</td>
+                <td>UI</td>
+                <td><span class="stag stag-lg2" style="margin:0;">MODIFIED</span></td>
+                <td>Streaming status, HITL review UI, resume flow, Command import</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- CONFIGURATION REFERENCE                                              -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">⚙️</div>
+        <div class="stage-title">Configuration Reference</div>
+        <div class="stage-file">config/settings.py</div>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Setting</th><th>Value</th><th>Purpose</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">WEB_SEARCH_ENABLED</td>
+                <td class="mono">True</td>
+                <td>Toggle web-search fallback on/off</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">WEB_SEARCH_MAX_RESULTS</td>
+                <td class="mono">5</td>
+                <td>Number of Tavily results to fetch</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">MEMORY_WINDOW</td>
+                <td class="mono">6</td>
+                <td>Max past turns injected into prompts (3 exchanges)</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr style="background:rgba(6,182,212,0.05);">
+                <td class="mono">CONVERSATIONS_DB_PATH</td>
+                <td class="mono">data/conversations.db</td>
+                <td>SQLite file for checkpointer persistence</td>
+                <td><span class="stag stag-lg2" style="margin:0;">NEW</span></td>
+            </tr>
+            <tr>
+                <td class="mono">MAX_RETRIES</td>
+                <td class="mono">1</td>
+                <td>Max corrective RAG loops before web fallback</td>
+                <td><span class="stag stag-same" style="margin:0;">v1</span></td>
+            </tr>
+            <tr>
+                <td class="mono">CONFIDENCE_THRESHOLD_SOFT</td>
+                <td class="mono">0.10</td>
+                <td>Below this → low-confidence disclaimer</td>
+                <td><span class="stag stag-same" style="margin:0;">v3</span></td>
+            </tr>
+            <tr>
+                <td class="mono">CONFIDENCE_THRESHOLD_HARD</td>
+                <td class="mono">0.02</td>
+                <td>Below this → "none" confidence</td>
+                <td><span class="stag stag-same" style="margin:0;">v3</span></td>
+            </tr>
+            <tr>
+                <td class="mono">TOP_K</td>
+                <td class="mono">5</td>
+                <td>Documents to retrieve after reranking</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+            <tr>
+                <td class="mono">LLM_PROVIDER</td>
+                <td class="mono">"groq"</td>
+                <td>Active LLM backend (Groq free tier: 30 RPM)</td>
+                <td><span class="stag stag-same" style="margin:0;">v2</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- DIRECTORY STRUCTURE                                                   -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage lg-stage">
+    <div class="stage-header">
+        <div class="stage-num sn-lg2">📁</div>
+        <div class="stage-title">graph/ Directory Structure — LG v2</div>
+    </div>
+
+    <div class="card card-lg2" style="max-width:650px; margin:0 auto;">
+        <div class="card-example" style="color:#67e8f9; font-size:0.75rem;">
+src/bizintel/graph/
+├── __init__.py
+├── builder.py              ← build_graph() — 15 nodes + 3 conditional edges + checkpointer
+├── edges.py                ← 3 routing functions (+ route_after_web_search)
+├── state/
+│   ├── __init__.py
+│   ├── input.py            ← InputState(BaseModel) — unchanged
+│   ├── output.py           ← OutputState(BaseModel) — unchanged
+│   └── private.py          ← PrivateState + web_searched + conversation_history
+├── utils/                  ← NEW directory
+│   └── history.py          ← format_history_context() for memory injection
+└── nodes/
+    ├── __init__.py
+    ├── classify.py          ← now injects conversation_history
+    ├── expand_query.py
+    ├── retrieve.py
+    ├── confidence.py
+    ├── _generate_base.py
+    ├── generate_similar.py
+    ├── generate_swot.py
+    ├── generate_competitor.py
+    ├── generate_comparison.py
+    ├── generate_ecosystem.py
+    ├── validate.py
+    ├── rewrite.py
+    ├── web_search.py        ← NEW — Tavily API node
+    ├── web_review.py        ← NEW — HITL interrupt node
+    └── record_turn.py       ← NEW — memory persistence node</div>
+    </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- TECH STACK — UPDATED                                                 -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<div class="stage">
+    <div class="stage-header">
+        <div class="stage-num">🔧</div>
+        <div class="stage-title">Tech Stack — LG v2</div>
+    </div>
+
+    <table class="stbl">
+        <thead>
+            <tr><th>Layer</th><th>Technology</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Orchestrator</td><td class="mono">LangGraph (StateGraph)</td><td><span class="stag stag-same" style="margin:0;">v1</span></td></tr>
+            <tr><td>State Management</td><td class="mono">Pydantic BaseModel + operator.add reducer</td><td><span class="stag stag-lg2" style="margin:0;">v2</span></td></tr>
+            <tr style="background:rgba(6,182,212,0.05);"><td>Checkpointer</td><td class="mono">langgraph-checkpoint-sqlite (SqliteSaver)</td><td><span class="stag stag-lg2" style="margin:0;">NEW</span></td></tr>
+            <tr style="background:rgba(6,182,212,0.05);"><td>Web Search</td><td class="mono">tavily-python (Tavily API)</td><td><span class="stag stag-lg2" style="margin:0;">NEW</span></td></tr>
+            <tr style="background:rgba(6,182,212,0.05);"><td>HITL</td><td class="mono">LangGraph interrupt() + Command(resume=...)</td><td><span class="stag stag-lg2" style="margin:0;">NEW</span></td></tr>
+            <tr><td>LLM Provider</td><td class="mono">Groq (llama-3.3-70b-versatile) / OpenAI (gpt-4o-mini)</td><td><span class="stag stag-same" style="margin:0;">v2</span></td></tr>
+            <tr><td>Embeddings</td><td class="mono">all-MiniLM-L6-v2 (384d)</td><td><span class="stag stag-same" style="margin:0;">v1</span></td></tr>
+            <tr><td>Vector Store</td><td class="mono">ChromaDB</td><td><span class="stag stag-same" style="margin:0;">v1</span></td></tr>
+            <tr><td>Keyword Search</td><td class="mono">rank-bm25 (Okapi BM25)</td><td><span class="stag stag-same" style="margin:0;">v2</span></td></tr>
+            <tr><td>Fusion</td><td class="mono">Weighted RRF (custom)</td><td><span class="stag stag-same" style="margin:0;">v2</span></td></tr>
+            <tr><td>Reranker</td><td class="mono">cross-encoder/ms-marco-MiniLM-L-6-v2 (22 MB)</td><td><span class="stag stag-same" style="margin:0;">v2</span></td></tr>
+            <tr><td>UI</td><td class="mono">Streamlit (streaming + HITL review)</td><td><span class="stag stag-lg2" style="margin:0;">v2</span></td></tr>
+            <tr><td>Runtime</td><td class="mono">Python 3.13</td><td><span class="stag stag-same" style="margin:0;">v1</span></td></tr>
+            <tr><td>Package Manager</td><td class="mono">uv + hatch</td><td><span class="stag stag-same" style="margin:0;">v1</span></td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div style="text-align:center; padding:30px 0; color:#6b7280; font-size:0.8rem;">
+    BizIntel LG v2 · March 2026 ·
+    <a href="architecture_flowchart_lg_v1.html" style="color:#c4b5fd;">← LG v1 Architecture</a> ·
+    <a href="architecture_flowchart_v3.html" style="color:#9ca3af;">← v3 Architecture</a>
+</div>
+
+</body>
+</html>

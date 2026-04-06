@@ -1,0 +1,82 @@
+id,query,analysis_type,model_name,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,llama-3.3-70b-versatile,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"To find similar startups to Stripe, I'll look for companies that operate in the Fintech industry, specifically in payment processing and related areas. Here are the similar startups, ranked by relevan…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.71,430
+sim_02,Find startups similar to Airbnb,similar,llama-3.3-70b-versatile,Proper-noun test — Airbnb → short-term rental marketplace,"Based on the provided startup data, here are the similar startups to Airbnb, ranked by relevance:
+
+1. **HomeAway** (USA, 2005) — Similar to Airbnb as it is also an online vacation rental marketplace, …",5,1.0,0.8,1.0,1.0,1.0,1.0,5.93,422
+sim_03,AI healthcare startups in India,similar,llama-3.3-70b-versatile,Descriptive query — should match without heavy expansion,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.4,1.0,0.0,1.0,1.0,1.0,3.69,116
+sim_04,Find edtech companies that teach coding to kids,similar,llama-3.3-70b-versatile,Multi-concept query — edtech + coding + children,"Here are the similar startups that teach coding to kids, ranked by relevance:
+
+1. **Codingal** (IN, 2020) — Offers online coding classes for K-12 students, providing personalized learning paths and 1:…",5,0.8,0.8,1.0,1.0,1.0,1.0,4.62,290
+sim_05,Startups building developer tools and APIs,similar,llama-3.3-70b-versatile,Technical domain query — developer tooling,"## Ecosystem Overview
+The startup ecosystem covered by the provided data is primarily focused on the domain of developer tools and APIs, with a strong emphasis on cloud computing, SaaS, and B2B soluti…",5,1.0,0.8,1.0,1.0,1.0,1.0,4.41,680
+sim_06,Climate tech and clean energy startups,similar,llama-3.3-70b-versatile,Emerging sector — climate / cleantech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,1.0,0.0,1.0,1.0,1.0,4.18,116
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,llama-3.3-70b-versatile,Must produce all 4 SWOT quadrants with healthcare context,"To provide a SWOT analysis of AI healthcare startups founded after 2020, I need more information about the specific startups in question. However, I can identify similar startups based on the provided…",5,0.8,0.8,0.0,1.0,1.0,1.0,4.15,388
+swot_02,SWOT analysis of fintech startups in the US,swot,llama-3.3-70b-versatile,SWOT for fintech — should reference US market specifics,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,0.8,0.0,1.0,3.67,116
+swot_03,SWOT of food delivery startups,swot,llama-3.3-70b-versatile,SWOT for food delivery sector,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,1.0,0.0,1.0,0.0,1.0,4.83,116
+swot_04,SWOT analysis for cybersecurity companies,swot,llama-3.3-70b-versatile,SWOT for cybersecurity domain,"## Strengths
+- Established experience: Companies like Above Security (founded in 1999) and Internet Security Systems (founded in 1994) have a long history of providing security services, indicating a …",5,0.8,0.8,1.0,1.0,1.0,1.0,4.35,868
+swot_05,SWOT of e-commerce startups in India,swot,llama-3.3-70b-versatile,SWOT for Indian e-commerce,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,0.0,1.0,3.94,116
+comp_01,Who are the main competitors in the food delivery space?,competitor,llama-3.3-70b-versatile,Competitor landscape for food delivery,"## Direct Competitors
+MobileEatz and CityMint are direct competitors as they offer similar services, which are food ordering and delivery from local restaurants through mobile apps. They target the sa…",5,1.0,0.8,1.0,1.0,1.0,1.0,4.03,478
+comp_02,Competitive landscape for cloud infrastructure startups,competitor,llama-3.3-70b-versatile,Competitor analysis for cloud infra,"## Direct Competitors
+Based on the provided startup data, the direct competitors in the cloud infrastructure market are:
+- Virtacore Systems: Offers cloud solutions for small-to-midsize businesses, in…",5,1.0,0.8,1.0,1.0,1.0,1.0,4.41,722
+comp_03,Competitors of ride-sharing platforms,competitor,llama-3.3-70b-versatile,Ride-sharing competitor map,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,0.0,0.0,0.8,0.0,1.0,3.21,116
+comp_05,Competitive analysis of project management tools,competitor,llama-3.3-70b-versatile,Project management tool competitors,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,1.24,116
+cmp_01,Compare YC-backed edtech startups vs Crunchbase edtech companies,comparison,llama-3.3-70b-versatile,Cross-source comparison for edtech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.6,1.0,1.0,56.41,116
+cmp_05,Side-by-side comparison of SaaS companies in B2B vs B2C,comparison,llama-3.3-70b-versatile,Business model comparison — B2B vs B2C SaaS,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,50.71,116
+eco_02,Explore the blockchain and Web3 startup ecosystem,ecosystem,llama-3.3-70b-versatile,Blockchain/Web3 ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,1.49,116
+eco_03,Map the proptech real estate technology ecosystem,ecosystem,llama-3.3-70b-versatile,PropTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,47.52,116
+eco_04,Startup ecosystem for mental health and wellness,ecosystem,llama-3.3-70b-versatile,Mental health/wellness ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,0.8,0.0,1.0,1.38,116
+eco_05,Map the agriculture technology (agtech) startup ecosystem,ecosystem,llama-3.3-70b-versatile,AgTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,0.0,1.0,1.3,116
+auto_02,What's happening in the space tech industry?,auto,llama-3.3-70b-versatile,Open-ended question — should auto-detect ecosystem or overview,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,24.07,116
+auto_03,Analyse the gaming startup landscape in the US,auto,llama-3.3-70b-versatile,Analysis request — should auto-detect competitor or ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,2.38,116
+auto_04,Find me something interesting in quantum computing,auto,llama-3.3-70b-versatile,Very vague — tests query expansion + auto format selection,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.0,0.0,0.0,1.0,1.0,1.0,59.78,116

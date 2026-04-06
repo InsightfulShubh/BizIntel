@@ -1,0 +1,107 @@
+id,query,analysis_type,description,answer_preview,num_sources,context_relevancy,groundedness,answer_relevancy,precision_at_k,structure_score,bad_result_check,latency_seconds,total_tokens
+sim_01,Find startups similar to Stripe,similar,Classic proper-noun test — must resolve Stripe → fintech via query expansion,"Based on the provided startup data, here are the similar startups to Stripe, ranked by relevance:
+
+1. **Dots** (US, 2021) — Similar to Stripe, Dots provides a developer-friendly API for payments, allo…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.64,386
+sim_02,Find startups similar to Airbnb,similar,Proper-noun test — Airbnb → short-term rental marketplace,"Based on the provided startup data, here are the similar startups to Airbnb, ranked by relevance:
+
+1. **HomeAway** (USA, 2005) — Similarity explanation: HomeAway is an online marketplace of vacation r…",5,1.0,0.8,1.0,1.0,1.0,1.0,2.51,546
+sim_03,AI healthcare startups in India,similar,Descriptive query — should match without heavy expansion,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.4,1.0,0.0,1.0,1.0,1.0,1.69,116
+sim_04,Find edtech companies that teach coding to kids,similar,Multi-concept query — edtech + coding + children,"Here are the similar startups that teach coding to kids, ranked by relevance:
+
+1. **Codingal** (IN, 2020) — Offers online coding classes for K-12 students, providing personalized learning paths and 1:…",5,0.8,0.8,1.0,1.0,1.0,1.0,2.31,322
+sim_05,Startups building developer tools and APIs,similar,Technical domain query — developer tooling,"⚠️ **Low confidence** — the retrieved context may not fully match your query. Results below should be reviewed critically.
+
+---
+
+Based on the provided startup data, here are the similar startups ranke…",5,1.0,0.8,1.0,1.0,1.0,1.0,2.87,472
+sim_06,Climate tech and clean energy startups,similar,Emerging sector — climate / cleantech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,1.0,0.0,1.0,1.0,1.0,1.69,116
+swot_01,SWOT analysis of AI healthcare startups founded after 2020,swot,Must produce all 4 SWOT quadrants with healthcare context,"## Strengths
+- RedBrick AI has a strong network of investors, including Y Combinator and Sequoia Capital, which can provide access to funding and expertise, as evidenced by their $4.6 million raise.
+-…",5,0.6,0.8,0.5,0.8,1.0,1.0,5.83,684
+swot_02,SWOT analysis of fintech startups in the US,swot,SWOT for fintech — should reference US market specifics,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.6,1.0,0.0,1.0,0.0,1.0,2.6,116
+swot_03,SWOT of food delivery startups,swot,SWOT for food delivery sector,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,0.0,1.0,2.79,116
+swot_04,SWOT analysis for cybersecurity companies,swot,SWOT for cybersecurity domain,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,0.0,1.0,2.97,116
+swot_05,SWOT of e-commerce startups in India,swot,SWOT for Indian e-commerce,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,0.0,1.0,1.77,116
+comp_01,Who are the main competitors in the food delivery space?,competitor,Competitor landscape for food delivery,"## Direct Competitors
+Tablevibe, MobileEatz, CityMint, and Caviar are direct competitors in the food delivery space, as they all provide platforms for customers to order food from local restaurants fo…",5,1.0,0.8,1.0,1.0,1.0,1.0,10.14,506
+comp_02,Competitive landscape for cloud infrastructure startups,competitor,Competitor analysis for cloud infra,"## Direct Competitors
+(Same market, same customer)
+Cloupia, DynamicOps, and GoGrid are direct competitors in the cloud infrastructure market, offering cloud management and infrastructure solutions to …",5,1.0,0.8,1.0,1.0,1.0,1.0,6.96,554
+comp_03,Competitors of ride-sharing platforms,competitor,Ride-sharing competitor map,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,0.8,0.0,1.0,2.62,116
+comp_04,Who competes in the online education market?,competitor,Online education competitors,"## Direct Competitors
+EDU 2.0 and Sclipo - Online Campus Platform are direct competitors as they both offer learning management systems (LMS) and are in the education industry, targeting the same cust…",5,1.0,0.8,1.0,1.0,1.0,1.0,4.68,488
+comp_05,Competitive analysis of project management tools,competitor,Project management tool competitors,"## Direct Competitors
+Pivotal Tracker, Comindwork, Agilefant, and Extreme Planner are direct competitors as they all offer project management tools with a focus on agile development, collaboration, an…",5,1.0,0.8,1.0,1.0,1.0,1.0,7.43,566
+cmp_01,Compare YC-backed edtech startups vs Crunchbase edtech companies,comparison,Cross-source comparison for edtech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,1.0,1.0,2.66,116
+cmp_02,Compare fintech startups in India vs the US,comparison,Geography comparison — India vs US fintech,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.6,1.0,0.0,1.0,1.0,1.0,3.11,116
+cmp_03,Compare AI startups founded before 2015 vs after 2020,comparison,Time-period comparison for AI,"### Structured Comparison
+
+Given the data, we can only compare Aiaioo (founded before 2015) with the startups founded after 2020, which are Zumo Labs, BabylonAI, and Stack AI. LabelFlow, founded in 20…",5,0.5,0.8,1.0,1.0,1.0,1.0,6.4,804
+cmp_04,Compare healthcare vs biotech startups,comparison,Sector comparison — healthcare vs biotech,"Based on the provided startup data, I will compare the startups side by side, focusing on the aspects of Industry, Country, Founded, and Key Focus.
+
+| Aspect | Digital Health | Nest Genomics | Annai S…",5,1.0,0.8,0.5,1.0,1.0,1.0,5.84,728
+cmp_05,Side-by-side comparison of SaaS companies in B2B vs B2C,comparison,Business model comparison — B2B vs B2C SaaS,"### Side-by-Side Comparison
+
+| Aspect | Buissy.com Ltd | Marketbright | ReachForce | Net-Results | Less Annoying Software |
+|--------|---------------|--------------|-------------|--------------|------…",5,0.8,0.8,0.5,1.0,1.0,1.0,6.65,726
+eco_01,Map the autonomous vehicle startup ecosystem,ecosystem,AV ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,0.0,1.0,2.48,116
+eco_02,Explore the blockchain and Web3 startup ecosystem,ecosystem,Blockchain/Web3 ecosystem,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,1.0,0.0,1.0,0.0,1.0,2.42,116
+eco_03,Map the proptech real estate technology ecosystem,ecosystem,PropTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,0.8,0.0,1.0,2.9,116
+eco_04,Startup ecosystem for mental health and wellness,ecosystem,Mental health/wellness ecosystem,"## Ecosystem Overview
+The startup ecosystem covers the domain of Mental Health Tech, focusing on digital health and wellness solutions. This includes online counseling, therapy, and coaching services,…",5,1.0,0.8,1.0,1.0,1.0,1.0,7.58,664
+eco_05,Map the agriculture technology (agtech) startup ecosystem,ecosystem,AgTech ecosystem mapping,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,1.0,1.0,0.0,1.0,0.0,1.0,2.98,116
+auto_01,Tell me about robotics startups,auto,Vague query — auto should pick a reasonable format,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,1.0,1.0,2.64,116
+auto_02,What's happening in the space tech industry?,auto,Open-ended question — should auto-detect ecosystem or overview,"## Industry Overview
+The space tech industry is experiencing significant growth and innovation, with various startups working on diverse projects. Based on the provided data, here are some key trends …",5,1.0,0.8,1.0,1.0,1.0,1.0,6.8,564
+auto_03,Analyse the gaming startup landscape in the US,auto,Analysis request — should auto-detect competitor or ecosystem,"**Gaming Startup Landscape in the US**
+=====================================
+
+### Overview
+
+The US gaming startup landscape is diverse, with various companies focusing on different aspects of the indu…",5,0.8,0.8,1.0,1.0,1.0,1.0,4.61,430
+auto_04,Find me something interesting in quantum computing,auto,Very vague — tests query expansion + auto format selection,"🚫 **I don't have enough information to answer this reliably.**
+
+The retrieved context doesn't appear relevant to your query. This can happen when:
+- The topic is outside the startup database's coverag…",5,0.8,1.0,0.0,1.0,1.0,1.0,2.84,116

@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizIntel LG v1 — LangGraph Interview Prep</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #1e293b;
+            padding: 12px 0;
+        }
+        .nav-inner {
+            max-width: 1100px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand {
+            font-size: 1.3rem; font-weight: 700;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-links a {
+            color: #94a3b8; text-decoration: none; font-size: 0.78rem;
+            padding: 4px 10px; border-radius: 6px; transition: all 0.2s;
+        }
+        .nav-links a:hover { background: #1e293b; color: #e2e8f0; }
+
+        /* ── Main container ── */
+        .container { max-width: 1100px; margin: 0 auto; padding: 90px 24px 60px; }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center; padding: 60px 20px 40px;
+            border-bottom: 1px solid #1e293b; margin-bottom: 50px;
+        }
+        .hero h1 {
+            font-size: 2.8rem; font-weight: 800;
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa, #f472b6);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .hero p { color: #94a3b8; font-size: 1.15rem; max-width: 700px; margin: 0 auto; }
+        .hero-stats {
+            display: flex; justify-content: center; gap: 40px; margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .hero-stat { text-align: center; }
+        .hero-stat .val { font-size: 2rem; font-weight: 700; color: #8b5cf6; }
+        .hero-stat .lbl { font-size: 0.82rem; color: #64748b; }
+
+        /* ── Section ── */
+        .section { margin-bottom: 55px; }
+        .section-id { position: relative; top: -80px; }
+        .section-title {
+            font-size: 1.7rem; font-weight: 700; color: #f1f5f9;
+            margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title .num {
+            font-size: 0.85rem; font-weight: 600;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white; padding: 3px 12px; border-radius: 20px;
+        }
+        .section-sub { color: #64748b; font-size: 0.95rem; margin-bottom: 24px; }
+
+        /* ── Q&A Card ── */
+        .qa {
+            background: #1e293b; border-radius: 14px;
+            border: 1px solid #334155;
+            margin-bottom: 18px; overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .qa:hover { border-color: #8b5cf6; }
+        .qa-q {
+            padding: 18px 22px; cursor: pointer;
+            display: flex; align-items: flex-start; gap: 12px;
+            user-select: none;
+        }
+        .qa-q:hover { background: rgba(139,92,246,0.06); }
+        .qa-icon {
+            flex-shrink: 0; width: 28px; height: 28px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; color: white; font-weight: 700;
+        }
+        .qa-question {
+            font-weight: 600; font-size: 1.02rem; color: #e2e8f0;
+            flex: 1;
+        }
+        .qa-chevron {
+            color: #475569; font-size: 1.2rem; transition: transform 0.3s;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .qa.open .qa-chevron { transform: rotate(180deg); }
+        .qa-a {
+            display: none; padding: 0 22px 22px 62px;
+            color: #cbd5e1; font-size: 0.93rem;
+        }
+        .qa.open .qa-a { display: block; }
+
+        /* ── Answer content ── */
+        .qa-a p { margin-bottom: 12px; }
+        .qa-a ul, .qa-a ol { margin: 8px 0 12px 20px; }
+        .qa-a li { margin-bottom: 6px; }
+        .qa-a strong { color: #e2e8f0; }
+        .qa-a code {
+            background: #0f172a; padding: 2px 7px; border-radius: 5px;
+            font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.85em; color: #a78bfa;
+        }
+
+        .highlight {
+            background: #0f172a; border: 1px solid #1e293b;
+            border-radius: 10px; padding: 14px 18px; margin: 12px 0;
+            font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 0.82rem; color: #86efac; line-height: 1.7;
+            overflow-x: auto; white-space: pre-wrap;
+        }
+
+        .callout {
+            border-radius: 10px; padding: 14px 18px; margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        .callout.success { background: rgba(16,185,129,0.1); border-left: 4px solid #10b981; }
+        .callout.warning { background: rgba(245,158,11,0.1); border-left: 4px solid #f59e0b; }
+        .callout.info    { background: rgba(139,92,246,0.1); border-left: 4px solid #8b5cf6; }
+        .callout.danger  { background: rgba(239,68,68,0.1); border-left: 4px solid #ef4444; }
+
+        .vs-table {
+            width: 100%; border-collapse: collapse; margin: 12px 0;
+            font-size: 0.85rem;
+        }
+        .vs-table th {
+            background: rgba(139,92,246,0.15); padding: 10px 14px;
+            text-align: left; color: #c4b5fd;
+            border-bottom: 1px solid #334155;
+        }
+        .vs-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: top;
+        }
+        .vs-table tr:hover { background: rgba(255,255,255,0.02); }
+
+        .tag {
+            display: inline-block; padding: 2px 10px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 600; margin-right: 4px;
+        }
+        .tag-lg { background: #8b5cf633; color: #c4b5fd; border: 1px solid #8b5cf655; }
+        .tag-pattern { background: #3b82f633; color: #93c5fd; border: 1px solid #3b82f655; }
+        .tag-key { background: #ef444433; color: #fca5a5; border: 1px solid #ef444455; }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center; padding: 30px 0; color: #475569;
+            border-top: 1px solid #1e293b; margin-top: 40px; font-size: 0.82rem;
+        }
+        .footer a { color: #8b5cf6; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-brand">🧠 BizIntel LG v1 — Interview Prep</div>
+        <div class="nav-links">
+            <a href="#why">Why LangGraph</a>
+            <a href="#schema">State Schema</a>
+            <a href="#nodes">Nodes</a>
+            <a href="#edges">Edges & Routing</a>
+            <a href="#patterns">Design Patterns</a>
+            <a href="#optionb">Option B</a>
+            <a href="#corrective">Corrective RAG</a>
+            <a href="#migration">Migration</a>
+            <a href="#eval">Eval & Debugging</a>
+            <a href="#advanced">Advanced</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+<!-- ════════════════════════ HERO ════════════════════════ -->
+<div class="hero">
+    <h1>LangGraph v1 — Interview Prep</h1>
+    <p>Every "why" behind the LangGraph migration — schema selection, architecture decisions, routing logic, design patterns, and debugging war stories.</p>
+    <div class="hero-stats">
+        <div class="hero-stat"><div class="val">60+</div><div class="lbl">Q&A Covered</div></div>
+        <div class="hero-stat"><div class="val">12</div><div class="lbl">Graph Nodes</div></div>
+        <div class="hero-stat"><div class="val">10</div><div class="lbl">Sections</div></div>
+        <div class="hero-stat"><div class="val">3</div><div class="lbl">State Schemas</div></div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 1. WHY LANGGRAPH ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="why"></div>
+    <div class="section-title"><span class="num">01</span> Why LangGraph?</div>
+    <div class="section-sub">The motivation for migrating from a monolithic chain to a graph-based orchestrator</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did you migrate from chain.py to LangGraph? What was wrong with the chain?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The v3 <code>chain.py</code> was a single monolithic <code>analyze()</code> method — ~80 lines doing query expansion, retrieval, confidence check, prompt building, LLM call, and response formatting in one function. Three concrete problems:</p>
+            <ol>
+                <li><strong>No retry loop:</strong> If confidence was low, you got one shot. No corrective RAG — if the first retrieval was bad, the answer was bad. Period.</li>
+                <li><strong>Untestable:</strong> You couldn't test the confidence gate without running the full pipeline (expansion + retrieval + reranking). Each step was tightly coupled.</li>
+                <li><strong>Rigid branching:</strong> The if/elif cascade for confidence routing was hardcoded. Adding a new branch (e.g., a human-in-the-loop step) meant modifying the core function.</li>
+            </ol>
+            <p>LangGraph solves all three: each step is an isolated node, conditional edges handle routing declaratively, and the <code>rewrite → expand → retrieve</code> loop enables corrective RAG.</p>
+            <div class="callout info">
+                <strong>Interview phrasing:</strong> "We migrated to LangGraph to decompose a monolithic chain into testable nodes, enable corrective RAG with a retry loop, and make routing declarative via conditional edges."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why LangGraph specifically and not LangChain's LCEL, or plain Python orchestration?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Option</th><th>Pros</th><th>Cons</th></tr>
+                <tr>
+                    <td><strong>Plain Python</strong></td>
+                    <td>No dependency, full control</td>
+                    <td>Must hand-roll state management, retry loops, conditional routing. No visualization, no checkpointing.</td>
+                </tr>
+                <tr>
+                    <td><strong>LCEL (LangChain)</strong></td>
+                    <td>Composable chains, streaming</td>
+                    <td>DAG-only — no cycles (no retry loop). Pipe syntax gets unreadable for 12-node graphs with branches.</td>
+                </tr>
+                <tr>
+                    <td><strong>LangGraph ✅</strong></td>
+                    <td>StateGraph with cycles, conditional edges, Pydantic state, built-in Mermaid viz, checkpointing</td>
+                    <td>Extra dependency (langgraph). Learning curve for state schemas.</td>
+                </tr>
+            </table>
+            <p>The killer feature was <strong>cycles</strong>. LCEL is a DAG — it can't loop back. Our corrective RAG needs <code>rewrite → expand_query</code> which is a cycle. LangGraph's <code>StateGraph</code> supports this natively.</p>
+            <div class="callout success">
+                <strong>Key point:</strong> "We needed cycles for corrective RAG retry, Pydantic state for type safety, and conditional edges for confidence-based routing. LangGraph was the only option that hit all three."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What does LangGraph give you that you didn't have before?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ol>
+                <li><strong>Corrective RAG loop:</strong> If the first retrieval has low confidence, we rewrite the query and try again. This wasn't possible in the linear chain.</li>
+                <li><strong>LLM-driven classification:</strong> We removed the analysis_type dropdown from the UI. Now a Classify node asks the LLM to pick the right type. Users just type a query.</li>
+                <li><strong>Validation node:</strong> After generation, a separate Validate node does a groundedness check. If the answer is ungrounded, we can retry.</li>
+                <li><strong>Mermaid visualization:</strong> <code>graph.get_graph().draw_mermaid()</code> gives an auto-generated architecture diagram from the actual code — it's always accurate.</li>
+                <li><strong>Future checkpointing:</strong> LangGraph supports checkpointers for persistence and human-in-the-loop. We haven't enabled it yet (v1), but the architecture is ready.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What stayed the same during the migration? What did you NOT change?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>We followed a <strong>"wrap, don't rewrite"</strong> principle. These components were untouched:</p>
+            <ul>
+                <li><strong>StartupRetriever</strong> — the hybrid retriever (semantic + BM25 + RRF + cross-encoder reranker)</li>
+                <li><strong>StartupEmbedder</strong> — all-MiniLM-L6-v2 model, 384d embeddings</li>
+                <li><strong>ChromaDB</strong> — 134K documents already indexed, no re-embedding</li>
+                <li><strong>BM25 index</strong> — built at runtime from ChromaDB documents</li>
+                <li><strong>Prompt templates</strong> — 6 templates in <code>prompt_templates.py</code></li>
+                <li><strong>LLM client factory</strong> — <code>get_llm_client()</code> for Groq/OpenAI</li>
+                <li><strong>Evaluation pipeline</strong> — <code>eval_dataset.py</code> + <code>evaluator.py</code></li>
+            </ul>
+            <p>The graph nodes are thin wrappers that <em>call into</em> these existing components. The retriever doesn't know it's inside a LangGraph node.</p>
+            <div class="callout warning">
+                <strong>Interview signal:</strong> This shows engineering maturity. You don't rewrite working code during a migration — you wrap it. Minimizes risk, preserves test coverage, and keeps the diff small.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 2. STATE SCHEMA DESIGN ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="schema"></div>
+    <div class="section-title"><span class="num">02</span> State Schema Design</div>
+    <div class="section-sub">Why 3 Pydantic schemas, why multiple inheritance, why not a dict</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why did you use 3 separate Pydantic schemas instead of one big state dictionary?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>LangGraph supports <strong>schema filtering</strong> — you can declare separate Input, Output, and Internal schemas. This gives you three key benefits:</p>
+            <ol>
+                <li><strong>API surface control:</strong> The caller only sees <code>InputState</code> (what to send) and <code>OutputState</code> (what comes back). Internal fields like <code>expanded_query</code>, <code>retry_count</code>, <code>reranker_scores</code> never leak out.</li>
+                <li><strong>Type safety:</strong> Pydantic validates at runtime. If a node returns <code>{"confidence": 42}</code> instead of a string, you get a clear error — not a silent bug three nodes later.</li>
+                <li><strong>Documentation as code:</strong> The schema IS the API contract. Any developer can read <code>InputState</code> and know exactly what <code>graph.invoke()</code> accepts.</li>
+            </ol>
+            <div class="highlight">InputState:  { user_query: str }           ← caller sends this
+OutputState: { answer, analysis_type, source_docs, confidence, best_score }   ← caller gets this
+PrivateState: { ...all 11 fields... }     ← graph uses this internally</div>
+            <div class="callout danger">
+                <strong>What a dict would look like:</strong> <code>graph.invoke({"user_query": "...", "retry_count": 0, "expanded_query": "", ...})</code> — the caller would need to know about internal fields. Leaky abstraction.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why does PrivateState use multiple inheritance from both InputState and OutputState?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">class PrivateState(InputState, OutputState):
+    expanded_query: str = ""
+    retry_count: int = 0
+    # ... private fields</div>
+            <p>This is how LangGraph's schema filtering works. The <code>StateGraph</code> constructor takes three schemas:</p>
+            <div class="highlight">graph = StateGraph(
+    PrivateState,       # ← full internal state
+    input=InputState,   # ← filters input
+    output=OutputState, # ← filters output
+)</div>
+            <p>For this to work, LangGraph requires that <code>PrivateState</code> <strong>contains all fields</strong> from both Input and Output — which multiple inheritance guarantees via Pydantic's MRO (Method Resolution Order).</p>
+            <p><strong>Alternative: flat composition</strong> — manually copy all fields from Input and Output into PrivateState. Works but violates DRY (if you add a field to OutputState, you must remember to add it to PrivateState too). MI keeps them in sync automatically.</p>
+            <div class="callout info">
+                <strong>Follow-up they might ask:</strong> "Isn't MI bad?" → In general, yes for behaviour. But here it's <em>data</em> MI — Pydantic models are just data containers. There's no diamond-of-death risk because these classes have no methods with conflicting behaviour.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why Pydantic models and not TypedDict or dataclasses?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Option</th><th>Pros</th><th>Cons</th></tr>
+                <tr>
+                    <td><strong>TypedDict</strong></td>
+                    <td>Built-in, zero overhead, LangGraph's default example uses this</td>
+                    <td>No runtime validation. <code>{"confidence": 42}</code> silently passes. Also: dict access (<code>state["key"]</code>) is stringly-typed — typos are silent.</td>
+                </tr>
+                <tr>
+                    <td><strong>dataclasses</strong></td>
+                    <td>Attribute access, type hints</td>
+                    <td>No runtime validation. No serialization helpers. LangGraph support is limited compared to Pydantic.</td>
+                </tr>
+                <tr>
+                    <td><strong>Pydantic ✅</strong></td>
+                    <td>Runtime validation, attribute access (<code>state.confidence</code>), serialization, schema generation, default values</td>
+                    <td>Slightly heavier import. Requires <code>state.field</code> not <code>state["field"]</code>.</td>
+                </tr>
+            </table>
+            <div class="callout success">
+                <strong>Key point:</strong> "Pydantic gives us runtime type validation, attribute-style access, and LangGraph schema filtering. The minor overhead is worth catching bugs at node boundaries instead of 3 nodes later."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Walk me through all 11 fields in PrivateState. Why each one?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <table class="vs-table">
+                <tr><th>Field</th><th>Source</th><th>Set By</th><th>Used By</th></tr>
+                <tr><td><code>user_query</code></td><td>InputState</td><td>caller</td><td>classify, expand_query, generate_*</td></tr>
+                <tr><td><code>answer</code></td><td>OutputState</td><td>generate_* or refuse</td><td>validate, returned to caller</td></tr>
+                <tr><td><code>analysis_type</code></td><td>OutputState</td><td>classify</td><td>route_after_confidence, generate_*</td></tr>
+                <tr><td><code>source_docs</code></td><td>OutputState</td><td>retrieve</td><td>generate_*, validate</td></tr>
+                <tr><td><code>confidence</code></td><td>OutputState</td><td>confidence_gate</td><td>route_after_confidence, generate_*, route_after_validate</td></tr>
+                <tr><td><code>best_score</code></td><td>OutputState</td><td>retrieve</td><td>confidence_gate</td></tr>
+                <tr><td><code>expanded_query</code></td><td>Private</td><td>expand_query, rewrite</td><td>retrieve</td></tr>
+                <tr><td><code>reranker_scores</code></td><td>Private</td><td>retrieve</td><td>confidence_gate</td></tr>
+                <tr><td><code>mean_score</code></td><td>Private</td><td>retrieve</td><td>logging/diagnostics</td></tr>
+                <tr><td><code>validation_check</code></td><td>Private</td><td>validate</td><td>route_after_validate</td></tr>
+                <tr><td><code>retry_count</code></td><td>Private</td><td>rewrite</td><td>route_after_confidence, route_after_validate</td></tr>
+            </table>
+            <div class="callout info">
+                <strong>Design principle:</strong> Fields that the caller needs are in OutputState. Fields that only the graph internals need are in PrivateState. <code>expanded_query</code> is private because the user doesn't care what the LLM rewrote their query to.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">We hit "PrivateState object is not subscriptable" — what happened and how did you fix it?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>When we first wrote the nodes, we used dict-style access: <code>state["user_query"]</code> and <code>state.get("confidence", "high")</code>. This works with TypedDict state (which is a regular dict), but Pydantic models are NOT dicts — they're objects.</p>
+            <div class="highlight">❌ state["confidence"]         → TypeError: not subscriptable
+❌ state.get("confidence")     → AttributeError: no .get() method
+✅ state.confidence             → works
+✅ getattr(state, "confidence", "high")  → works (with default)</div>
+            <p>We had to search-and-replace across all 8 node files + builder.py. The fix: <code>state["key"]</code> → <code>state.key</code>, and <code>state.get("key", default)</code> → <code>getattr(state, "key", default)</code>.</p>
+            <div class="callout warning">
+                <strong>Lesson learned:</strong> When LangGraph uses TypedDict, nodes receive a plain dict. When it uses Pydantic, nodes receive a Pydantic model instance. The access pattern is fundamentally different. We should have caught this earlier by running a single smoke test before writing all nodes.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 3. NODE ARCHITECTURE ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="nodes"></div>
+    <div class="section-title"><span class="num">03</span> Node Architecture</div>
+    <div class="section-sub">12 nodes, 3 different patterns — factory, plain, DRY helper</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why 12 nodes? Isn't that over-engineered for a RAG pipeline?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>It sounds like a lot, but count by responsibility:</p>
+            <ul>
+                <li><strong>4 core pipeline nodes:</strong> classify, expand_query, retrieve, confidence_gate — these exist in any RAG with classification + guardrails</li>
+                <li><strong>5 generate nodes:</strong> One per analysis type. These are thin wrappers (3 lines each) around a shared helper. They exist because LangGraph's conditional edges need distinct node names to route to.</li>
+                <li><strong>3 control flow nodes:</strong> validate, rewrite, refuse — these enable corrective RAG</li>
+            </ul>
+            <p>If you remove the 5 generate nodes (which are 3-line wrappers), you have <strong>7 unique logic units</strong>. That's not over-engineered — it's each concern having a home.</p>
+            <div class="callout success">
+                <strong>The "why 5 generate nodes?" answer:</strong> LangGraph's <code>add_conditional_edges</code> routes to node names. You can't route to "generate" and then somehow pass analysis_type. You need distinct targets: <code>generate_similar</code>, <code>generate_swot</code>, etc. The DRY helper (<code>_generate_base.py</code>) ensures the actual logic isn't duplicated.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">You have 3 different node patterns — factory, plain function, factory+helper. Why not pick one?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Each pattern exists for a reason:</p>
+            <table class="vs-table">
+                <tr><th>Pattern</th><th>Used By</th><th>Why</th></tr>
+                <tr>
+                    <td><strong>Factory</strong><br><code>make_*_node(dep)</code></td>
+                    <td>classify, expand, retrieve, validate, rewrite</td>
+                    <td>These nodes need external dependencies (LLM client or retriever). The factory captures the dependency in a closure — the resulting function only takes <code>state</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>Plain function</strong></td>
+                    <td>confidence_gate</td>
+                    <td>Pure logic — no LLM, no retriever, no external dependency. Just threshold math on <code>state.best_score</code>. No factory needed.</td>
+                </tr>
+                <tr>
+                    <td><strong>Factory + DRY Helper</strong></td>
+                    <td>5 generate_* nodes</td>
+                    <td>Each needs the LLM client (→ factory) and shares 95% of logic with the others (→ shared <code>run_generation()</code> helper in <code>_generate_base.py</code>).</td>
+                </tr>
+            </table>
+            <div class="callout info">
+                <strong>Interview phrasing:</strong> "The pattern follows the dependency. Nodes with external deps get factories. Pure logic gets a plain function. Nodes that share logic get a DRY helper. Using one pattern everywhere would either over-abstract (factory for confidence_gate) or under-abstract (duplicating generate logic 5 times)."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Explain the classify node. Why does the LLM decide the analysis type?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>In v3, the user had to pick "similar", "swot", etc. from a dropdown. This had two problems:</p>
+            <ol>
+                <li><strong>UX friction:</strong> Users don't know what "ecosystem mapping" means. They just want to type "Tell me about robotics startups."</li>
+                <li><strong>Misclassification:</strong> A user might pick "similar" when their query is really a SWOT. The wrong prompt template = wrong answer format.</li>
+            </ol>
+            <p>Now the Classify node asks the LLM to pick from 5 types based on the query text. Falls back to "similar" if parsing fails.</p>
+            <div class="highlight">_CLASSIFY_PROMPT = """
+Classify this startup query into exactly one type:
+- similar: Finding startups like X
+- swot: Strengths/weaknesses analysis
+- competitor: Competitive landscape
+- comparison: Compare X vs Y
+- ecosystem: Map a startup ecosystem
+
+Query: {query}
+Type:"""</div>
+            <div class="callout warning">
+                <strong>Trade-off:</strong> This adds 1 extra LLM call per query. On Groq free tier (30 RPM), this is significant. We accepted this because classification accuracy is better than user guessing, and the call is cheap (max_tokens=20, temperature=0).
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What does the validate node actually check?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Three checks, in order:</p>
+            <ol>
+                <li><strong>Documents exist:</strong> Are there source_docs? (Sanity check — retrieve should always produce docs, but defensive.)</li>
+                <li><strong>Score threshold:</strong> Is best_score > 0? (If reranker gave all negative scores, the docs are garbage.)</li>
+                <li><strong>LLM groundedness check:</strong> Ask the LLM "Is this answer grounded in these source documents?" This catches hallucination that slipped past the confidence gate.</li>
+            </ol>
+            <p>If any check fails, <code>validation_check = False</code>. The routing edge then decides: retry if retries remain, or accept best-effort.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why is _generate_base.py a helper and not a node? What's the underscore convention?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><code>_generate_base.py</code> is prefixed with <code>_</code> to signal it's <strong>internal/private</strong> — not a graph node, not exported in <code>__init__.py</code>. It's a helper module containing the shared <code>run_generation()</code> function.</p>
+            <p>It's NOT a node because:</p>
+            <ul>
+                <li>It takes <code>analysis_type</code> as a parameter — but LangGraph nodes only take <code>state</code></li>
+                <li>It would need state to carry which type to generate — adding routing complexity</li>
+                <li>Having separate node names lets conditional edges route directly to <code>generate_swot</code> without an intermediate dispatch</li>
+            </ul>
+            <div class="highlight">_generate_base.py:   run_generation(llm, state, analysis_type="swot")
+generate_swot.py:    make_generate_swot_node(llm) → node(state) → run_generation(llm, state, "swot")
+generate_similar.py: make_generate_similar_node(llm) → node(state) → run_generation(llm, state, "similar")</div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Where does the refuse node live? Why is it inline in builder.py?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The refuse node is 2 lines of code — it sets <code>answer</code> to a hardcoded refusal message:</p>
+            <div class="highlight">def _make_refuse_node():
+    def refuse_node(state) -> dict:
+        return {"answer": _REFUSAL_MSG}
+    return refuse_node</div>
+            <p>Creating a separate file (<code>refuse.py</code>) for 2 lines would be over-engineering. The <code>_</code> prefix on <code>_make_refuse_node</code> marks it as builder-private. It has no dependencies, no LLM call, no logic — just a constant assignment.</p>
+            <div class="callout info">
+                <strong>Principle:</strong> "Don't create a file for a function. Create a file for a responsibility." Refuse has no responsibility beyond setting a string.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 4. EDGES & ROUTING ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="edges"></div>
+    <div class="section-title"><span class="num">04</span> Edges & Routing Logic</div>
+    <div class="section-sub">2 conditional edges — how they route, why the path map, what each branch means</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does route_after_confidence work? Walk me through every path.</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">def route_after_confidence(state) -> str:
+    confidence = state.confidence  # "high" | "low" | "none"
+    retry_count = state.retry_count
+
+    if confidence in ("high", "low"):
+        return f"generate_{state.analysis_type}"
+        # → "generate_swot", "generate_similar", etc.
+
+    # confidence == "none"
+    if retry_count < MAX_RETRIES:    # MAX_RETRIES = 1
+        return "rewrite"              # try different query
+
+    return "__end__"                  # → maps to refuse node</div>
+            <p><strong>Path table:</strong></p>
+            <table class="vs-table">
+                <tr><th>Confidence</th><th>Retry Count</th><th>Route To</th><th>Meaning</th></tr>
+                <tr><td>high</td><td>any</td><td><code>generate_{type}</code></td><td>Good retrieval → generate answer</td></tr>
+                <tr><td>low</td><td>any</td><td><code>generate_{type}</code></td><td>Mediocre retrieval → generate with disclaimer</td></tr>
+                <tr><td>none</td><td>0</td><td><code>rewrite</code></td><td>Bad retrieval, first attempt → try rewritten query</td></tr>
+                <tr><td>none</td><td>≥ 1</td><td><code>__end__</code> → refuse</td><td>Bad retrieval even after retry → give up gracefully</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What's the path_map in add_conditional_edges? Why is it needed?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">graph.add_conditional_edges(
+    "confidence_gate",        # source node
+    route_after_confidence,   # routing function
+    {                         # path map
+        "generate_similar":   "generate_similar",
+        "generate_swot":      "generate_swot",
+        "generate_competitor":"generate_competitor",
+        "generate_comparison":"generate_comparison",
+        "generate_ecosystem": "generate_ecosystem",
+        "rewrite":            "rewrite",
+        END:                  "refuse",
+    },
+)</div>
+            <p>The path map serves two purposes:</p>
+            <ol>
+                <li><strong>Validation:</strong> LangGraph verifies at compile time that every possible return value from <code>route_after_confidence</code> has a mapping. If the function returns "generate_xyz" which isn't in the map, you get an error at build time — not at runtime.</li>
+                <li><strong>Remapping:</strong> <code>END → "refuse"</code> is a remap. The routing function returns <code>"__end__"</code> but we want to go to the refuse node first (to set the refusal message), then refuse → END.</li>
+            </ol>
+            <div class="callout warning">
+                <strong>Subtle point:</strong> Without the path map, <code>return END</code> would go directly to <code>__end__</code>, skipping the refuse node. The user would get an empty answer. The remap <code>END: "refuse"</code> ensures the refusal message is always set before the graph terminates.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does route_after_validate decide retry vs end?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">def route_after_validate(state) -> str:
+    if state.validation_check:     # True = passed
+        return "__end__"           # ✅ good answer
+
+    # Validation failed:
+    if state.confidence == "low":
+        return "__end__"           # best-effort (don't retry low confidence)
+
+    if state.retry_count < MAX_RETRIES:
+        return "rewrite"           # retry
+
+    return "__end__"               # exhausted retries</div>
+            <p><strong>Key design decision:</strong> We DON'T retry when confidence was "low". Why? Because low confidence means the retrieval was mediocre — retrying won't find better docs. We prepend the disclaimer and accept the best-effort answer.</p>
+            <p>Retry only makes sense when confidence was "high" (good docs, but the LLM hallucinated) — a rewritten query might produce docs that constrain the LLM better.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why only 2 conditional edges? Didn't you have 4 at some point?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>In an earlier LG v1 iteration, we had 4 conditional edges:</p>
+            <ol>
+                <li><code>route_after_classify</code> — branched to type-specific retrieve nodes</li>
+                <li><code>route_after_expand</code> — branched to type-specific retrieve nodes (after expansion)</li>
+                <li><code>route_after_confidence</code> — branched to a single generate node</li>
+                <li><code>route_after_validate</code> — retry or end</li>
+            </ol>
+            <p>When we flipped to <strong>Option B</strong> (single retrieve, branched generate), edges 1-2 became unnecessary. Classify → expand → retrieve is now a simple linear chain. The only branching happens after confidence (to pick the right generate node) and after validate (retry or end).</p>
+            <div class="callout success">
+                <strong>Simplification:</strong> 4 → 2 conditional edges. Fewer branches = fewer edge cases = easier to reason about.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 5. DESIGN PATTERNS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="patterns"></div>
+    <div class="section-title"><span class="num">05</span> Design Patterns</div>
+    <div class="section-sub">Closure DI, factory functions, __all__, and why state stays pure</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Explain the closure-based dependency injection pattern. Why not use classes?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <div class="highlight">def build_graph(retriever, llm_client):
+    # Dependencies captured in closures:
+    classify = make_classify_node(llm_client)      # llm_client lives in closure
+    retrieve = make_retrieve_node(retriever)        # retriever lives in closure
+    graph.add_node("classify", classify)            # graph just sees fn(state) → dict</div>
+            <p>LangGraph nodes must be <code>fn(state) → dict</code>. Dependencies like <code>llm_client</code> can't be passed as arguments. Three ways to inject them:</p>
+            <table class="vs-table">
+                <tr><th>Approach</th><th>Pros</th><th>Cons</th></tr>
+                <tr>
+                    <td><strong>Global/singleton</strong></td>
+                    <td>Simple</td>
+                    <td>Untestable. Can't swap LLM client in tests. Hidden coupling.</td>
+                </tr>
+                <tr>
+                    <td><strong>Class with __call__</strong></td>
+                    <td>OOP pattern, clear</td>
+                    <td>Heavier. Boilerplate (__init__, self.llm_client). Serialization issues if LangGraph tries to pickle nodes.</td>
+                </tr>
+                <tr>
+                    <td><strong>Closure ✅</strong></td>
+                    <td>Lightweight, testable, no serialization issues (closures aren't pickled by LangGraph internals)</td>
+                    <td>Less familiar pattern for some devs</td>
+                </tr>
+            </table>
+            <div class="callout info">
+                <strong>Key insight:</strong> LangGraph doesn't serialize node functions — it serializes <em>state</em>. So closures work perfectly. The LLM client lives in Python's closure scope, not in the state. State stays pure Pydantic data.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What does __all__ do and why do you use it in __init__.py files?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p><code>__all__</code> is a Python list that controls what <code>from module import *</code> exports. We use it in two ways:</p>
+            <div class="highlight"># graph/state/__init__.py
+from .input import InputState
+from .output import OutputState
+from .private import PrivateState
+
+__all__ = ["InputState", "OutputState", "PrivateState"]</div>
+            <ol>
+                <li><strong>Explicit API surface:</strong> Even without <code>import *</code>, <code>__all__</code> documents "these are the public symbols." IDEs use it for autocomplete.</li>
+                <li><strong>Re-export pattern:</strong> <code>from bizintel.graph.state import PrivateState</code> works cleanly instead of <code>from bizintel.graph.state.private import PrivateState</code>. The __init__ re-exports.</li>
+                <li><strong>Prevents leakage:</strong> Internal helpers, constants, or imports in __init__.py don't accidentally become part of the public API.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why does state have to stay "pure data"? Can't nodes store the LLM client in state?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>LangGraph state must be <strong>serializable</strong> — for checkpointing, replay, and debugging. An <code>OpenAI()</code> client object contains:</p>
+            <ul>
+                <li>HTTP connection pools (cannot be pickled)</li>
+                <li>API keys (security risk if serialized)</li>
+                <li>Internal thread locks (non-serializable)</li>
+            </ul>
+            <p>If state contained <code>llm_client: OpenAI</code>, LangGraph's checkpointer would fail. Even without a checkpointer, it violates the principle: <strong>state = data about the computation, not the computation tools themselves.</strong></p>
+            <div class="callout danger">
+                <strong>Analogy:</strong> State is like a patient's chart — it records blood pressure, test results, history. You don't staple the MRI machine to the chart. The MRI machine (LLM client) is a tool that reads the chart and writes results.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 6. OPTION B ARCHITECTURE ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="optionb"></div>
+    <div class="section-title"><span class="num">06</span> Option B — Branch Generate, Single Retrieve</div>
+    <div class="section-sub">The architecture flip — why we went from 5 retrieve nodes to 5 generate nodes</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What was the original architecture and what was Option B?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The original design branched on <strong>retrieve</strong> — 5 type-specific retrieve nodes that all did the same retrieval but were separate for routing. Option B flipped it:</p>
+            <table class="vs-table">
+                <tr><th>Aspect</th><th>Original (Branch Retrieve)</th><th>Option B (Branch Generate) ✅</th></tr>
+                <tr><td>Retrieve nodes</td><td>5 (retrieve_similar, retrieve_swot, ...)</td><td>1 (single retrieve)</td></tr>
+                <tr><td>Generate nodes</td><td>1 (unified generate)</td><td>5 (generate_similar, generate_swot, ...)</td></tr>
+                <tr><td>Branch point</td><td>After classify</td><td>After confidence_gate</td></tr>
+                <tr><td>Where type matters</td><td>Retrieve (but they all did the same thing!)</td><td>Generate (where type actually selects the prompt)</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why was branching retrieve a problem?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The 5 retrieve nodes all called the same <code>retriever.retrieve()</code> with the same parameters. They were <strong>uniform in behaviour but branched in structure</strong>. This violates the principle: <em>"branch where behaviour diverges."</em></p>
+            <ul>
+                <li><strong>5 identical files:</strong> retrieve_similar.py, retrieve_swot.py, etc. — all calling <code>_retrieve_base.py</code> with zero differences.</li>
+                <li><strong>Unnecessary routing:</strong> <code>route_after_classify</code> and <code>route_after_expand</code> existed just to direct to the "right" retrieve node — but they all did the same thing.</li>
+                <li><strong>Confusion:</strong> "Why does the type matter for retrieval?" It doesn't — retrieval is the same regardless of whether you want SWOT or competitor analysis.</li>
+            </ul>
+            <div class="callout success">
+                <strong>Where type DOES matter:</strong> Generation — that's where <code>get_prompt(analysis_type)</code> selects the right template (SWOT format vs competitor table vs ecosystem map). Branching generate is semantically correct.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Were there other options? Why not branch both retrieve and generate?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Three options were on the table:</p>
+            <table class="vs-table">
+                <tr><th>Option</th><th>Structure</th><th>Verdict</th></tr>
+                <tr>
+                    <td><strong>A: Branch both</strong></td>
+                    <td>5 retrieve + 5 generate = 10 branched nodes</td>
+                    <td>❌ Maximum flexibility but massive graph. 10 identical retrieves + 10 conditional edges. Way over-engineered.</td>
+                </tr>
+                <tr>
+                    <td><strong>B: Branch generate only ✅</strong></td>
+                    <td>1 retrieve + 5 generate = 6 nodes</td>
+                    <td>✅ Branches at the point of divergence. Linear up to confidence, then fans out.</td>
+                </tr>
+                <tr>
+                    <td><strong>C: Branch neither</strong></td>
+                    <td>1 retrieve + 1 generate</td>
+                    <td>⚠️ Simplest, but generate would need <code>if analysis_type == "swot": ...</code> inside it. Conditional logic hidden inside a node instead of in edges.</td>
+                </tr>
+            </table>
+            <div class="callout info">
+                <strong>Option C was tempting</strong> but violates LangGraph's philosophy: routing decisions belong in edges, not inside nodes. A single generate node with a big switch/case defeats the purpose of a graph orchestrator.
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 7. CORRECTIVE RAG ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="corrective"></div>
+    <div class="section-title"><span class="num">07</span> Corrective RAG & Retry Loop</div>
+    <div class="section-sub">How the rewrite loop works, why MAX_RETRIES=1, what prevents infinite loops</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Explain the corrective RAG loop. What triggers it?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Two triggers can start a retry:</p>
+            <ol>
+                <li><strong>Confidence = "none" after confidence_gate:</strong> The retrieval was so poor (best_score below HARD threshold) that we don't even try to generate. Instead → rewrite the query and try again.</li>
+                <li><strong>Validation failed after validate:</strong> The answer was generated but the groundedness check failed. The LLM hallucinated despite having docs → rewrite and try.</li>
+            </ol>
+            <p>The rewrite loop path:</p>
+            <div class="highlight">rewrite → expand_query → retrieve → confidence_gate → generate_* → validate
+  ↓                                                                    ↓
+  (rewrites expanded_query,                              (checks groundedness,
+   increments retry_count)                                may loop back again)</div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Why MAX_RETRIES = 1 and not 2 or 3?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Each retry costs <strong>up to 4 LLM calls</strong> (expand + generate + validate + possibly classify). On Groq free tier (30 RPM), more retries means more rate limiting. Practically:</p>
+            <ul>
+                <li><strong>0 retries:</strong> No corrective ability at all</li>
+                <li><strong>1 retry ✅:</strong> One chance to recover from a bad query expansion. Covers the most common failure mode.</li>
+                <li><strong>2+ retries:</strong> Diminishing returns. If one rewrite didn't help, a second rewrite of a rewrite is unlikely to either. Plus it doubles latency.</li>
+            </ul>
+            <div class="callout warning">
+                <strong>Latency math:</strong> Base path = 4 LLM calls × ~1s each = 4s. With 1 retry = 7-8s. With 2 retries = 11-12s. Users won't wait 12 seconds. One retry is the sweet spot.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What prevents infinite loops in the graph?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Two safeguards:</p>
+            <ol>
+                <li><strong><code>retry_count</code> in state:</strong> The rewrite node increments <code>retry_count</code>. Both routing edges check <code>retry_count < MAX_RETRIES</code>. Once exhausted → route to END.</li>
+                <li><strong>LangGraph's built-in recursion limit:</strong> Even if our logic had a bug, LangGraph caps the total number of node executions per invocation (default 25). After 25 steps, it raises <code>GraphRecursionError</code>.</li>
+            </ol>
+            <p>Between these two, infinite loops are impossible. The first is our application-level guard; the second is a framework-level safety net.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">The rewrite node rewrites the expanded_query, not the user_query. Why?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The <code>user_query</code> is sacred — it's what the user typed. We never modify it. The rewrite node rewrites <code>expanded_query</code> because:</p>
+            <ul>
+                <li><strong>The problem is expansion, not the user:</strong> If retrieval failed, it's because query expansion produced bad search terms, not because the user asked a bad question.</li>
+                <li><strong>Provenance:</strong> We always want to show "You asked: {original query}" in the UI. If we mutated user_query, we'd lose the original.</li>
+                <li><strong>Generate needs the original:</strong> The generate prompt uses <code>user_query</code> to produce the answer. It should see "Find startups similar to Stripe", not the rewritten "fintech payment API developer tools".</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 8. MIGRATION PROCESS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="migration"></div>
+    <div class="section-title"><span class="num">08</span> Migration Process</div>
+    <div class="section-sub">How the codebase evolved from chain.py to the graph — what changed, what broke, what we learned</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Walk me through the migration steps. What was the order of changes?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ol>
+                <li><strong>Design phase:</strong> Discussed 3 DI approaches (global, class, closure) → chose closure. Discussed 3 state approaches (dict, TypedDict, Pydantic) → chose Pydantic 3-schema.</li>
+                <li><strong>State schemas:</strong> Created <code>graph/state/</code> — InputState, OutputState, PrivateState with MI.</li>
+                <li><strong>Nodes:</strong> Created all node files. Initial version had 5 branched retrieve nodes (Option A).</li>
+                <li><strong>Builder + edges:</strong> Wired everything in <code>builder.py</code>. Verified it compiled.</li>
+                <li><strong>Delete old code:</strong> Removed <code>rag/chain.py</code>, <code>utils/</code>. Updated all imports in <code>streamlit_app.py</code>, <code>run_eval.py</code>, <code>state.py</code>.</li>
+                <li><strong>Architecture flip:</strong> After reviewing, spotted the asymmetry (retrieve branched but uniform). Flipped to Option B — deleted 5 retrieve_* + _retrieve_base.py, created 5 generate_* + _generate_base.py.</li>
+                <li><strong>Bug fixes:</strong> Fixed Pydantic state access (not subscriptable), added <code>load_dotenv()</code>, fixed rate limiting.</li>
+                <li><strong>Eval + validation:</strong> Ran eval pipeline, diagnosed regression (rate limiting), added <code>max_retries</code> and query delay.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What files did you have to update when replacing chain.py with the graph?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Four consumer files needed updating:</p>
+            <ol>
+                <li><strong><code>app/state.py</code></strong> — Changed <code>load_chain()</code> to <code>load_graph()</code>. Swapped <code>StartupChain(retriever, llm_client)</code> for <code>build_graph(retriever, llm_client)</code>.</li>
+                <li><strong><code>app/streamlit_app.py</code></strong> — Changed <code>chain.analyze(query, analysis_type)</code> to <code>graph.invoke({"user_query": query})</code>. Result keys changed from chain's dict format to OutputState fields.</li>
+                <li><strong><code>app/components.py</code></strong> — Removed the "Analysis Type" dropdown from the sidebar (classify node now handles this).</li>
+                <li><strong><code>evaluation/run_eval.py</code></strong> — Changed <code>chain.analyze()</code> to <code>graph.invoke()</code>. Same result key mapping.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What went wrong during the migration? What bugs did you encounter?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Three significant bugs:</p>
+            <ol>
+                <li><strong>PrivateState not subscriptable:</strong> All nodes used <code>state["key"]</code> — works with TypedDict, fails with Pydantic. Had to change 8 files to <code>state.key</code> / <code>getattr()</code>. Root cause: LangGraph docs default to TypedDict examples; we chose Pydantic without adjusting access patterns.</li>
+                <li><strong>Missing dotenv in notebook:</strong> The Jupyter notebook didn't have <code>load_dotenv()</code>, so <code>GROQ_API_KEY</code> wasn't loaded. Graph compiled fine but LLM calls failed with "API key not set". Subtle because the error came from deep inside the Groq client.</li>
+                <li><strong>Rate limiting causing eval regression:</strong> Post-migration eval showed dramatic metric drops. Investigation revealed 429 rate limit errors from Groq (30 RPM limit). The pipeline now makes more LLM calls per query (classify + expand + generate + validate) and the eval fires 30 queries with 7 LLM calls each = 210 calls. Fix: <code>max_retries=3</code> on the OpenAI client + 2-second delay between eval queries.</li>
+            </ol>
+            <div class="callout danger">
+                <strong>Interview power move:</strong> Don't hide bugs — narrate them as learning stories. "We discovered the Pydantic access issue early in testing, which reinforced our principle of running smoke tests after each node, not after all 12."
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 9. EVAL & DEBUGGING ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="eval"></div>
+    <div class="section-title"><span class="num">09</span> Evaluation & Debugging</div>
+    <div class="section-sub">How we diagnosed the eval regression, rate limiting, and confidence tuning</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">Your eval metrics dropped after the LangGraph migration. What happened?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Average context_relevancy dropped from 0.833 → 0.518, answer_relevancy from 0.700 → 0.375. Two query types scored all zeros: ecosystem (4 queries) and auto (3 queries). Two queries outright failed.</p>
+            <p>Root cause: <strong>Groq rate limiting (HTTP 429)</strong>. The LangGraph pipeline makes more LLM calls per query (classify + expand + generate + validate = 4), and the eval runner fires 30 queries with no delay. Total: ~210 LLM calls against a 30 RPM limit.</p>
+            <p>Rate limiting caused <strong>two cascade failures</strong>:</p>
+            <ol>
+                <li><strong>Graph node 429:</strong> When classify/expand/generate hit 429, the entire <code>graph.invoke()</code> errored → query logged as "failed."</li>
+                <li><strong>Evaluator judge 429:</strong> The evaluator's <code>_judge()</code> method catches exceptions and returns 0.0. So even queries that produced answers got scored 0.0 because the judge itself was rate-limited.</li>
+            </ol>
+            <div class="callout info">
+                <strong>Why ecosystem/auto hit hardest:</strong> They run <em>last</em> in the eval dataset (queries 22-30). By that point, the rate limit was fully saturated. Earlier queries (similar, swot) ran when there was still headroom.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How did you fix the rate limiting issue?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Two fixes:</p>
+            <ol>
+                <li><strong><code>LLM_MAX_RETRIES = 3</code></strong> — Added to <code>settings.py</code>, passed to <code>OpenAI(max_retries=3)</code>. The OpenAI SDK has built-in exponential backoff. On 429, it waits 1s → 2s → 4s before giving up. Both the graph nodes AND the evaluator judge benefit (they both use <code>get_llm_client()</code>).</li>
+                <li><strong><code>QUERY_DELAY = 2</code></strong> seconds between eval queries in <code>run_eval.py</code>. Spreads 210 LLM calls over ~60+ seconds instead of a tight loop. Keeps us under 30 RPM.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you know the regression wasn't a real architecture problem?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Diagnostic evidence:</p>
+            <ol>
+                <li><strong>Live test succeeded:</strong> Running a single ecosystem query ("Startup ecosystem for mental health") produced best_score=2.862, confidence=high, correctly routed to generate_ecosystem. The graph logic was correct.</li>
+                <li><strong>429 in the log:</strong> The live test's generate call hit <code>HTTP/1.1 429 Too Many Requests</code>. The LLM was reachable but rate-limited.</li>
+                <li><strong>Order-dependent failures:</strong> Ecosystem/auto failed because they run last. If it were an architecture bug, they'd fail every time regardless of order.</li>
+                <li><strong>Earlier types scored normally:</strong> similar (0.8 context_relevancy), competitor (0.92) — these ran first before rate limit kicked in.</li>
+            </ol>
+            <div class="callout success">
+                <strong>Interview lesson:</strong> When eval metrics drop, don't assume the model is worse. Investigate infrastructure first — rate limits, API errors, network issues. The eval runner's infrastructure is as important as the pipeline's correctness.
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What's the "auto" type in the eval dataset? The graph never produces "auto".</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>The eval dataset has 4 queries typed as "auto" — these are queries without an obvious type, like "Tell me about robotics startups" or "What's happening in the space tech industry?" In v3, the user could select "auto" from the dropdown, and the chain would use the auto prompt template.</p>
+            <p>In LG v1, the classify node maps these to a real type (usually "similar" or "ecosystem"). The eval dataset still labels them "auto" for the <code>analysis_type</code> column, but the graph internally classifies them. This is fine for eval — the evaluator uses the dataset's type label for structural checks but the actual answer is generated with the LLM-chosen type.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What are your confidence thresholds and how did you pick them?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Two thresholds from the cross-encoder reranker score:</p>
+            <table class="vs-table">
+                <tr><th>Threshold</th><th>Value</th><th>Meaning</th></tr>
+                <tr><td><code>CONFIDENCE_THRESHOLD_HARD</code></td><td>0.02</td><td>Below this → refuse. No LLM call.</td></tr>
+                <tr><td><code>CONFIDENCE_THRESHOLD_SOFT</code></td><td>0.10</td><td>Below this → low confidence. Generate with disclaimer.</td></tr>
+            </table>
+            <p>These were calibrated empirically in v3 by testing with out-of-domain queries ("best pizza restaurants") and borderline queries. The cross-encoder returns scores roughly in [-10, +10] range, with relevant docs typically scoring > 1.0. The thresholds are deliberately very low — we'd rather generate with a disclaimer than refuse prematurely.</p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════════ 10. ADVANCED QUESTIONS ═══════════════ -->
+<div class="section">
+    <div class="section-id" id="advanced"></div>
+    <div class="section-title"><span class="num">10</span> Advanced Questions & Follow-ups</div>
+    <div class="section-sub">Deeper dives an interviewer might pursue</div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How would you add a human-in-the-loop (HITL) approval step?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>LangGraph has built-in support for HITL via <strong>interrupt_before</strong> or <strong>interrupt_after</strong>:</p>
+            <div class="highlight"># Add interrupt before validate:
+compiled = graph.compile(
+    checkpointer=MemorySaver(),
+    interrupt_before=["validate"],
+)
+
+# First invoke pauses at validate
+result = graph.invoke({"user_query": "..."})
+# → result contains answer draft for human review
+
+# Human reviews, then resumes:
+graph.invoke(None, config={"thread_id": "..."})
+# → continues from validate → END</div>
+            <p>The architecture is already HITL-ready because we pass <code>checkpointer=None</code> in <code>build_graph()</code>. Swapping it for a <code>MemorySaver</code> or <code>SqliteSaver</code> enables persistence and resume.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How would you add streaming to the generate nodes?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>LangGraph supports <code>graph.stream()</code> and <code>graph.astream()</code>. For token-level streaming from the LLM:</p>
+            <ol>
+                <li>Change <code>graph.invoke()</code> → <code>graph.stream()</code> in the Streamlit app</li>
+                <li>Use the <code>stream_mode="messages"</code> option to get LLM tokens as they arrive</li>
+                <li>In Streamlit, use <code>st.write_stream()</code> to render tokens progressively</li>
+            </ol>
+            <p>The node code itself doesn't need to change — LangGraph handles the streaming plumbing at the framework level.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">If you could do the migration again, what would you do differently?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ol>
+                <li><strong>Start with Option B:</strong> We initially created 5 retrieve nodes (Option A) then flipped to 5 generate nodes. Should have recognized the asymmetry sooner — "branch where behaviour diverges."</li>
+                <li><strong>Smoke test after each node:</strong> Instead of writing all 12 nodes then testing, we should have tested classify alone, then classify+expand, building up incrementally. The Pydantic access bug would've been caught at node 1, not node 12.</li>
+                <li><strong>Rate limit awareness from day one:</strong> We added <code>max_retries</code> and eval delays only after seeing the regression. Should have budgeted LLM calls per query upfront (4-7 calls × 30 queries = 120-210 calls) and designed the eval accordingly.</li>
+                <li><strong>TypedDict first, Pydantic later:</strong> Start with TypedDict (simpler, dict access works) to validate the graph topology, then upgrade to Pydantic for production type safety. Reduces moving parts during the initial build.</li>
+            </ol>
+            <div class="callout success">
+                <strong>Retrospectives are interview gold.</strong> Showing what you'd do differently demonstrates growth, self-awareness, and engineering maturity — more impressive than "it worked perfectly the first time."
+            </div>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How do you test a LangGraph pipeline?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Three levels:</p>
+            <ol>
+                <li><strong>Unit test per node:</strong> Each node is a pure <code>fn(state) → dict</code>. Create a mock state, call the function, assert the returned dict. For factory nodes, pass a mock LLM client:
+                    <div class="highlight"># Test classify node
+mock_llm = MockLLM(response="swot")
+classify = make_classify_node(mock_llm)
+result = classify(MockState(user_query="SWOT of fintech"))
+assert result["analysis_type"] == "swot"</div>
+                </li>
+                <li><strong>Integration test per path:</strong> Test the full graph with a real (or mocked) retriever. Verify that "Find startups similar to Stripe" → classify=similar → expand → retrieve → confidence=high → generate_similar → validate → answer.</li>
+                <li><strong>Eval pipeline:</strong> 30-query benchmark with LLM-as-judge scoring (context_relevancy, groundedness, answer_relevancy). Automated regression detection.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">What's next for LG v2?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <ul>
+                <li><strong>Checkpointer:</strong> Enable persistence with <code>SqliteSaver</code> for conversation history and resume</li>
+                <li><strong>Streaming:</strong> Token-level streaming in the Streamlit UI for better UX</li>
+                <li><strong>Parallel retrieve:</strong> Use LangGraph's <code>Send()</code> API to fan out retrieval across multiple indexes simultaneously</li>
+                <li><strong>Multi-turn:</strong> Maintain conversation context across queries (requires message history in state)</li>
+                <li><strong>Tool use:</strong> Let the LLM decide whether to retrieve, or call other tools (web search, DB lookup)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does the graph handle errors mid-pipeline? What if the LLM call in expand_query fails?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>Each node handles errors at its own level:</p>
+            <ul>
+                <li><strong>expand_query:</strong> Catches exceptions and falls back to <code>user_query</code> as-is. Retrieval still works, just with a less optimal query.</li>
+                <li><strong>classify:</strong> Catches exceptions and falls back to <code>"similar"</code> (most common type).</li>
+                <li><strong>generate_*:</strong> No try/catch — if the LLM fails here, it throws. This is intentional: a failed generation means no answer. The <code>run_eval.py</code> catches this at the <code>graph.invoke()</code> level and logs it as a failed query.</li>
+                <li><strong>retrieve:</strong> If retrieval fails, empty source_docs → confidence_gate sees no docs → confidence="none" → retry or refuse.</li>
+            </ul>
+            <p>After adding <code>max_retries=3</code> to the OpenAI client, transient 429/5xx errors are automatically retried with exponential backoff before reaching the node's error handling.</p>
+        </div>
+    </div>
+
+    <div class="qa" onclick="this.classList.toggle('open')">
+        <div class="qa-q">
+            <div class="qa-icon">Q</div>
+            <div class="qa-question">How does the Mermaid visualization help? When do you use it?</div>
+            <div class="qa-chevron">▼</div>
+        </div>
+        <div class="qa-a">
+            <p>LangGraph auto-generates a Mermaid diagram from the compiled graph:</p>
+            <div class="highlight">mermaid_code = graph.get_graph().draw_mermaid()
+# Returns a Mermaid string that renders as a flow chart</div>
+            <p>Key benefit: the diagram is generated <strong>from the actual code</strong>, not a manually drawn picture. If you add a node or change an edge, the diagram updates automatically. We use it in:</p>
+            <ul>
+                <li><strong>Notebooks:</strong> Visual verification that the graph topology matches our intent</li>
+                <li><strong>README:</strong> The architecture diagram is a rendered Mermaid PNG</li>
+                <li><strong>Debugging:</strong> When a query takes an unexpected path, the diagram helps trace which conditional edge fired</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+</div> <!-- /container -->
+
+<div class="footer">
+    BizIntel LG v1 · Branch: <code>lg_v1</code> · March 2026 ·
+    <a href="interview_prep.html">← v1-v3 Interview Prep</a> ·
+    <a href="architecture_flowchart_lg_v1.html">LG v1 Architecture Flowchart →</a>
+</div>
+
+<script>
+// Toggle Q&A cards
+document.querySelectorAll('.qa').forEach(qa => {
+    qa.addEventListener('click', () => qa.classList.toggle('open'));
+});
+</script>
+
+</body>
+</html>

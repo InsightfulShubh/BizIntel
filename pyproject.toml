@@ -7,6 +7,8 @@ requires-python = ">=3.13"
 dependencies = [
 	"chromadb>=1.5.5",
 	"faiss-cpu>=1.13.2",
+	"langgraph>=0.4.1",
+	"langgraph-checkpoint-sqlite>=2.0.0",
 	"matplotlib>=3.10.8",
 	"openai>=2.26.0",
 	"openpyxl>=3.1.5",
@@ -16,6 +18,7 @@ dependencies = [
 	"rank-bm25>=0.2.2",
 	"sentence-transformers>=5.3.0",
 	"streamlit>=1.55.0",
+	"tavily-python>=0.5.0",
 ]
 
 [build-system]
